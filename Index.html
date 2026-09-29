@@ -499,7 +499,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
     <div class="sectionhead">
       <div>
         <div class="kicker">Administrative Operations (Internal)</div>
-        <h2>Admin Management Panel</h2>
+        <h2>Admin Management Panel</h2><div id="backendStatus" class="small" style="margin-top:6px"></div>
         <p>Review, approve, audit records of payments made, or manage campaigns.</p>
       </div>
       <button class="btn" onclick="show('home')">Exit Admin</button>
@@ -610,9 +610,25 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 </footer>
 
 <script>
-const SUPABASE_URL = "https://eahsbvkxxcdvgtcsltoo.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_huDvY1Qg55Ut_U8dNRcyEQ_6mekq4gV";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL = "REPLACE_WITH_NEW_SUPABASE_PROJECT_URL";
+const SUPABASE_ANON_KEY = "REPLACE_WITH_NEW_SUPABASE_PUBLISHABLE_KEY";
+const BACKEND_CONFIGURED =
+  /^https:\/\/[^\s]+\.supabase\.co$/i.test(SUPABASE_URL) &&
+  SUPABASE_ANON_KEY &&
+  !SUPABASE_ANON_KEY.startsWith("REPLACE_");
+const supabaseClient = BACKEND_CONFIGURED
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    })
+  : null;
+
+function requireBackend(){
+  if (!BACKEND_CONFIGURED || !supabaseClient) {
+    alert("LIVED Proof backend is not configured yet. Replace SUPABASE_URL and SUPABASE_ANON_KEY with the NEW Supabase project values.");
+    throw new Error("Supabase backend not configured");
+  }
+  return supabaseClient;
+}
 
 const SEAL = "data:image/jpeg;base64,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";
 const KEY="lived_proof_prod_v5";
@@ -1505,61 +1521,64 @@ async function confirmManualPayment(){
     return;
   }
 
-  const { error } = await supabaseClient.from('campaigns').insert([{
-    id: pendingManualCampaign.id,
-    name: pendingManualCampaign.name,
-    category: pendingManualCampaign.category,
-    currency: pendingManualCampaign.currency,
-    native_token_name: pendingManualCampaign.nativeTokenName,
-    image: pendingManualCampaign.image,
-    budget: pendingManualCampaign.budget,
-    duration: pendingManualCampaign.duration,
-    max_participants: pendingManualCampaign.maxParticipants,
-    top_rewarded: pendingManualCampaign.topRewarded,
-    target_links: pendingManualCampaign.targetLinks,
-    brief: pendingManualCampaign.brief,
-    requirements: pendingManualCampaign.requirements,
-    status: "PENDING",
-    payer_wallet: pendingManualCampaign.payerWallet,
-    sol_paid: pendingManualCampaign.solPaid,
-    yappers: []
-  }]);
+  try {
+    const client = requireBackend();
+    const campaignPayload = {
+      name: pendingManualCampaign.name,
+      category: pendingManualCampaign.category,
+      currency: pendingManualCampaign.currency,
+      native_token_name: pendingManualCampaign.nativeTokenName,
+      image: pendingManualCampaign.image,
+      budget: pendingManualCampaign.budget,
+      duration: pendingManualCampaign.duration,
+      max_participants: pendingManualCampaign.maxParticipants,
+      top_rewarded: pendingManualCampaign.topRewarded,
+      target_links: pendingManualCampaign.targetLinks,
+      brief: pendingManualCampaign.brief,
+      requirements: pendingManualCampaign.requirements,
+      status: "PENDING",
+      payer_wallet: pendingManualCampaign.payerWallet,
+      sol_paid: pendingManualCampaign.solPaid,
+      yappers: []
+    };
 
-  if (error) {
-    alert("Error submitting campaign to cloud database: " + error.message);
-    return;
+    const { error } = await client.from('campaigns').insert([campaignPayload]);
+    if (error) {
+      alert("Error submitting campaign to cloud database: " + error.message);
+      return;
+    }
+
+    db.paymentsLedger = db.paymentsLedger || [];
+    db.paymentsLedger.unshift({
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      campaignName: pendingManualCampaign.name,
+      budget: pendingManualCampaign.budget,
+      solAmount: pendingManualCampaign.solPaid,
+      txSignature: "MANUAL_TX_" + Math.random().toString(36).substring(2, 10).toUpperCase(),
+      payer: pendingManualCampaign.payerWallet
+    });
+    save();
+
+    document.getElementById("campaignForm").reset();
+    uploadedCampaignImageBase64 = "";
+    document.getElementById("imgPreview").style.display = "none";
+    document.getElementById("imgPreviewPlaceholder").style.display = "block";
+    document.getElementById("nativeTokenBox").style.display = "none";
+    document.getElementById("linksContainer").innerHTML = `
+      <div class="dynamic-link-row">
+        <input type="url" class="cLinkInput" placeholder="https://x.com/Project/status/..." required>
+      </div>
+    `;
+    syncBudgetRules();
+    pendingManualCampaign = null;
+
+    await loadGlobalCampaigns();
+    alert("🎉 Campaign Submitted Successfully! Your request has been forwarded to the admin queue for verification.");
+    show("campaigns");
+  } catch (err) {
+    console.error("Campaign submission error:", err);
+    if (err?.message) alert("Campaign submission stopped: " + err.message);
   }
-
-  db.paymentsLedger = db.paymentsLedger || [];
-  db.paymentsLedger.unshift({
-    timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-    campaignName: pendingManualCampaign.name,
-    budget: pendingManualCampaign.budget,
-    solAmount: pendingManualCampaign.solPaid,
-    txSignature: "MANUAL_TX_" + Math.random().toString(36).substring(2, 10).toUpperCase(),
-    payer: pendingManualCampaign.payerWallet
-  });
-
-  db.pendingRequests = db.pendingRequests || [];
-  db.pendingRequests.unshift(pendingManualCampaign);
-  save();
-
-  document.getElementById("campaignForm").reset();
-  uploadedCampaignImageBase64 = "";
-  document.getElementById("imgPreview").style.display = "none";
-  document.getElementById("imgPreviewPlaceholder").style.display = "block";
-  document.getElementById("nativeTokenBox").style.display = "none";
-  document.getElementById("linksContainer").innerHTML = `
-    <div class="dynamic-link-row">
-      <input type="url" class="cLinkInput" placeholder="https://x.com/Project/status/..." required>
-    </div>
-  `;
-  syncBudgetRules();
-  pendingManualCampaign = null;
-
-  await loadGlobalCampaigns();
-  alert("🎉 Campaign Submitted Successfully! Your request has been forwarded to the admin queue for verification.");
-  show("campaigns");
 }
 
 function clearPaymentRecords() {
@@ -1696,6 +1715,10 @@ function exportCardImage(){
 const ADMIN_EMAIL = "admin@livedproof.xyz";
 
 async function restoreAdminSession(){
+  if (!BACKEND_CONFIGURED) {
+    isAdminLoggedIn = false;
+    return;
+  }
   const { data } = await supabaseClient.auth.getSession();
   isAdminLoggedIn = !!(data && data.session && data.session.user && data.session.user.email === ADMIN_EMAIL);
 }
@@ -1703,6 +1726,7 @@ async function restoreAdminSession(){
 async function adminLogin(){
   const inputPass = document.getElementById("adminKey").value;
   if(!inputPass) return;
+  if(!BACKEND_CONFIGURED){ alert("Configure the new Supabase backend first."); return; }
   const { error } = await supabaseClient.auth.signInWithPassword({ email: ADMIN_EMAIL, password: inputPass });
   document.getElementById("adminKey").value = "";
   if(error){
@@ -1799,7 +1823,7 @@ function renderAdminQueue(){
           </div>
           <div class="actions" style="margin-top:10px">
             <button class="btn success" onclick="acceptCampaignRequest(${item.id})">✓ Approve & Publish</button>
-            <button class="btn danger" onclick="rejectCampaignRequest(${item.id})">✕ Reject / Delete</button>
+            <button class="btn danger" onclick="rejectCampaignRequest(${item.id})">✕ Reject</button>
           </div>
         </div>
       </div>
@@ -1838,88 +1862,145 @@ function renderAdminQueue(){
         </div>
         <div class="actions">
           <button class="btn sm primary" onclick="openEditModal(${item.id})">Edit</button>
-          <button class="btn sm danger" onclick="deleteActiveCampaign(${item.id})">Delete</button>
+          <button class="btn sm danger" onclick="deleteActiveCampaign(${item.id})">Archive</button>
         </div>
       </div>
     `).join("");
   }
 }
 
-async function acceptCampaignRequest(id){
-  const { data, error } = await supabaseClient.from('campaigns').update({ status: 'ACTIVE' }).eq('id', id).select();
-  if(error || !data || !data.length){
-    alert("Approval failed - the database rejected the update. " + (error ? error.message : "Check admin sign-in and RLS policies."));
-    return;
+async function writeAdminAudit(campaignId, action, beforeStatus, afterStatus, notes="") {
+  try {
+    const client = requireBackend();
+    const { error } = await client.from('admin_actions').insert([{
+      campaign_id: campaignId,
+      action,
+      before_status: beforeStatus,
+      after_status: afterStatus,
+      notes
+    }]);
+    if (error) console.warn("Audit log write failed:", error.message);
+  } catch (err) {
+    console.warn("Audit log write skipped:", err.message);
   }
-  await loadGlobalCampaigns();
-  renderAdminQueue();
-  renderHome();
+}
+
+async function acceptCampaignRequest(id){
+  try {
+    const client = requireBackend();
+    const { data: before } = await client.from('campaigns').select('status').eq('id', id).maybeSingle();
+    const { data: userData } = await client.auth.getUser();
+    const { data, error } = await client
+      .from('campaigns')
+      .update({ status: 'ACTIVE', approved_at: new Date().toISOString(), approved_by: userData?.user?.id || null })
+      .eq('id', id)
+      .select('id,status')
+      .maybeSingle();
+
+    if(error || !data){
+      alert("Approval failed - " + (error ? error.message : "No campaign was updated."));
+      return;
+    }
+
+    await writeAdminAudit(id, 'APPROVE', before?.status || 'PENDING', 'ACTIVE', 'Campaign approved and published');
+    await loadGlobalCampaigns();
+    renderAdminQueue();
+    renderHome();
+    alert("Campaign approved and published.");
+  } catch (err) {
+    console.error("Approval error:", err);
+    alert("Approval failed: " + err.message);
+  }
 }
 
 async function rejectCampaignRequest(id){
-  const { data, error } = await supabaseClient.from('campaigns').delete().eq('id', id).select();
-  if(error || !data || !data.length){
-    alert("Delete failed - the database rejected it. " + (error ? error.message : "Check admin sign-in and RLS policies."));
-    return;
+  try {
+    const client = requireBackend();
+    const { data: before } = await client.from('campaigns').select('status').eq('id', id).maybeSingle();
+    const { data: userData } = await client.auth.getUser();
+    const { data, error } = await client
+      .from('campaigns')
+      .update({ status: 'REJECTED', rejected_at: new Date().toISOString(), rejected_by: userData?.user?.id || null })
+      .eq('id', id)
+      .select('id,status')
+      .maybeSingle();
+
+    if(error || !data){
+      alert("Rejection failed - " + (error ? error.message : "No campaign was updated."));
+      return;
+    }
+
+    await writeAdminAudit(id, 'REJECT', before?.status || 'PENDING', 'REJECTED', 'Campaign rejected; record retained for audit');
+    await loadGlobalCampaigns();
+    renderAdminQueue();
+    alert("Campaign rejected. The record was retained instead of being deleted.");
+  } catch (err) {
+    console.error("Rejection error:", err);
+    alert("Rejection failed: " + err.message);
   }
-  await loadGlobalCampaigns();
-  renderAdminQueue();
 }
 
 async function deleteActiveCampaign(id){
-  if(!confirm("Are you sure you want to delete this active campaign?")) return;
-  const { data, error } = await supabaseClient.from('campaigns').delete().eq('id', id).select();
-  if(error || !data || !data.length){
-    alert("Delete failed - the database rejected it. " + (error ? error.message : "Check admin sign-in and RLS policies."));
-    return;
+  if(!confirm("Archive this campaign? It will disappear from the public directory but remain in the database.")) return;
+  try {
+    const client = requireBackend();
+    const { data: before } = await client.from('campaigns').select('status').eq('id', id).maybeSingle();
+    const { data: userData } = await client.auth.getUser();
+    const { data, error } = await client
+      .from('campaigns')
+      .update({ status: 'ARCHIVED', archived_at: new Date().toISOString(), archived_by: userData?.user?.id || null })
+      .eq('id', id)
+      .select('id,status')
+      .maybeSingle();
+
+    if(error || !data){
+      alert("Archive failed - " + (error ? error.message : "No campaign was updated."));
+      return;
+    }
+
+    await writeAdminAudit(id, 'ARCHIVE', before?.status || 'ACTIVE', 'ARCHIVED', 'Campaign archived instead of hard-deleted');
+    await loadGlobalCampaigns();
+    renderAdminQueue();
+    renderHome();
+    alert("Campaign archived.");
+  } catch (err) {
+    console.error("Archive error:", err);
+    alert("Archive failed: " + err.message);
   }
-  await loadGlobalCampaigns();
-  renderAdminQueue();
-  renderHome();
 }
 
 async function checkAndRunAudits(campaignsList) {
-  const now = new Date().getTime();
+  const client = requireBackend();
+  const now = Date.now();
   for (const c of campaignsList) {
-    if (c.status === 'ACTIVE') {
-      const createdTime = new Date(c.created_at || Date.now()).getTime();
-      const durationDays = parseInt(c.duration) || 7;
-      const expiryTime = createdTime + (durationDays * 24 * 60 * 60 * 1000);
-      
-      if (now >= expiryTime) {
-        const { error } = await supabaseClient.rpc('distribute_campaign_payouts', { p_campaign_id: c.id });
-        if (error) {
-          console.error(`Failed to auto-audit campaign ${c.id}:`, error.message);
-        } else {
-          console.log(`Campaign ${c.id} successfully audited and payout distributed.`);
-        }
-      }
+    if (c.status !== 'ACTIVE') continue;
+    const createdTime = new Date(c.created_at || Date.now()).getTime();
+    const durationDays = parseInt(c.duration) || 7;
+    const expiryTime = createdTime + (durationDays * 24 * 60 * 60 * 1000);
+    if (now >= expiryTime) {
+      const { error } = await client.rpc('distribute_campaign_payouts', { p_campaign_id: c.id });
+      if (error) console.warn(`Campaign ${c.id} could not be auto-closed:`, error.message);
     }
   }
 }
 
 async function loadGlobalCampaigns() {
-  const { data, error } = await supabaseClient
-    .from('campaigns')
-    .select('*')
-    .order('created_at', { ascending: false });
-    
-  if (error) {
-    console.error("Supabase load error:", error.message);
-    return;
-  }
-
-  if (data) {
-    await checkAndRunAudits(data);
-
-    const { data: refreshedData } = await supabaseClient
+  try {
+    const client = requireBackend();
+    const { data, error } = await client
       .from('campaigns')
       .select('*')
       .order('created_at', { ascending: false });
 
-    const sourceData = refreshedData || data;
+    if (error) {
+      console.error("Supabase load error:", error.message);
+      return;
+    }
 
-    db.campaigns = sourceData.filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED').map(c => ({
+    const sourceData = data || [];
+    if (isAdminLoggedIn) await checkAndRunAudits(sourceData);
+
+    const normalize = (c) => ({
       id: Number(c.id),
       name: c.name,
       category: c.category,
@@ -1930,39 +2011,29 @@ async function loadGlobalCampaigns() {
       duration: c.duration,
       maxParticipants: c.max_participants,
       topRewarded: c.top_rewarded,
-      targetLinks: c.target_links,
-      brief: c.brief,
-      requirements: c.requirements,
+      targetLinks: c.target_links || [],
+      brief: c.brief || "",
+      requirements: c.requirements || "Open contribution",
       status: c.status,
       payerWallet: c.payer_wallet,
-      solPaid: c.sol_paid,
-      yappers: c.yappers || [],
-      joined: (c.yappers || []).some(y => y[0] === db.currentUser.handle)
-    }));
+      solPaid: Number(c.sol_paid || 0),
+      yappers: Array.isArray(c.yappers) ? c.yappers : [],
+      joined: Array.isArray(c.yappers) && c.yappers.some(y => y && y[0] === db.currentUser.handle)
+    });
 
-    db.pendingRequests = sourceData.filter(c => c.status === 'PENDING').map(c => ({
-      id: Number(c.id),
-      name: c.name,
-      category: c.category,
-      currency: c.currency || "SOL",
-      nativeTokenName: c.native_token_name || null,
-      image: c.image,
-      budget: Number(c.budget),
-      duration: c.duration,
-      maxParticipants: c.max_participants,
-      topRewarded: c.top_rewarded,
-      targetLinks: c.target_links,
-      brief: c.brief,
-      requirements: c.requirements,
-      status: c.status,
-      payerWallet: c.payer_wallet,
-      solPaid: c.sol_paid,
-      yappers: c.yappers || []
-    }));
+    db.campaigns = sourceData
+      .filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED')
+      .map(normalize);
+
+    db.pendingRequests = sourceData
+      .filter(c => c.status === 'PENDING')
+      .map(normalize);
 
     renderCampaigns();
     renderHome();
     if (isAdminLoggedIn) renderAdminQueue();
+  } catch (err) {
+    console.error("loadGlobalCampaigns failed:", err);
   }
 }
 
@@ -1975,13 +2046,18 @@ document.addEventListener("keydown", e => {
 
 async function initApp() {
   const safe = async (fn) => { try { await fn(); } catch(e){ console.error(fn.name, e); } };
+  const status = document.getElementById("backendStatus");
+  if (status) {
+    status.textContent = BACKEND_CONFIGURED ? "● New Supabase backend configured" : "● New Supabase backend not configured";
+    status.style.color = BACKEND_CONFIGURED ? "var(--good)" : "var(--warn)";
+  }
   await safe(restoreAdminSession);
   await safe(checkXOAuthReturn);
-  await safe(loadGlobalCampaigns);
+  if (BACKEND_CONFIGURED) await safe(loadGlobalCampaigns);
   await safe(syncBudgetRules);
   await safe(renderHome);
   await safe(renderLivedCard);
-  safe(fetchLiveSolPrice);
+  if (BACKEND_CONFIGURED) safe(fetchLiveSolPrice);
 }
 
 initApp();
