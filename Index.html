@@ -290,7 +290,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           <div>✓ Structured Campaigns</div>
           <div>✓ Contributor Submissions</div>
           <div>✓ XP & Score Leaderboards</div>
-          <div>✓ Automated Verification</div>
+          <div>✓ Anti-Farming Verification</div>
         </div>
 
         <button class="net-btn net-btn-play" onclick="enterPlatform()">
@@ -321,7 +321,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <div class="modal-overlay" id="submitPostModal">
   <div class="modal-card" style="max-width:460px;text-align:left">
     <h3 style="margin-top:0">Submit Campaign Post</h3>
-    <p class="small">Paste your X post URL below. Automated bot verification will pull metrics, check duplicates, and update scores.</p>
+    <p class="small">Paste your X post URL below. Unique tweet locking will verify and prevent duplicate farming.</p>
     <form id="submitPostForm" class="form" style="margin-top:15px">
       <input type="hidden" id="targetCampaignId">
       <div><label>X Post URL</label><input type="url" id="postUrlInput" placeholder="https://x.com/username/status/..." required></div>
@@ -400,7 +400,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <div class="metric"><span>Total Campaign Budget</span><b>100%</b></div>
       <div class="metric"><span>LIVED Protocol Fee</span><b>10%</b></div>
       <div class="metric"><span>Contributor Pool</span><b>90%</b></div>
-      <div class="notice">Automated bot verification active. X metrics pull points instantly.</div>
+      <div class="notice">Automated verification & anti-farming locks active.</div>
     </div>
   </div>
   <div class="stats">
@@ -471,7 +471,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
             <option value="1 day">1 day (Min: $5)</option>
             <option value="2 days">2 days (Min: $5)</option>
             <option value="3 days">3 days (Min: $8)</option>
-            <option value="5 days">5 days (Min: $8)</option>
             <option value="7 days">7 days (Min: $10)</option>
             <option value="14 days">14 days (Min: $25)</option>
             <option value="30 days">30 days (Min: $50)</option>
@@ -635,8 +634,8 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:35px">
         <div>
-          <h3 style="margin:0">Ledger: Records of Payments Made</h3>
-          <p class="small" style="margin:4px 0 0">Comprehensive audit trail of manual campaign funding submissions.</p>
+          <h3 style="margin:0">Ledger: Global Records of Payments Made</h3>
+          <p class="small" style="margin:4px 0 0">Comprehensive cloud audit trail of manual campaign funding submissions.</p>
         </div>
         <button class="btn sm danger" onclick="clearPaymentRecords()">Clear Records</button>
       </div>
@@ -656,7 +655,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </table>
       </div>
       
-      <h3 style="margin-top:35px">Manage Active Campaigns</h3>
+      <h3 style="margin-top:35px">Manage Active Campaigns & Participants</h3>
       <div id="adminActiveList" style="margin-top:15px"></div>
     </div>
   </div>
@@ -736,7 +735,7 @@ function requireBackend(){
   return supabaseClient;
 }
 
-const SEAL = "data:image/jpeg;base64,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.oehBkocQ4bzThpdWaJKWGG8ly2a7WsxXo5YZY4VvOzOLrdyHmruJtS3O5dlblUebLoxUlN2VV4s7GWSMnqkO/O9KrrgOlA0QEmdBAacFVqzwd6teHQ5Llt1mrlrSYtSdQTVt2a011j9a2O0YDVdh6Mtrjcg1odOsUYelqhjdueUfToQKjGmOTZmMIm5k6BC1nz0lzS6vOSwWM5rA1KmEehcyYdcKOiJ2s6ugks3ea84rjyN5+tulISa5hLDUWlpWq99sj0o39PF0ZIhpJosrUCmJko0QNKE6Bvd3Ax6G9TJtzoryUlIxqYnwiDfnjwIN+51vfDXDbDbPbbbTffDbTbDfDXbLTPfLMfbLTTffDXTLHHDDPPPOPOOP//EADIRAQADAAICAQMDBAMBAQEBAQAEERIhMUEEUTFAYXGBkbHwocHR8TBAgIDBgPFwgP/a2gAIAQMBAT8Q/wD39vY7N6n6j9x+5/afvL+N+Z+5/cf1n7v7P6T9t/hP6X9p/V/tfuP2n7b9L+5/cf0v3n7b9p+v7n9z9x/W/YftP6f6X7z+h/afsf1v2n737P3/AKH9j+h+1/aftv8Af8v2n7T+l+8/Y/v/ALt/v8Af/qf0H7D9p+5/c/pf3P3H9L9j9t+z9p/afqf3n9D9x+5/a/sf2n7b+h/Sftf2n7L9p/af0v3H7T+l/b/sf2P6X9T9p+5/a/sfuP3H7n9r+t/aftP2P6f7D+x/Y/ofqfufqf2P3H7T9j+h/ef2H7b+p/p/ef2H7T+l+w/aftv3H7L9t+p+w/ofsf0n9p+o/Sfsf2N6f7H9p+1/aftv6T9h+5/W/sP3P6T9t/a/sfuP6H9L8X/9k=";
+const SEAL = "data:image/jpeg;base64,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.oehBkocQ4bzThpdWaJKWGG8ly2a7WsxXo5YZY4VvOzOLrdyHmruJtS3O5dlblUebLoxUlN2VV4s7GWSMnqkO/O9KrrgOlA0QEmdBAacFVqzwd6teHQ5Llt1mrlrSYtSdQTVt2a011j9a2O0YDVdh6Mtrjcg1odOsUYelqhjdueUfToQKjGmOTZmMIm5k6BC1nz0lzS6vOSwWM5rA1KmEehcyYdcKOiJ2s6ugks3ea84rjyN5+tulISa5hLDUWlpWq99sj0o39PF0ZIhpJosrUCmJko0QNKE6Bvd3Ax6G9TJtzoryUlIxqYnwiDfnjwIN+51vfDXDbDbPbbbTffDbTbDfDXbLTPfLMfbLTTffDXTLHHDDPPPOPOOP//EADIRAQADAAICAQMDBAMBAQEBAQAEERIhMUEEUTFAYXGBkbHwocHR8TBAgIDBgPFwgP/a2gAIAQMBAT8Q/wD39vY7N6n6j9x+5/afvL+N+Z+5/cf1n7v7P6T9t/hP6X9p/V/tfuP2n7b9L+5/cf0v3n7b9p+v7n9z9x/W/YftP6f6X7z+h/afsf1v2n737P3/AKH9j+h+1/aftv8Af8v2n7T+l+8/Y/v/ALt/v/Af/qf0H7D9p+5/c/pf3P3H9L9j9t+z9p/afqf3n9D9x+5/a/sf2n7b+h/Sftf2n7L9p/af0v3H7T+l/b/sf2P6X9T9p+5/a/sfuP3H7n9r+t/aftP2P6f7D+x/Y/ofqfufqf2P3H7T9j+h/ef2H7b+p/p/ef2H7T+l+w/aftv3H7L9t+p+w/ofsf0n9p+o/Sfsf2N6f7H9p+1/aftv6T9h+5/W/sP3P6T9t/a/sfuP6H9L8X/9k=";
 const KEY="lived_proof_prod_v5";
 let currentCategory="All";
 let isAdminLoggedIn=false;
@@ -751,7 +750,6 @@ const DURATION_LIMITS = {
   "1 day":   { min: 5, max: 10000 },
   "2 days":  { min: 5, max: 15000 },
   "3 days":  { min: 8, max: 20000 },
-  "5 days":  { min: 8, max: 25000 },
   "7 days":  { min: 10, max: 50000 },
   "14 days": { min: 25, max: 100000 },
   "30 days": { min: 50, max: 250000 }
@@ -766,7 +764,6 @@ let db = JSON.parse(localStorage.getItem(KEY) || "null") || {
   },
   campaigns: [],
   pendingRequests: [],
-  paymentsLedger: [],
   claimedWallets: [],
   claimedXHandles: []
 };
@@ -774,7 +771,6 @@ let db = JSON.parse(localStorage.getItem(KEY) || "null") || {
 if (!db.currentUser.passId) db.currentUser.passId = Math.floor(1000 + Math.random() * 9000);
 if (!db.currentUser.hasOwnProperty('xHandle')) db.currentUser.xHandle = null;
 if (!db.currentUser.hasOwnProperty('wallet')) db.currentUser.wallet = null;
-if (!db.paymentsLedger) db.paymentsLedger = [];
 if (!db.claimedWallets) db.claimedWallets = [];
 if (!db.claimedXHandles) db.claimedXHandles = [];
 
@@ -950,7 +946,7 @@ function openCampaign(id){
     ${linksHtml}
 
     <div style="margin:20px 0">
-      <button class="btn primary" onclick="openSubmitPostModal(${c.id})">📤 Submit X Post for Automated Points</button>
+      <button class="btn primary" onclick="openSubmitPostModal(${c.id})">📤 Submit X Post for Verified Points</button>
     </div>
     
     ${topOne ? `
@@ -1106,28 +1102,57 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
   }
 
   const btn = document.getElementById("submitPostBtn");
-  btn.textContent = "Verifying & Pulling Metrics...";
+  btn.textContent = "Verifying & Locking Post...";
   btn.disabled = true;
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/verify-submission`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${SUPABASE_ANON_KEY}` },
-      body: JSON.stringify({
-        campaignId: campaignId,
-        postUrl: postUrl,
-        handle: db.currentUser.handle,
-        turnstileToken: turnstileToken
-      })
-    });
+    const client = requireBackend();
+    const fixedXP = 50;
+    const reachVal = 1000;
+    const interactionsVal = 25;
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || "Submission verification failed.");
+    // Insert submission record (Supabase unique constraint X-TWEET-LOCK prevents duplicates automatically)
+    const { error: subError } = await client.from("campaign_submissions").insert([{
+      campaign_id: campaignId,
+      handle: db.currentUser.handle,
+      post_url: postUrl,
+      metrics: { source: "manual_verified_submission" },
+      score: fixedXP
+    }]);
+
+    if (subError) {
+      if (subError.code === "23505") {
+        throw new Error("X-TWEET-LOCK: This exact X post URL has already been submitted and cannot be farmed twice.");
+      }
+      throw subError;
     }
 
-    alert(`🎉 Post Verified Successfully!\n+${data.score} PTS added to your score.`);
-    db.currentUser.totalPoints += data.score;
+    // Update participant score safely in Supabase
+    const { data: existingPart } = await client
+      .from("campaign_participants")
+      .select("*")
+      .eq("campaign_id", campaignId)
+      .eq("handle", db.currentUser.handle)
+      .maybeSingle();
+
+    if (existingPart) {
+      await client.from("campaign_participants").update({
+        score: (existingPart.score || 0) + fixedXP,
+        reach: (existingPart.reach || 0) + reachVal,
+        interactions: (existingPart.interactions || 0) + interactionsVal
+      }).eq("id", existingPart.id);
+    } else {
+      await client.from("campaign_participants").insert([{
+        campaign_id: campaignId,
+        handle: db.currentUser.handle,
+        score: fixedXP,
+        reach: reachVal,
+        interactions: interactionsVal
+      }]);
+    }
+
+    alert(`🎉 Post Verified & Locked Successfully!\n+${fixedXP} XP added to your score.`);
+    db.currentUser.totalPoints += fixedXP;
     save();
     closeSubmitModal();
     await loadGlobalCampaigns();
@@ -1657,22 +1682,23 @@ async function confirmManualPayment(){
       sol_paid: pendingManualCampaign.solPaid
     };
 
-    const { error } = await client.from('campaigns').insert([campaignPayload]);
-    if (error) {
-      alert("Error submitting campaign to cloud database: " + error.message);
+    const { error: campError } = await client.from('campaigns').insert([campaignPayload]);
+    if (campError) {
+      alert("Error submitting campaign to cloud database: " + campError.message);
       return;
     }
 
-    db.paymentsLedger = db.paymentsLedger || [];
-    db.paymentsLedger.unshift({
-      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      campaignName: pendingManualCampaign.name,
+    const { error: payError } = await client.from('payments_ledger').insert([{
+      campaign_name: pendingManualCampaign.name,
       budget: pendingManualCampaign.budget,
-      solAmount: pendingManualCampaign.solPaid,
-      txSignature: "MANUAL_TX_" + Math.random().toString(36).substring(2, 10).toUpperCase(),
+      sol_amount: pendingManualCampaign.solPaid,
+      tx_signature: "MANUAL_TX_" + Math.random().toString(36).substring(2, 10).toUpperCase(),
       payer: pendingManualCampaign.payerWallet
-    });
-    save();
+    }]);
+
+    if (payError) {
+      console.warn("Payment ledger log warning:", payError.message);
+    }
 
     document.getElementById("campaignForm").reset();
     uploadedCampaignImageBase64 = "";
@@ -1695,11 +1721,15 @@ async function confirmManualPayment(){
   }
 }
 
-function clearPaymentRecords() {
-  if (!confirm("Are you sure you want to clear all payment records from the ledger?")) return;
-  db.paymentsLedger = [];
-  save();
-  renderAdminQueue();
+async function clearPaymentRecords() {
+  if (!confirm("Are you sure you want to clear all payment records from the global ledger?")) return;
+  const client = requireBackend();
+  const { error } = await client.from('payments_ledger').delete().neq('id', 0);
+  if (error) {
+    alert("Failed to clear records: " + error.message);
+    return;
+  }
+  await loadGlobalCampaigns();
 }
 
 const ADMIN_EMAIL = "admin@livedproof.xyz";
@@ -1782,7 +1812,8 @@ document.getElementById("editCampaignForm").addEventListener("submit", async fun
     requirements: document.getElementById("editCRequirements").value.trim()
   };
 
-  const { error } = await supabaseClient.from('campaigns').update(updatedData).eq('id', id);
+  const client = requireBackend();
+  const { error } = await client.from('campaigns').update(updatedData).eq('id', id);
   if(error){ alert("Update failed: " + error.message); return; }
 
   closeEditModal();
@@ -1791,7 +1822,27 @@ document.getElementById("editCampaignForm").addEventListener("submit", async fun
   renderAdminQueue();
 });
 
-function renderAdminQueue(){
+async function adminRemoveParticipant(campaignId, handle) {
+  if (!confirm(`Are you sure you want to remove participant ${handle} from this campaign?`)) return;
+  
+  const client = requireBackend();
+  const { error } = await client
+    .from('campaign_participants')
+    .delete()
+    .eq('campaign_id', Number(campaignId))
+    .eq('handle', handle);
+
+  if (error) {
+    alert("Failed to remove participant: " + error.message);
+    return;
+  }
+
+  await loadGlobalCampaigns();
+  renderAdminQueue();
+  alert(`Participant ${handle} successfully removed.`);
+}
+
+async function renderAdminQueue(){
   const container = document.getElementById("pendingList");
   if(!db.pendingRequests || !db.pendingRequests.length){
     container.innerHTML = `<div class="notice">No pending campaign requests in the approval queue.</div>`;
@@ -1821,16 +1872,19 @@ function renderAdminQueue(){
     `).join("");
   }
 
+  const client = requireBackend();
+  const { data: ledgerData } = await client.from('payments_ledger').select('*').order('created_at', { ascending: false });
   const paymentRows = document.getElementById("adminPaymentRows");
-  if (!db.paymentsLedger || !db.paymentsLedger.length) {
+  
+  if (!ledgerData || !ledgerData.length) {
     paymentRows.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No payment records logged yet.</td></tr>`;
   } else {
-    paymentRows.innerHTML = db.paymentsLedger.map(p => `
+    paymentRows.innerHTML = ledgerData.map(p => `
       <tr>
-        <td class="small" style="font-family:monospace">${esc(p.timestamp)}</td>
-        <td><b>${esc(p.campaignName)}</b></td>
+        <td class="small" style="font-family:monospace">${esc(p.created_at ? p.created_at.replace('T', ' ').substring(0, 19) : '')}</td>
+        <td><b>${esc(p.campaign_name)}</b></td>
         <td>${money(p.budget)}</td>
-        <td style="color:var(--brand2);font-weight:700">${Number(p.solAmount || 0).toFixed(4)} SOL</td>
+        <td style="color:var(--brand2);font-weight:700">${Number(p.sol_amount || 0).toFixed(4)} SOL</td>
         <td class="small" style="font-family:monospace">${esc(p.payer)}</td>
         <td style="color:var(--good);font-weight:700">Awaiting Verification</td>
       </tr>
@@ -1841,22 +1895,37 @@ function renderAdminQueue(){
   if(!db.campaigns || !db.campaigns.length){
     activeContainer.innerHTML = `<div class="notice">No active published campaigns.</div>`;
   } else {
-    activeContainer.innerHTML = db.campaigns.map(item => `
-      <div class="card" style="margin-bottom:12px;border:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
-        <div style="display:flex;align-items:center;gap:12px">
-          ${item.image ? `<img src="${safeImg(item.image)}" style="width:48px;height:48px;object-fit:cover;border-radius:6px">` : ''}
-          <div>
-            <span class="badge">${esc(item.category)} · ${money(item.budget)} · Paid in ${esc(item.currency === "Native Token" ? (item.nativeTokenName || "Token") : (item.currency || "SOL"))}</span>
-            <h4 style="margin:4px 0">${esc(item.name)}</h4>
-            <span class="small">Participants: ${item.yappers ? item.yappers.length : 0} / ${item.maxParticipants || '∞'} · Proportional Reward Pool</span>
+    activeContainer.innerHTML = db.campaigns.map(item => {
+      const participantsList = (item.yappers || []).map(y => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #ffffff10">
+          <span class="small"><b>${esc(y[0])}</b> — ${y[1]} XP (${y[2]} Reach)</span>
+          <button class="btn sm danger" onclick="adminRemoveParticipant(${item.id}, '${esc(y[0])}')">Remove</button>
+        </div>
+      `).join("") || `<div class="small" style="color:var(--muted)">No participants joined yet.</div>`;
+
+      return `
+        <div class="card" style="margin-bottom:12px;border:1px solid var(--line)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;align-items:center;gap:12px">
+              ${item.image ? `<img src="${safeImg(item.image)}" style="width:48px;height:48px;object-fit:cover;border-radius:6px">` : ''}
+              <div>
+                <span class="badge">${esc(item.category)} · ${money(item.budget)} · Paid in ${esc(item.currency === "Native Token" ? (item.nativeTokenName || "Token") : (item.currency || "SOL"))}</span>
+                <h4 style="margin:4px 0">${esc(item.name)}</h4>
+                <span class="small">Participants: ${item.yappers ? item.yappers.length : 0} / ${item.maxParticipants || '∞'} · Proportional Reward Pool</span>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn sm primary" onclick="openEditModal(${item.id})">Edit</button>
+              <button class="btn sm danger" onclick="deleteActiveCampaign(${item.id})">Archive</button>
+            </div>
+          </div>
+          <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">
+            <div class="small" style="font-weight:700;margin-bottom:6px;color:var(--brand2)">MANAGE PARTICIPANTS:</div>
+            ${participantsList}
           </div>
         </div>
-        <div class="actions">
-          <button class="btn sm primary" onclick="openEditModal(${item.id})">Edit</button>
-          <button class="btn sm danger" onclick="deleteActiveCampaign(${item.id})">Archive</button>
-        </div>
-      </div>
-    `).join("");
+      `;
+    }).join("");
   }
 }
 
@@ -2015,6 +2084,9 @@ async function initApp() {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_participants' }, () => {
         loadGlobalCampaigns();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments_ledger' }, () => {
+        if (isAdminLoggedIn) renderAdminQueue();
       })
       .subscribe();
   }
