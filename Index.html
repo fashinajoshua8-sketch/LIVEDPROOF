@@ -468,6 +468,10 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         <div>
           <label>Duration</label>
           <select id="cDuration">
+            <option value="1 day">1 day (Min: $5)</option>
+            <option value="2 days">2 days (Min: $5)</option>
+            <option value="3 days">3 days (Min: $8)</option>
+            <option value="5 days">5 days (Min: $8)</option>
             <option value="7 days">7 days (Min: $10)</option>
             <option value="14 days">14 days (Min: $25)</option>
             <option value="30 days">30 days (Min: $50)</option>
@@ -744,6 +748,10 @@ const TREASURY_WALLET = "BV6Eu6JbEJ6iQi6zn72fxuXjkGevEjPRByDiftLUasBa";
 let dynamicSolPrice = 150;
 
 const DURATION_LIMITS = {
+  "1 day":   { min: 5, max: 10000 },
+  "2 days":  { min: 5, max: 15000 },
+  "3 days":  { min: 8, max: 20000 },
+  "5 days":  { min: 8, max: 25000 },
   "7 days":  { min: 10, max: 50000 },
   "14 days": { min: 25, max: 100000 },
   "30 days": { min: 50, max: 250000 }
