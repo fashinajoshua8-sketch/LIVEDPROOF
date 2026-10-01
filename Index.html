@@ -40,7 +40,6 @@ button{cursor:pointer}
 a{color:inherit;text-decoration:none}
 .shell{max-width:1180px;margin:auto;padding:0 22px}
 
-/* Responsive Header Layout & Bold Branding */
 nav{position:sticky;top:0;z-index:20;background:#050505ee;border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
 .navin{min-height:72px;display:flex;align-items:center;justify-content:space-between;padding:10px 0;gap:12px;flex-wrap:wrap}
 .logo{font-weight:900;letter-spacing:3px;font-size:26px;text-transform:uppercase;text-shadow:0 0 15px rgba(255,106,0,0.4)}
@@ -105,15 +104,12 @@ input:focus,textarea:focus,select:focus{border-color:#ff6a0066}
 .filter-tabs button{background:rgba(20,20,20,0.7);border:1px solid var(--line);color:var(--muted);padding:8px 14px;border-radius:20px;font-size:13px;font-weight:700}
 .filter-tabs button.active,.filter-tabs button:hover{color:var(--fg);border-color:var(--brand);background:#ff6a0015}
 
-/* Dynamic Links input container */
 .dynamic-link-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
 .dynamic-link-row input{flex:1}
 
-/* Image preview container */
 .img-preview-box{width:100%;height:140px;border:1px dashed var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#080808;margin-top:6px}
 .img-preview-box img{width:100%;height:100%;object-fit:cover;display:none}
 
-/* LIVED Card Visual Styling */
 .lived-card-container{
   background:
     radial-gradient(circle at 50% 50%, rgba(20,16,12,0.86), rgba(8,8,9,0.95)),
@@ -142,12 +138,11 @@ input:focus,textarea:focus,select:focus{border-color:#ff6a0066}
 .level-bar{height:6px;background:#ffffff15;border-radius:99px;overflow:hidden;margin:10px 0 6px}
 .level-bar-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--gold));width:10%;transition:width .3s}
 
-/* Netflix Modal & Welcome Gate Overlay Styles */
 .netflix-modal-overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.88);
-  backdrop-filter:blur(8px);
+  background:rgba(5,5,5,0.92);
+  backdrop-filter:blur(10px);
   z-index:99999;
   display:flex;
   align-items:center;
@@ -159,16 +154,16 @@ input:focus,textarea:focus,select:focus{border-color:#ff6a0066}
   position:relative;
   width:100%;
   max-width:750px;
-  background: var(--void);
+  background:var(--void);
   border-radius:14px;
   overflow:hidden;
-  box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.9);
+  box-shadow:0 25px 50px -12px rgba(0,0,0,0.9);
   border:1px solid var(--line);
   animation:netScaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .netflix-hero-banner{
   position:relative;
-  background:linear-gradient(135deg, #1f1f1f 0%, #0b0b0b 100%);
+  background:linear-gradient(145deg, rgba(21,21,21,0.95), rgba(13,13,13,0.98));
   background-size:cover;
   background-position:center;
   display:flex;
@@ -186,7 +181,7 @@ input:focus,textarea:focus,select:focus{border-color:#ff6a0066}
   width:100%;
 }
 .netflix-title{
-  color:#fff;
+  color:var(--fg);
   font-size:2.2rem;
   font-weight:900;
   letter-spacing:-0.5px;
@@ -202,10 +197,10 @@ input:focus,textarea:focus,select:focus{border-color:#ff6a0066}
   font-weight:700;
 }
 .net-badge{padding:3px 8px;border-radius:4px}
-.net-badge.match{color: var(--brand2);background:rgba(255, 106, 0, 0.12); border: 1px solid rgba(255, 106, 0, 0.3);}
-.net-badge.rating{border:1px solid rgba(255,255,255,0.4);color:#fff;font-size:0.7rem;padding:1px 5px}
+.net-badge.match{color:var(--brand2);background:rgba(255, 106, 0, 0.12);border:1px solid rgba(255, 106, 0, 0.3)}
+.net-badge.rating{border:1px solid rgba(255,255,255,0.4);color:var(--fg);font-size:0.7rem;padding:1px 5px}
 .netflix-description{
-  color:#d2d2d2;
+  color:var(--muted);
   font-size:0.95rem;
   line-height:1.6;
   margin-bottom:24px;
@@ -224,20 +219,18 @@ input:focus,textarea:focus,select:focus{border-color:#ff6a0066}
   width:100%;
   border:none;
 }
-.net-btn-play{background: var(--brand);color:#0a0a0a; font-weight:800;}
-.net-btn-play:hover{background: var(--brand2); transform:translateY(-1px);}
+.net-btn-play{background:var(--brand);color:#0a0a0a}
+.net-btn-play:hover{background:var(--brand2);transform:translateY(-1px)}
 
 @keyframes netFadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes netScaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-/* Modal styles for wallet connection */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.active{display:flex}
 .modal-card{background:#141414;border:1px solid var(--line);border-radius:16px;padding:26px;max-width:420px;width:100%;text-align:center}
 .wallet-option{display:flex;align-items:center;justify-content:space-between;width:100%;padding:14px 16px;background:#1c1c1c;border:1px solid var(--line);border-radius:10px;margin-top:10px;color:var(--fg);font-weight:700;transition:border-color .2s, background .2s}
 .wallet-option:hover{border-color:var(--brand);background:#242424}
 
-/* Strict uniform 24x24 bounds for wallet logos */
 .wallet-icon-frame{
   width:24px;
   height:24px;
@@ -274,7 +267,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 </head>
 <body>
 
-<!-- NETFLIX-STYLE WELCOME GATE OVERLAY -->
 <div id="welcomeGateModal" class="netflix-modal-overlay">
   <div class="netflix-modal-container">
     <div class="netflix-hero-banner">
@@ -286,14 +278,14 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </div>
         
         <h1 class="netflix-title">
-          Don't just say you contributed. <span style="color: #4ade80;">Prove it.</span>
+          Don't just say you contributed. <span style="color: var(--brand2);">Prove it.</span>
         </h1>
         
         <p class="netflix-description">
           <strong>LIVED Proof</strong> is a Web3 campaign platform built to turn community participation into measurable, verifiable contributions. Launch campaigns, verify qualifying activity, and track performance through scoring, XP, and leaderboards.
         </p>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; font-size: 0.85rem; color: #b8b8b8;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; font-size: 0.85rem; color: var(--muted);">
           <div>✓ Structured Campaigns</div>
           <div>✓ Contributor Submissions</div>
           <div>✓ XP & Score Leaderboards</div>
@@ -317,17 +309,13 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <button type="button" data-view="create">Create Campaign</button>
       <button type="button" data-view="cardView">LIVED Card</button>
       <button type="button" data-view="dashboard">Project Dashboard</button>
-      
-      <!-- Connectors in Header -->
       <button type="button" id="navXBtn" onclick="redirectToXOAuth()" style="color:#38bdf8;font-weight:700;border:1px solid #38bdf844;background:rgba(56,189,248,0.1)">🔗 Connect X</button>
       <button type="button" id="navWalletBtn" onclick="toggleWalletConnection()" style="color:var(--brand2);font-weight:700;border:1px solid #ff8a3344;background:rgba(255,138,51,0.1)">⚡ Connect Wallet</button>
-      
       <button type="button" data-view="rules">Rules</button>
     </div>
   </div>
 </nav>
 
-<!-- SUBMIT POST MODAL WITH TURNSTILE -->
 <div class="modal-overlay" id="submitPostModal">
   <div class="modal-card" style="max-width:460px;text-align:left">
     <h3 style="margin-top:0">Submit Campaign Post</h3>
@@ -346,7 +334,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   </div>
 </div>
 
-<!-- WALLET SELECTION MODAL -->
 <div class="modal-overlay" id="walletModal">
   <div class="modal-card">
     <h3 style="margin-top:0">Connect Solana Wallet</h3>
@@ -364,7 +351,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   </div>
 </div>
 
-<!-- EDIT CAMPAIGN MODAL -->
 <div class="modal-overlay" id="editCampaignModal">
   <div class="modal-card" style="max-width:550px;text-align:left">
     <h3 style="margin-top:0">Edit Campaign</h3>
@@ -422,7 +408,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   </div>
 </section>
 
-<!-- CAMPAIGNS DIRECTORY -->
 <section id="campaigns" class="view section">
   <div class="sectionhead">
     <div>
@@ -441,7 +426,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   <div id="campaignGrid" class="grid"></div>
 </section>
 
-<!-- STEP 1: CREATE CAMPAIGN FORM -->
 <section id="create" class="view section">
   <div class="panel">
     <div class="kicker">Project portal</div>
@@ -452,7 +436,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         <div><label>Category</label><select id="cCategory"><option>DeFi</option><option>Memecoin</option><option>AI</option><option>Infrastructure</option><option>NFT</option></select></div>
       </div>
 
-      <!-- Currency Reward Selection -->
       <div class="row">
         <div>
           <label>Reward Currency</label>
@@ -531,7 +514,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   </div>
 </section>
 
-<!-- STEP 2: MANUAL TREASURY PAYMENT & CONFIRMATION PAGE -->
 <section id="treasuryPayment" class="view section">
   <div class="panel">
     <div class="kicker">Step 2 · Manual Funding</div>
@@ -562,7 +544,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   </div>
 </section>
 
-<!-- ENHANCED VISUAL LIVED CARD PASS -->
 <section id="cardView" class="view section">
   <div class="panel" style="text-align:center">
     <div class="kicker">Decentralized Creator Credential</div>
@@ -615,7 +596,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   </div>
 </section>
 
-<!-- HIDDEN ADMIN PORTAL WITH AUDIT LEDGER -->
 <section id="admin" class="view section">
   <div class="panel">
     <div class="sectionhead">
@@ -646,7 +626,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       </div>
       <div id="pendingList"></div>
 
-      <!-- Payment Records Ledger Table -->
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:35px">
         <div>
           <h3 style="margin:0">Ledger: Records of Payments Made</h3>
@@ -676,7 +655,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   </div>
 </section>
 
-<!-- RULES VIEW -->
 <section id="rules" class="view section">
   <div class="panel">
     <div class="kicker">Community standards</div>
@@ -697,7 +675,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   </div>
 </section>
 
-<!-- PROJECT DASHBOARD -->
 <section id="dashboard" class="view section">
   <div class="sectionhead">
     <div>
@@ -712,7 +689,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   <div id="dashContent"></div>
 </section>
 
-<!-- CAMPAIGN DETAIL VIEW -->
 <section id="campaignDetail" class="view section">
   <div class="panel">
     <div id="detailContent"></div>
@@ -746,13 +722,13 @@ const supabaseClient = BACKEND_CONFIGURED
 
 function requireBackend(){
   if (!BACKEND_CONFIGURED || !supabaseClient) {
-    alert("LIVED Proof backend is not configured yet. Replace SUPABASE_URL and SUPABASE_ANON_KEY with the NEW Supabase project values.");
+    alert("LIVED Proof backend is not configured yet.");
     throw new Error("Supabase backend not configured");
   }
   return supabaseClient;
 }
 
-const SEAL = "data:image/jpeg;base64,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";
+const SEAL = "data:image/jpeg;base64,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.oehBkocQ4bzThpdWaJKWGG8ly2a7WsxXo5YZY4VvOzOLrdyHmruJtS3O5dlblUebLoxUlN2VV4s7GWSMnqkO/O9KrrgOlA0QEmdBAacFVqzwd6teHQ5Llt1mrlrSYtSdQTVt2a011j9a2O0YDVdh6Mtrjcg1odOsUYelqhjdueUfToQKjGmOTZmMIm5k6BC1nz0lzS6vOSwWM5rA1KmEehcyYdcKOiJ2s6ugks3ea84rjyN5+tulISa5hLDUWlpWq99sj0o39PF0ZIhpJosrUCmJko0QNKE6Bvd3Ax6G9TJtzoryUlIxqYnwiDfnjwIN+51vfDXDbDbPbbbTffDbTbDfDXbLTPfLMfbLTTffDXTLHHDDPPPOPOOP//EADIRAQADAAICAQMDBAMBAQEBAQAEERIhMUEEUTFAYXGBkbHwocHR8TBAgIDBgPFwgP/a2gAIAQMBAT8Q/wD39vY7N6n6j9x+5/afvL+N+Z+5/cf1n7v7P6T9t/hP6X9p/V/tfuP2n7b9L+5/cf0v3n7b9p+v7n9z9x/W/YftP6f6X7z+h/afsf1v2n737P3/AKH9j+h+1/aftv8Af8v2n7T+l+8/Y/v/ALt/v8Af/qf0H7D9p+5/c/pf3P3H9L9j9t+z9p/afqf3n9D9x+5/a/sf2n7b+h/Sftf2n7L9p/af0v3H7T+l/b/sf2P6X9T9p+5/a/sfuP3H7n9r+t/aftP2P6f7D+x/Y/ofqfufqf2P3H7T9j+h/ef2H7b+p/p/ef2H7T+l+w/aftv3H7L9t+p+w/ofsf0n9p+o/Sfsf2N6f7H9p+1/aftv6T9h+5/W/sP3P6T9t/a/sfuP6H9L8X/9k=";
 const KEY="lived_proof_prod_v5";
 let currentCategory="All";
 let isAdminLoggedIn=false;
@@ -796,7 +772,6 @@ function safeImg(s){ return /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]
 function safeUrl(s){ return /^https?:\/\//i.test(String(s||"")) ? s : "#"; }
 function money(n){ return "$"+Number(n||0).toLocaleString(undefined,{maximumFractionDigits:2}); }
 
-// Helper function to extract domain and display a favicon logo next to engagement links
 function getFaviconLogo(url) {
   try {
     const parsed = new URL(url);
@@ -903,13 +878,19 @@ function renderCampaigns(){
 }
 
 function openCampaign(id){
-  const c = db.campaigns.find(x=>x.id===id); if(!c) return;
+  const numericId = Number(id);
+  const c = db.campaigns.find(x => Number(x.id) === numericId) || db.pendingRequests?.find(x => Number(x.id) === numericId);
+  if(!c) {
+    alert("Campaign details could not be loaded. Please refresh the page.");
+    return;
+  }
   document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
-  document.getElementById("campaignDetail").classList.add("active");
+  const detailView = document.getElementById("campaignDetail");
+  if(detailView) detailView.classList.add("active");
   document.querySelectorAll(".navlinks button[data-view]").forEach(b=>b.classList.remove("active"));
   
   const pool = Number(c.budget)*0.9;
-  const topOne = c.yappers&&c.yappers.length ? c.yappers.slice().sort((a,b)=>b[1]-a[1])[0] : null;
+  const topOne = c.yappers && c.yappers.length ? c.yappers.slice().sort((a,b)=>b[1]-a[1])[0] : null;
   const currencyLabel = c.currency === "Native Token" ? (c.nativeTokenName || "Token") : (c.currency || "SOL");
 
   let linksHtml = '';
@@ -990,6 +971,7 @@ function openCampaign(id){
       <button class="btn" onclick="show('campaigns')">← Back to Directory</button>
     </div>
   `;
+  window.scrollTo({top:0, behavior:"smooth"});
 }
 
 function leaderboardHTML(c, pool, currencyLabel="SOL"){
@@ -1025,50 +1007,57 @@ function leaderboardHTML(c, pool, currencyLabel="SOL"){
 }
 
 async function joinCampaign(id){
-  const c = db.campaigns.find(x=>x.id===id); if(!c) return;
+  const numericId = Number(id);
+  const c = db.campaigns.find(x => Number(x.id) === numericId); 
+  if(!c) return;
   const list = c.yappers || [];
-  if(list.some(y => y[0] === db.currentUser.handle)){ c.joined = true; openCampaign(id); return; }
+  if(list.some(y => y[0] === db.currentUser.handle)){ c.joined = true; openCampaign(numericId); return; }
   if(c.maxParticipants && list.length >= c.maxParticipants){
     alert("This campaign has reached its maximum participant capacity.");
     return;
   }
-  const assignedScore = 0;
-  const entry = [
-    db.currentUser.handle,
-    assignedScore,
-    0,
-    0,
-    null
-  ];
-  const { error } = await supabaseClient.rpc('join_campaign', { p_id: id, p_entry: entry });
-  if(error){ alert("Could not join campaign: " + error.message); return; }
+  
+  const client = requireBackend();
+  const { error } = await client.from('campaign_participants').insert([{
+    campaign_id: numericId,
+    handle: db.currentUser.handle,
+    score: 0,
+    reach: 0,
+    interactions: 0
+  }]);
+
+  if(error){ 
+    alert("Could not join campaign: " + error.message); 
+    return; 
+  }
+
   db.currentUser.joinedCount += 1;
-  db.currentUser.totalPoints += assignedScore;
   save();
   await loadGlobalCampaigns();
-  openCampaign(id);
+  openCampaign(numericId);
 }
 
 async function leaveCampaign(id){
-  const c = db.campaigns.find(x => x.id === id); if(!c) return;
-  if(!confirm("Are you sure you want to exit this campaign? Your points for this campaign will be removed.")) return;
+  const numericId = Number(id);
+  const c = db.campaigns.find(x => Number(x.id) === numericId); if(!c) return;
+  if(!confirm("Are you sure you want to exit this campaign? Your participation record will be removed.")) return;
 
-  const existingEntry = (c.yappers || []).find(y => y[0] === db.currentUser.handle);
-  const deductedPoints = existingEntry ? existingEntry[1] : 0;
+  const client = requireBackend();
+  const { error } = await client.from('campaign_participants').delete().eq('campaign_id', numericId).eq('handle', db.currentUser.handle);
 
-  const { error } = await supabaseClient.rpc('leave_campaign', { p_id: id, p_handle: db.currentUser.handle });
-  if(error){ alert("Could not exit campaign: " + error.message); return; }
+  if(error){ 
+    alert("Could not exit campaign: " + error.message); 
+    return; 
+  }
 
   db.currentUser.joinedCount = Math.max(0, db.currentUser.joinedCount - 1);
-  db.currentUser.totalPoints = Math.max(0, db.currentUser.totalPoints - deductedPoints);
   c.joined = false;
   
   save();
   await loadGlobalCampaigns();
-  openCampaign(id);
+  openCampaign(numericId);
 }
 
-// AUTOMATED POST SUBMISSION MODAL LOGIC
 function openSubmitPostModal(campaignId) {
   if (!db.currentUser.xHandle) {
     alert("Please connect your X account first before submitting posts!");
@@ -1137,10 +1126,10 @@ function renderDashboard(targetId){
     return;
   }
   const selectedId = targetId || activeCampaigns[0].id;
-  const c = activeCampaigns.find(x=>x.id===selectedId) || activeCampaigns[0];
+  const c = activeCampaigns.find(x=>Number(x.id)===Number(selectedId)) || activeCampaigns[0];
   
   const selector = document.getElementById("campaignSelector");
-  selector.innerHTML = activeCampaigns.map(item=>`<option value="${item.id}" ${item.id===c.id?'selected':''}>${esc(item.name)}</option>`).join("");
+  selector.innerHTML = activeCampaigns.map(item=>`<option value="${item.id}" ${Number(item.id)===Number(c.id)?'selected':''}>${esc(item.name)}</option>`).join("");
   
   const pool = Number(c.budget)*0.9;
   const totalReach = (c.yappers||[]).reduce((a,y)=>a+y[2],0);
@@ -1309,7 +1298,6 @@ function toggleNativeTokenInput() {
   }
 }
 
-// WELCOME GATE CONTROLLER
 function enterPlatform() {
   const gate = document.getElementById('welcomeGateModal');
   if (gate) {
@@ -1321,7 +1309,6 @@ function enterPlatform() {
   }
 }
 
-/* PKCE X OAUTH IMPLEMENTATION */
 function base64UrlEncode(arrayBuffer) {
   const bytes = new Uint8Array(arrayBuffer);
   let binary = '';
@@ -1372,7 +1359,6 @@ async function redirectToXOAuth() {
     window.location.href = authUrl;
   } catch(err) {
     console.error("X OAuth Initialization Error:", err);
-    alert("Unable to initialize PKCE cryptography in browser context.");
   }
 }
 
@@ -1382,7 +1368,6 @@ async function checkXOAuthReturn() {
   const error = urlParams.get('error');
 
   if (error) {
-    alert("X Authorization was cancelled or denied: " + error);
     window.history.replaceState({}, document.title, window.location.pathname);
     return;
   }
@@ -1445,18 +1430,12 @@ async function checkXOAuthReturn() {
       db.currentUser.xHandle = formattedHandle;
       db.currentUser.handle = formattedHandle;
 
-      let alertMsg = `🎉 Authenticated successfully as ${formattedHandle}!`;
       if (!db.claimedXHandles.includes(formattedHandle.toLowerCase())) {
         db.claimedXHandles.push(formattedHandle.toLowerCase());
         db.currentUser.totalPoints += 15;
-        alertMsg += `\n+15 PTS connection reward awarded.`;
       }
       save();
       renderLivedCard();
-      alert(alertMsg);
-    } else {
-      if (navXBtn) navXBtn.textContent = "🔗 Connect X";
-      alert("Authorization complete, but unable to automatically resolve handle. You can update it manually in your LIVED Card profile settings.");
     }
     localStorage.removeItem("x_pkce_verifier");
     localStorage.removeItem("x_pkce_state");
@@ -1483,12 +1462,11 @@ function toggleWalletConnection() {
 async function disconnectWallet() {
   const provider = window.phantom?.solana || window.solflare || window.glow || window.jupiter || window.solana;
   if (provider && typeof provider.disconnect === "function") {
-    try { await provider.disconnect(); } catch (e) { console.log(e); }
+    try { await provider.disconnect(); } catch (e) {}
   }
   db.currentUser.wallet = null;
   save();
   renderLivedCard();
-  alert("Solana wallet disconnected successfully.");
 }
 
 function getSolanaProvider(providerName) {
@@ -1514,12 +1492,8 @@ async function requestLiveWallet(providerName){
           window.location.href = `https://phantom.app/ul/browse/${currentUrl}?ref=${refUrl}`;
           return;
         }
-        if (providerName === 'solflare') {
-          window.location.href = `https://solflare.com/ul/v1/browse/${currentUrl}?ref=${refUrl}`;
-          return;
-        }
       }
-      alert(`${providerName.toUpperCase()} extension not detected. Ensure your extension is active and unlocked.`);
+      alert(`${providerName.toUpperCase()} extension not detected.`);
       return;
     }
 
@@ -1530,24 +1504,17 @@ async function requestLiveWallet(providerName){
       db.currentUser.wallet = address;
       db.claimedWallets = db.claimedWallets || [];
       const normalizedAddress = address.trim();
-      let alertMsg = `Connected successfully!\nWallet: ${address.slice(0, 6)}...${address.slice(-6)}`;
 
       if (!db.claimedWallets.includes(normalizedAddress)) {
         db.claimedWallets.push(normalizedAddress);
-        db.currentUser.totalPoints += 25; // +25 PTS reward for first time wallet
-        alertMsg += `\n+25 PTS connection reward awarded.`;
-      } else {
-        alertMsg += `\n(Connection points already claimed previously for this wallet address.)`;
+        db.currentUser.totalPoints += 25;
       }
 
       save();
       renderLivedCard();
       closeWalletModal();
-      alert(alertMsg);
     }
   } catch(err) {
-    console.error("Wallet connection error:", err);
-    alert("Connection request was dismissed or rejected by user.");
     closeWalletModal();
   }
 }
@@ -1621,7 +1588,6 @@ document.getElementById("campaignForm").addEventListener("submit", (e) => {
   const solAmount = (budget / dynamicSolPrice).toFixed(4);
 
   pendingManualCampaign = {
-    id: Date.now(),
     name: campaignName,
     category: document.getElementById("cCategory").value,
     currency: currency,
@@ -1636,9 +1602,7 @@ document.getElementById("campaignForm").addEventListener("submit", (e) => {
     requirements: document.getElementById("cRequirements").value.trim() || "Open contribution",
     status: "PENDING",
     payerWallet: db.currentUser.wallet || "Manual Creator",
-    solPaid: Number(solAmount),
-    joined: false,
-    yappers: []
+    solPaid: Number(solAmount)
   };
 
   document.getElementById("confName").textContent = campaignName;
@@ -1672,8 +1636,7 @@ async function confirmManualPayment(){
       requirements: pendingManualCampaign.requirements,
       status: "PENDING",
       payer_wallet: pendingManualCampaign.payerWallet,
-      sol_paid: pendingManualCampaign.solPaid,
-      yappers: []
+      sol_paid: pendingManualCampaign.solPaid
     };
 
     const { error } = await client.from('campaigns').insert([campaignPayload]);
@@ -1711,7 +1674,6 @@ async function confirmManualPayment(){
     show("campaigns");
   } catch (err) {
     console.error("Campaign submission error:", err);
-    if (err?.message) alert("Campaign submission stopped: " + err.message);
   }
 }
 
@@ -1720,130 +1682,6 @@ function clearPaymentRecords() {
   db.paymentsLedger = [];
   save();
   renderAdminQueue();
-}
-
-function shareOnX(){
-  const profile = getCardProfile();
-  const text = `Verifying my contributor identity on @LivedPlatform!\n\nRank: ${profile.role}\nPoints: ${db.currentUser.totalPoints} PTS\nPass ID: #${db.currentUser.passId}\n\nJoin the campaign engagement layer on LIVED Proof:`;
-  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.origin)}`;
-  window.open(url, "_blank", "noopener");
-}
-
-function exportCardImage(){
-  const btn = document.getElementById("exportBtn");
-  btn.textContent = "Rendering...";
-  btn.disabled = true;
-
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  canvas.width = 1000;
-  canvas.height = 600;
-
-  const bgGrad = ctx.createLinearGradient(0, 0, 1000, 600);
-  bgGrad.addColorStop(0, "#19140f");
-  bgGrad.addColorStop(1, "#080809");
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, 1000, 600);
-
-  const sealImg = new Image();
-  sealImg.crossOrigin = "anonymous";
-  sealImg.src = SEAL;
-
-  const renderCardContent = () => {
-    ctx.save();
-    ctx.globalAlpha = 0.20;
-    ctx.translate(500, 300);
-    try { ctx.drawImage(sealImg, -230, -230, 460, 460); } catch(err) {}
-    ctx.restore();
-
-    ctx.strokeStyle = "#ff6a00";
-    ctx.lineWidth = 8;
-    ctx.strokeRect(20, 20, 960, 560);
-
-    ctx.fillStyle = "#ff8a33";
-    ctx.font = "bold 24px Arial";
-    ctx.fillText("LIVED PROOF PASS", 60, 80);
-
-    ctx.fillStyle = "#777777";
-    ctx.font = "20px monospace";
-    ctx.fillText(`PASS ID: #${db.currentUser.passId}`, 60, 115);
-
-    ctx.textAlign = "right";
-    ctx.fillStyle = "#f6f1e8";
-    ctx.font = "bold 28px Arial";
-    ctx.fillText(db.currentUser.handle, 920, 85);
-    ctx.textAlign = "left";
-
-    const chipGrad = ctx.createLinearGradient(60, 155, 150, 220);
-    chipGrad.addColorStop(0, "#ffd700");
-    chipGrad.addColorStop(1, "#b8860b");
-    ctx.fillStyle = chipGrad;
-    ctx.beginPath();
-    ctx.roundRect(60, 155, 90, 65, [10]);
-    ctx.fill();
-
-    const profile = getCardProfile();
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 44px Arial";
-    ctx.fillText(profile.role, 60, 290);
-
-    ctx.fillStyle = "#9c9388";
-    ctx.font = "22px Arial";
-    ctx.fillText(`${db.currentUser.totalPoints} PTS Aggregated · ${db.currentUser.joinedCount} Campaigns Active`, 60, 330);
-
-    if(db.currentUser.wallet){
-      ctx.fillStyle = "#ff8a33";
-      ctx.font = "16px monospace";
-      ctx.fillText(`Wallet: ${db.currentUser.wallet.slice(0,6)}...${db.currentUser.wallet.slice(-6)}`, 60, 360);
-    }
-
-    ctx.strokeStyle = "rgba(255,255,255,0.15)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(60, 385);
-    ctx.lineTo(920, 385);
-    ctx.stroke();
-
-    ctx.fillStyle = "#ff6a00";
-    ctx.font = "bold 20px Arial";
-    ctx.fillText("ACCREDITATIONS:", 60, 425);
-
-    let badgeX = 60;
-    ctx.font = "bold 18px Arial";
-    profile.badges.forEach(b => {
-      const txt = b.label;
-      const width = ctx.measureText(txt).width + 32;
-      ctx.fillStyle = "rgba(255,106,0,0.18)";
-      ctx.beginPath();
-      ctx.roundRect(badgeX, 450, width, 40, [20]);
-      ctx.fill();
-      ctx.strokeStyle = "#ff6a00";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      ctx.fillStyle = "#ff8a33";
-      ctx.fillText(txt, badgeX + 16, 476);
-      badgeX += width + 14;
-    });
-
-    ctx.fillStyle = "#666666";
-    ctx.font = "16px monospace";
-    ctx.fillText("EVERYBODY BELONGS. EVERYBODY HAS LIVED IT.", 60, 545);
-
-    const link = document.createElement("a");
-    link.download = `LIVED-Proof-Pass-${db.currentUser.handle.replace('@','')}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-
-    btn.textContent = "↓ Download Card (.PNG)";
-    btn.disabled = false;
-  };
-
-  if (sealImg.complete) renderCardContent();
-  else {
-    sealImg.onload = renderCardContent;
-    sealImg.onerror = () => renderCardContent();
-  }
 }
 
 const ADMIN_EMAIL = "admin@livedproof.xyz";
@@ -1860,7 +1698,7 @@ async function restoreAdminSession(){
 async function adminLogin(){
   const inputPass = document.getElementById("adminKey").value;
   if(!inputPass) return;
-  if(!BACKEND_CONFIGURED){ alert("Configure the new Supabase backend first."); return; }
+  if(!BACKEND_CONFIGURED){ alert("Configure backend first."); return; }
   const { error } = await supabaseClient.auth.signInWithPassword({ email: ADMIN_EMAIL, password: inputPass });
   document.getElementById("adminKey").value = "";
   if(error){
@@ -1895,7 +1733,8 @@ async function renderAdminPanel(){
 }
 
 function openEditModal(id){
-  const c = db.campaigns.find(x => x.id === id) || (db.pendingRequests || []).find(x => x.id === id);
+  const numericId = Number(id);
+  const c = db.campaigns.find(x => Number(x.id) === numericId) || (db.pendingRequests || []).find(x => Number(x.id) === numericId);
   if(!c) return;
   document.getElementById("editCampaignId").value = c.id;
   document.getElementById("editCName").value = c.name;
@@ -2003,157 +1842,119 @@ function renderAdminQueue(){
   }
 }
 
-async function writeAdminAudit(campaignId, action, beforeStatus, afterStatus, notes="") {
-  try {
-    const client = requireBackend();
-    const { error } = await client.from('admin_actions').insert([{
-      campaign_id: campaignId,
-      action,
-      before_status: beforeStatus,
-      after_status: afterStatus,
-      notes
-    }]);
-    if (error) console.warn("Audit log write failed:", error.message);
-  } catch (err) {
-    console.warn("Audit log write skipped:", err.message);
-  }
-}
-
 async function acceptCampaignRequest(id){
   try {
     const client = requireBackend();
-    const { data: before } = await client.from('campaigns').select('status').eq('id', id).maybeSingle();
-    const { data: userData } = await client.auth.getUser();
     const { data, error } = await client
       .from('campaigns')
-      .update({ status: 'ACTIVE', approved_at: new Date().toISOString(), approved_by: userData?.user?.id || null })
+      .update({ status: 'ACTIVE', approved_at: new Date().toISOString() })
       .eq('id', id)
       .select('id,status')
       .maybeSingle();
 
     if(error || !data){
-      alert("Approval failed - " + (error ? error.message : "No campaign was updated."));
+      alert("Approval failed - " + (error ? error.message : "No campaign updated."));
       return;
     }
 
-    await writeAdminAudit(id, 'APPROVE', before?.status || 'PENDING', 'ACTIVE', 'Campaign approved and published');
     await loadGlobalCampaigns();
     renderAdminQueue();
     renderHome();
     alert("Campaign approved and published.");
   } catch (err) {
     console.error("Approval error:", err);
-    alert("Approval failed: " + err.message);
   }
 }
 
 async function rejectCampaignRequest(id){
   try {
     const client = requireBackend();
-    const { data: before } = await client.from('campaigns').select('status').eq('id', id).maybeSingle();
-    const { data: userData } = await client.auth.getUser();
     const { data, error } = await client
       .from('campaigns')
-      .update({ status: 'REJECTED', rejected_at: new Date().toISOString(), rejected_by: userData?.user?.id || null })
+      .update({ status: 'REJECTED', rejected_at: new Date().toISOString() })
       .eq('id', id)
       .select('id,status')
       .maybeSingle();
 
     if(error || !data){
-      alert("Rejection failed - " + (error ? error.message : "No campaign was updated."));
+      alert("Rejection failed - " + (error ? error.message : "No campaign updated."));
       return;
     }
 
-    await writeAdminAudit(id, 'REJECT', before?.status || 'PENDING', 'REJECTED', 'Campaign rejected; record retained for audit');
     await loadGlobalCampaigns();
     renderAdminQueue();
-    alert("Campaign rejected. The record was retained instead of being deleted.");
+    alert("Campaign rejected.");
   } catch (err) {
     console.error("Rejection error:", err);
-    alert("Rejection failed: " + err.message);
   }
 }
 
 async function deleteActiveCampaign(id){
-  if(!confirm("Archive this campaign? It will disappear from the public directory but remain in the database.")) return;
+  if(!confirm("Archive this campaign?")) return;
   try {
     const client = requireBackend();
-    const { data: before } = await client.from('campaigns').select('status').eq('id', id).maybeSingle();
-    const { data: userData } = await client.auth.getUser();
     const { data, error } = await client
       .from('campaigns')
-      .update({ status: 'ARCHIVED', archived_at: new Date().toISOString(), archived_by: userData?.user?.id || null })
+      .update({ status: 'ARCHIVED', archived_at: new Date().toISOString() })
       .eq('id', id)
       .select('id,status')
       .maybeSingle();
 
     if(error || !data){
-      alert("Archive failed - " + (error ? error.message : "No campaign was updated."));
+      alert("Archive failed - " + (error ? error.message : "No campaign updated."));
       return;
     }
 
-    await writeAdminAudit(id, 'ARCHIVE', before?.status || 'ACTIVE', 'ARCHIVED', 'Campaign archived instead of hard-deleted');
     await loadGlobalCampaigns();
     renderAdminQueue();
     renderHome();
     alert("Campaign archived.");
   } catch (err) {
     console.error("Archive error:", err);
-    alert("Archive failed: " + err.message);
-  }
-}
-
-async function checkAndRunAudits(campaignsList) {
-  const client = requireBackend();
-  const now = Date.now();
-  for (const c of campaignsList) {
-    if (c.status !== 'ACTIVE') continue;
-    const createdTime = new Date(c.created_at || Date.now()).getTime();
-    const durationDays = parseInt(c.duration) || 7;
-    const expiryTime = createdTime + (durationDays * 24 * 60 * 60 * 1000);
-    if (now >= expiryTime) {
-      const { error } = await client.rpc('distribute_campaign_payouts', { p_campaign_id: c.id });
-      if (error) console.warn(`Campaign ${c.id} could not be auto-closed:`, error.message);
-    }
   }
 }
 
 async function loadGlobalCampaigns() {
   try {
     const client = requireBackend();
-    const { data, error } = await client
-      .from('campaigns')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const [campRes, partRes] = await Promise.all([
+      client.from('campaigns').select('*').order('created_at', { ascending: false }),
+      client.from('campaign_participants').select('*')
+    ]);
 
-    if (error) {
-      console.error("Supabase load error:", error.message);
+    if (campRes.error) {
+      console.error("Supabase campaigns load error:", campRes.error.message);
       return;
     }
 
-    const sourceData = data || [];
-    if (isAdminLoggedIn) await checkAndRunAudits(sourceData);
+    const sourceData = campRes.data || [];
+    const allParticipants = partRes.data || [];
 
-    const normalize = (c) => ({
-      id: Number(c.id),
-      name: c.name,
-      category: c.category,
-      currency: c.currency || "SOL",
-      nativeTokenName: c.native_token_name || c.nativeTokenName || null,
-      image: c.image,
-      budget: Number(c.budget),
-      duration: c.duration,
-      maxParticipants: c.max_participants || c.maxParticipants,
-      topRewarded: c.top_rewarded || c.topRewarded,
-      targetLinks: c.target_links || c.targetLinks || [],
-      brief: c.brief || "",
-      requirements: c.requirements || "Open contribution",
-      status: c.status,
-      payerWallet: c.payer_wallet || c.payerWallet,
-      solPaid: Number(c.sol_paid || 0),
-      yappers: Array.isArray(c.yappers) ? c.yappers : [],
-      joined: Array.isArray(c.yappers) && c.yappers.some(y => y && y[0] === db.currentUser.handle)
-    });
+    const normalize = (c) => {
+      const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
+      const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, null]);
+
+      return {
+        id: Number(c.id),
+        name: c.name,
+        category: c.category,
+        currency: c.currency || "SOL",
+        nativeTokenName: c.native_token_name || c.nativeTokenName || null,
+        image: c.image,
+        budget: Number(c.budget),
+        duration: c.duration,
+        maxParticipants: c.max_participants || c.maxParticipants,
+        topRewarded: c.top_rewarded || c.topRewarded,
+        targetLinks: c.target_links || c.targetLinks || [],
+        brief: c.brief || "",
+        requirements: c.requirements || "Open contribution",
+        status: c.status,
+        payerWallet: c.payer_wallet || c.payerWallet,
+        solPaid: Number(c.sol_paid || 0),
+        yappers: formattedYappers,
+        joined: formattedYappers.some(y => y && y[0] === db.currentUser.handle)
+      };
+    };
 
     db.campaigns = sourceData
       .filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED')
@@ -2179,15 +1980,23 @@ document.addEventListener("keydown", e => {
 });
 
 async function initApp() {
-  const safe = async (fn) => { try { await fn(); } catch(e){ console.error(fn.name, e); } };
+  const safe = async (fn) => { try { await fn(); } catch(e){ console.error(e); } };
   const status = document.getElementById("backendStatus");
   if (status) {
-    status.textContent = BACKEND_CONFIGURED ? "● New Supabase backend configured" : "● New Supabase backend not configured";
+    status.textContent = BACKEND_CONFIGURED ? "● Supabase backend configured" : "● Supabase backend not configured";
     status.style.color = BACKEND_CONFIGURED ? "var(--good)" : "var(--warn)";
   }
   await safe(restoreAdminSession);
   await safe(checkXOAuthReturn);
-  if (BACKEND_CONFIGURED) await safe(loadGlobalCampaigns);
+  if (BACKEND_CONFIGURED) {
+    await safe(loadGlobalCampaigns);
+    supabaseClient
+      .channel('public:campaigns')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns' }, () => {
+        loadGlobalCampaigns();
+      })
+      .subscribe();
+  }
   await safe(syncBudgetRules);
   await safe(renderHome);
   await safe(renderLivedCard);
