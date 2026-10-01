@@ -963,7 +963,7 @@ function openCampaign(id){
     ` : ''}
 
     <h3 style="margin-top:24px">Live Leaderboard & Rewards</h3>
-    <p class="small">Only the top ${c.topRewarded || 5} eligible ranks qualify for reward pool distributions in ${esc(currencyLabel)}.</p>
+    <p class="small">Proportional reward pool distribution based on total XP points.</p>
     ${leaderboardHTML(c, pool, currencyLabel)}
     
     <div class="actions" style="margin-top:22px">
@@ -980,20 +980,29 @@ function openCampaign(id){
 
 function leaderboardHTML(c, pool, currencyLabel="SOL"){
   const yList = (c.yappers||[]).slice().sort((a,b)=>b[1]-a[1]);
-  const topCutoff = c.topRewarded || 5;
-  const individualShare = topCutoff > 0 ? (pool / topCutoff) : 0;
+  const totalPoints = yList.reduce((sum, y) => sum + Number(y[1] || 0), 0);
+  
+  const isFinalized = c.status === "COMPLETED";
+  const payoutHeaderLabel = isFinalized ? "Final Reward" : "Estimated Payout";
 
   const rows = yList.map((y,i)=>{
     const badge = i === 0 ? '👑 #1' : `#${i+1}`;
-    const isEligible = i < topCutoff && y[1] > 0;
-    const payoutVal = isEligible ? individualShare : 0.00;
+    const userPoints = Number(y[1] || 0);
+    
+    let payoutVal = 0;
+    if (totalPoints > 0 && userPoints > 0) {
+      payoutVal = pool * (userPoints / totalPoints);
+    }
+    
     const payoutDisplay = `${payoutVal.toFixed(2)} ${currencyLabel}`;
-    const statusDisplay = isEligible ? `<span style="color:var(--good)">Eligible for Payout</span>` : `<span class="small" style="color:var(--muted)">Outside Top ${topCutoff} Cutoff</span>`;
+    const statusDisplay = isFinalized ? 
+      `<span style="color:var(--good)">Finalized Payout</span>` : 
+      `<span class="small" style="color:var(--muted)">Proportional Share</span>`;
 
     return `<tr>
       <td class="rank">${badge}</td>
       <td><span class="avatar">${esc(y[0].replace("@","").slice(0,2).toUpperCase())}</span>${esc(y[0])}</td>
-      <td class="score">${y[1]}</td>
+      <td class="score">${userPoints} XP</td>
       <td>${Number(y[2] || 0).toLocaleString()}</td>
       <td>${Number(y[3] || 0).toLocaleString()}</td>
       <td style="color:var(--fg);font-weight:700">
@@ -1004,7 +1013,7 @@ function leaderboardHTML(c, pool, currencyLabel="SOL"){
 
   return `<table class="leaderboard">
     <thead>
-      <tr><th>Rank</th><th>Contributor</th><th>Score</th><th>Reach</th><th>Interactions</th><th>Estimated Payout (${currencyLabel})</th></tr>
+      <tr><th>Rank</th><th>Contributor</th><th>Score/XP</th><th>Reach</th><th>Interactions</th><th>${payoutHeaderLabel} (${currencyLabel})</th></tr>
     </thead>
     <tbody>${rows||'<tr><td colspan="6">No contributors joined yet. All entries start at 0.</td></tr>'}</tbody>
   </table>`;
@@ -1146,7 +1155,7 @@ function renderDashboard(targetId){
       <div class="stat"><b>${money(c.budget)}</b><span class="small">Campaign Budget</span></div>
       <div class="stat"><b>${money(c.budget*0.1)}</b><span class="small">LIVED Fee (10%)</span></div>
       <div class="stat"><b>${money(pool)} (${currencyLabel})</b><span class="small">Contributor Pool (90%)</span></div>
-      <div class="stat"><b>Top ${c.topRewarded || 5}</b><span class="small">Rewarded Tier Cutoff</span></div>
+      <div class="stat"><b>Proportional</b><span class="small">Reward Distribution</span></div>
     </div>
 
     <div class="stats" style="margin-top:10px">
@@ -1168,7 +1177,6 @@ function getCardProfile(){
   const joined = db.currentUser.joinedCount;
 
   let role = "Registered Contributor";
-  let nextRankGoal = 70;
   let progressPct = Math.min(100, Math.round((pts / 70) * 100));
   let progressText = `${pts} / 70 PTS to Verified`;
 
@@ -1182,14 +1190,12 @@ function getCardProfile(){
   if(joined >= 1 || pts >= 70){
     role = "Verified Contributor";
     badges.push({ label: "🛡️ VERIFIED CONTRIBUTOR", cls: "badge-verified" });
-    nextRankGoal = 200;
     progressPct = Math.min(100, Math.round(((pts - 70) / 130) * 100));
     progressText = `${pts} / 200 PTS to Alpha`;
   }
   if(joined >= 3 || pts >= 200){
     role = "Alpha Contributor Lead";
     badges.push({ label: "👑 ALPHA CONTRIBUTOR", cls: "badge-lead" });
-    nextRankGoal = 400;
     progressPct = Math.min(100, Math.round(((pts - 200) / 200) * 100));
     progressText = `${pts} / 400 PTS to Legend`;
   }
@@ -1834,7 +1840,7 @@ function renderAdminQueue(){
           <div>
             <span class="badge">${esc(item.category)} · ${money(item.budget)} · Paid in ${esc(item.currency === "Native Token" ? (item.nativeTokenName || "Token") : (item.currency || "SOL"))}</span>
             <h4 style="margin:4px 0">${esc(item.name)}</h4>
-            <span class="small">Participants: ${item.yappers ? item.yappers.length : 0} / ${item.maxParticipants || '∞'} · Top ${item.topRewarded || 5} Split Pool</span>
+            <span class="small">Participants: ${item.yappers ? item.yappers.length : 0} / ${item.maxParticipants || '∞'} · Proportional Reward Pool</span>
           </div>
         </div>
         <div class="actions">
