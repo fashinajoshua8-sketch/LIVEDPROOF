@@ -2143,6 +2143,16 @@ async function deleteActiveCampaign(id){
 
 async function loadGlobalCampaigns() {
   try {
+    const cachedCampaigns = localStorage.getItem("lived_campaigns_cache");
+    if (cachedCampaigns) {
+      const parsed = JSON.parse(cachedCampaigns);
+      db.campaigns = parsed.campaigns || [];
+      db.pendingRequests = parsed.pendingRequests || [];
+      renderCampaigns();
+      renderHome();
+      if (isAdminLoggedIn) renderAdminQueue();
+    }
+
     const client = requireBackend();
     const [campRes, partRes] = await Promise.all([
       client.from('campaigns').select('*').order('created_at', { ascending: false }),
@@ -2190,6 +2200,11 @@ async function loadGlobalCampaigns() {
     db.pendingRequests = sourceData
       .filter(c => c.status === 'PENDING')
       .map(normalize);
+
+    localStorage.setItem("lived_campaigns_cache", JSON.stringify({
+      campaigns: db.campaigns,
+      pendingRequests: db.pendingRequests
+    }));
 
     renderCampaigns();
     renderHome();
