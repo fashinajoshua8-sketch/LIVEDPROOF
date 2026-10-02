@@ -1237,7 +1237,7 @@ function getCardProfile(){
   let progressText = `${pts} / 70 PTS to Verified`;
 
   const badges = [
-    { label: "✍️ REGISTERED CONTRIBUTOR", cls: "badge-creator" }
+    { label: "✍️️ REGISTERED CONTRIBUTOR", cls: "badge-creator" }
   ];
 
   if(db.currentUser.wallet) badges.push({ label: "⚡ WEB3 CONNECTED", cls: "badge-verified" });
@@ -1338,13 +1338,20 @@ async function syncProfileToSupabase() {
 async function loadProfileFromSupabase() {
   try {
     const client = requireBackend();
-    const { data, error } = await client.from('profiles').select('*').limit(1).maybeSingle();
+    const { data, error } = await client
+      .from('profiles')
+      .select('*')
+      .eq('handle', db.currentUser.handle)
+      .maybeSingle();
+
     if (data && !error) {
       db.currentUser.handle = data.handle || db.currentUser.handle;
       db.currentUser.wallet = data.wallet_address || null;
       db.currentUser.xHandle = data.x_handle || null;
       db.currentUser.passId = data.pass_id || db.currentUser.passId;
       db.currentUser.totalPoints = data.total_points || 0;
+    } else {
+      await syncProfileToSupabase();
     }
   } catch (err) {
     console.error("Load profile error:", err);
