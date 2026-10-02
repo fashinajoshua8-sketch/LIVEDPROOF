@@ -290,7 +290,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           <div>✓ Structured Campaigns</div>
           <div>✓ Contributor Submissions</div>
           <div>✓ XP & Score Leaderboards</div>
-          <div>✓ Phantom, Solflare & Glow Support</div>
+          <div>✓ 100% Cloud-Native Supabase State</div>
         </div>
 
         <button class="net-btn net-btn-play" onclick="enterPlatform()">
@@ -783,26 +783,20 @@ const DURATION_LIMITS = {
   "30 days": { min: 50, max: 250000 }
 };
 
-let db = JSON.parse(localStorage.getItem(KEY) || "null") || {
+let db = {
   currentUser: {
     handle: "@userProof",
     passId: Math.floor(1000 + Math.random() * 9000),
     joinedCount: 0,
-    totalPoints: 0
+    totalPoints: 0,
+    xHandle: null,
+    wallet: null
   },
   campaigns: [],
-  pendingRequests: [],
-  claimedWallets: [],
-  claimedXHandles: []
+  pendingRequests: []
 };
 
-if (!db.currentUser.passId) db.currentUser.passId = Math.floor(1000 + Math.random() * 9000);
-if (!db.currentUser.hasOwnProperty('xHandle')) db.currentUser.xHandle = null;
-if (!db.currentUser.hasOwnProperty('wallet')) db.currentUser.wallet = null;
-if (!db.claimedWallets) db.claimedWallets = [];
-if (!db.claimedXHandles) db.claimedXHandles = [];
-
-function save(){ localStorage.setItem(KEY, JSON.stringify(db)); }
+function save(){ /* Cloud-native: state persisted directly in Supabase */ }
 function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
 function safeImg(s){ return /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(s||"")) ? s : ""; }
 function safeUrl(s){ return /^https?:\/\//i.test(String(s||"")) ? s : "#"; }
@@ -826,7 +820,7 @@ async function fetchLiveSolPrice() {
       updateBudgetCalculations();
     }
   } catch (err) {
-    console.warn("Using fallback SOL conversion price due to network limits:", err);
+    console.warn("Using fallback SOL conversion price:", err);
   }
 }
 
@@ -1079,7 +1073,7 @@ async function joinCampaign(id){
   }
 
   db.currentUser.joinedCount += 1;
-  save();
+  await syncProfileToSupabase();
   await loadGlobalCampaigns();
   openCampaign(numericId);
 }
@@ -1100,7 +1094,7 @@ async function leaveCampaign(id){
   db.currentUser.joinedCount = Math.max(0, db.currentUser.joinedCount - 1);
   c.joined = false;
   
-  save();
+  await syncProfileToSupabase();
   await loadGlobalCampaigns();
   openCampaign(numericId);
 }
@@ -1183,7 +1177,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
 
     alert(`🎉 Post Verified & Locked Successfully!\n+${fixedXP} XP added to your score.`);
     db.currentUser.totalPoints += fixedXP;
-    save();
+    await syncProfileToSupabase();
     closeSubmitModal();
     await loadGlobalCampaigns();
     openCampaign(campaignId);
@@ -1315,15 +1309,47 @@ function renderLivedCard(){
   ).join("");
 }
 
-function updateHandle(){
+async function updateHandle(){
   const val = document.getElementById("editHandleInput").value.trim();
   if(!val){
     alert("Please enter a valid handle (e.g. @alpha_creator)");
     return;
   }
   db.currentUser.handle = val.startsWith("@") ? val : "@" + val;
-  save();
+  await syncProfileToSupabase();
   renderLivedCard();
+}
+
+async function syncProfileToSupabase() {
+  try {
+    const client = requireBackend();
+    const payload = {
+      handle: db.currentUser.handle,
+      wallet_address: db.currentUser.wallet || null,
+      x_handle: db.currentUser.xHandle || null,
+      pass_id: db.currentUser.passId,
+      total_points: db.currentUser.totalPoints
+    };
+    await client.from('profiles').upsert([payload], { onConflict: 'handle' });
+  } catch (err) {
+    console.error("Profile sync error:", err);
+  }
+}
+
+async function loadProfileFromSupabase() {
+  try {
+    const client = requireBackend();
+    const { data, error } = await client.from('profiles').select('*').limit(1).maybeSingle();
+    if (data && !error) {
+      db.currentUser.handle = data.handle || db.currentUser.handle;
+      db.currentUser.wallet = data.wallet_address || null;
+      db.currentUser.xHandle = data.x_handle || null;
+      db.currentUser.passId = data.pass_id || db.currentUser.passId;
+      db.currentUser.totalPoints = data.total_points || 0;
+    }
+  } catch (err) {
+    console.error("Load profile error:", err);
+  }
 }
 
 function handleImageUploadPreview(event) {
@@ -1499,15 +1525,10 @@ async function checkXOAuthReturn() {
 
     if (verifiedUsername) {
       const formattedHandle = "@" + verifiedUsername.replace("@","").trim();
-      db.claimedXHandles = db.claimedXHandles || [];
       db.currentUser.xHandle = formattedHandle;
       db.currentUser.handle = formattedHandle;
-
-      if (!db.claimedXHandles.includes(formattedHandle.toLowerCase())) {
-        db.claimedXHandles.push(formattedHandle.toLowerCase());
-        db.currentUser.totalPoints += 15;
-      }
-      save();
+      db.currentUser.totalPoints += 15;
+      await syncProfileToSupabase();
       renderLivedCard();
     }
     localStorage.removeItem("x_pkce_verifier");
@@ -1538,7 +1559,7 @@ async function disconnectWallet() {
     try { await provider.disconnect(); } catch (e) {}
   }
   db.currentUser.wallet = null;
-  save();
+  await syncProfileToSupabase();
   renderLivedCard();
 }
 
@@ -1586,15 +1607,8 @@ async function requestLiveWallet(providerName){
 
     if (address) {
       db.currentUser.wallet = address;
-      db.claimedWallets = db.claimedWallets || [];
-      const normalizedAddress = address.trim();
-
-      if (!db.claimedWallets.includes(normalizedAddress)) {
-        db.claimedWallets.push(normalizedAddress);
-        db.currentUser.totalPoints += 25;
-      }
-
-      save();
+      db.currentUser.totalPoints += 25;
+      await syncProfileToSupabase();
       renderLivedCard();
       closeWalletModal();
     }
@@ -2185,6 +2199,7 @@ async function initApp() {
     status.style.color = BACKEND_CONFIGURED ? "var(--good)" : "var(--warn)";
   }
   await safe(restoreAdminSession);
+  await safe(loadProfileFromSupabase);
   await safe(checkXOAuthReturn);
   if (BACKEND_CONFIGURED) {
     await safe(loadGlobalCampaigns);
