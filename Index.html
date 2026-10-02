@@ -290,7 +290,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           <div>✓ Structured Campaigns</div>
           <div>✓ Contributor Submissions</div>
           <div>✓ XP & Score Leaderboards</div>
-          <div>✓ Anti-Farming Verification</div>
+          <div>✓ Phantom, Solflare & Glow Support</div>
         </div>
 
         <button class="net-btn net-btn-play" onclick="enterPlatform()">
@@ -339,7 +339,8 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <div class="modal-overlay" id="walletModal">
   <div class="modal-card">
     <h3 style="margin-top:0">Connect Solana Wallet</h3>
-    <div style="margin-top:20px;display:grid;gap:10px">
+    <p class="small">Select your preferred preferred Web3 wallet.</p>
+    <div style="margin-top:16px;display:grid;gap:10px">
       <button type="button" class="wallet-option" onclick="requestLiveWallet('phantom')">
         <div style="display:flex;align-items:center;gap:12px">
           <div class="wallet-icon-frame">
@@ -347,6 +348,27 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           </div>
           <span style="font-size:15px;font-weight:700">Phantom</span>
         </div>
+        <span class="small" style="color:var(--brand2)">Web / Mobile</span>
+      </button>
+
+      <button type="button" class="wallet-option" onclick="requestLiveWallet('solflare')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="wallet-icon-frame">
+            <img src="https://cdn.jsdelivr.net/npm/solana-icons@latest/svg/wallets/solflare.svg" alt="Solflare" class="wallet-icon" loading="lazy"/>
+          </div>
+          <span style="font-size:15px;font-weight:700">Solflare</span>
+        </div>
+        <span class="small" style="color:var(--brand2)">Web / Mobile</span>
+      </button>
+
+      <button type="button" class="wallet-option" onclick="requestLiveWallet('glow')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="wallet-icon-frame">
+            <img src="https://cdn.jsdelivr.net/npm/solana-icons@latest/svg/wallets/glow.svg" alt="Glow" class="wallet-icon" loading="lazy"/>
+          </div>
+          <span style="font-size:15px;font-weight:700">Glow</span>
+        </div>
+        <span class="small" style="color:var(--brand2)">Web / Mobile</span>
       </button>
     </div>
     <button type="button" class="btn" style="margin-top:20px;width:100%" onclick="closeWalletModal()">Cancel</button>
@@ -540,7 +562,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
     </div>
 
     <div class="notice" style="margin:20px 0">
-      <b>Instructions:</b> Open your Solana wallet (Phantom, Solflare, etc.), transfer the exact SOL amount shown above to the LIVED Treasury address, and click the confirmation button below once completed.
+      <b>Instructions:</b> Open your Solana wallet (Phantom, Solflare, Glow), transfer the exact SOL amount shown above to the LIVED Treasury address, and click the confirmation button below once completed.
     </div>
 
     <div class="actions" style="justify-content:space-between">
@@ -608,7 +630,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <div>
         <div class="kicker">Administrative Operations (Internal)</div>
         <h2>Admin Management Panel</h2><div id="backendStatus" class="small" style="margin-top:6px"></div>
-        <p>Review, approve, audit records of payments made, monitor participant X posts, or manage campaigns.</p>
+        <p>Review, approve, audit payments, monitor participant X posts, and view payout wallet addresses.</p>
       </div>
       <button class="btn" onclick="show('home')">Exit Admin</button>
     </div>
@@ -661,7 +683,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         <div id="adminSubmissionsList"></div>
       </div>
       
-      <h3 style="margin-top:35px">Manage Active Campaigns & Participants</h3>
+      <h3 style="margin-top:35px">Manage Active Campaigns, Participants & Payout Wallets</h3>
       <div id="adminActiveList" style="margin-top:15px"></div>
     </div>
   </div>
@@ -998,6 +1020,7 @@ function leaderboardHTML(c, pool, currencyLabel="SOL"){
   const rows = yList.map((y,i)=>{
     const badge = i === 0 ? '👑 #1' : `#${i+1}`;
     const userPoints = Number(y[1] || 0);
+    const userWallet = y[4] ? `<br><span class="small" style="color:var(--brand2);font-family:monospace">${esc(y[4])}</span>` : `<br><span class="small" style="color:var(--muted)">No wallet linked</span>`;
     
     let payoutVal = 0;
     if (totalPoints > 0 && userPoints > 0) {
@@ -1011,7 +1034,7 @@ function leaderboardHTML(c, pool, currencyLabel="SOL"){
 
     return `<tr>
       <td class="rank">${badge}</td>
-      <td><span class="avatar">${esc(y[0].replace("@","").slice(0,2).toUpperCase())}</span>${esc(y[0])}</td>
+      <td><span class="avatar">${esc(y[0].replace("@","").slice(0,2).toUpperCase())}</span>${esc(y[0])} ${userWallet}</td>
       <td class="score">${userPoints} XP</td>
       <td>${Number(y[2] || 0).toLocaleString()}</td>
       <td>${Number(y[3] || 0).toLocaleString()}</td>
@@ -1023,7 +1046,7 @@ function leaderboardHTML(c, pool, currencyLabel="SOL"){
 
   return `<table class="leaderboard">
     <thead>
-      <tr><th>Rank</th><th>Contributor</th><th>Score/XP</th><th>Reach</th><th>Interactions</th><th>${payoutHeaderLabel} (${currencyLabel})</th></tr>
+      <tr><th>Rank</th><th>Contributor & Payout Wallet</th><th>Score/XP</th><th>Reach</th><th>Interactions</th><th>${payoutHeaderLabel} (${currencyLabel})</th></tr>
     </thead>
     <tbody>${rows||'<tr><td colspan="6">No contributors joined yet. All entries start at 0.</td></tr>'}</tbody>
   </table>`;
@@ -1046,7 +1069,8 @@ async function joinCampaign(id){
     handle: db.currentUser.handle,
     score: 0,
     reach: 0,
-    interactions: 0
+    interactions: 0,
+    wallet_address: db.currentUser.wallet || null
   }]);
 
   if(error){ 
@@ -1143,7 +1167,8 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
       await client.from("campaign_participants").update({
         score: (existingPart.score || 0) + fixedXP,
         reach: (existingPart.reach || 0) + reachVal,
-        interactions: (existingPart.interactions || 0) + interactionsVal
+        interactions: (existingPart.interactions || 0) + interactionsVal,
+        wallet_address: db.currentUser.wallet || existingPart.wallet_address
       }).eq("id", existingPart.id);
     } else {
       await client.from("campaign_participants").insert([{
@@ -1151,7 +1176,8 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
         handle: db.currentUser.handle,
         score: fixedXP,
         reach: reachVal,
-        interactions: interactionsVal
+        interactions: interactionsVal,
+        wallet_address: db.currentUser.wallet || null
       }]);
     }
 
@@ -1507,7 +1533,7 @@ function toggleWalletConnection() {
 }
 
 async function disconnectWallet() {
-  const provider = window.phantom?.solana || window.solflare || window.glow || window.jupiter || window.solana;
+  const provider = window.phantom?.solana || window.solflare || window.glow || window.solana;
   if (provider && typeof provider.disconnect === "function") {
     try { await provider.disconnect(); } catch (e) {}
   }
@@ -1520,9 +1546,12 @@ function getSolanaProvider(providerName) {
   if (providerName === 'phantom') {
     return window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
   }
-  if (providerName === 'solflare') return window.solflare || null;
-  if (providerName === 'glow') return window.glow || null;
-  if (providerName === 'jupiter') return window.jupiter || window.solana || null;
+  if (providerName === 'solflare') {
+    return window.solflare || (window.solana?.isSolflare ? window.solana : null);
+  }
+  if (providerName === 'glow') {
+    return window.glow || (window.solana?.isGlow ? window.solana : null);
+  }
   return window.solana || null;
 }
 
@@ -1539,8 +1568,16 @@ async function requestLiveWallet(providerName){
           window.location.href = `https://phantom.app/ul/browse/${currentUrl}?ref=${refUrl}`;
           return;
         }
+        if (providerName === 'solflare') {
+          window.location.href = `https://solflare.com/ul/v1/browse/${currentUrl}?ref=${refUrl}`;
+          return;
+        }
+        if (providerName === 'glow') {
+          window.location.href = `https://glow.app/ul/browse/${currentUrl}?ref=${refUrl}`;
+          return;
+        }
       }
-      alert(`${providerName.toUpperCase()} extension not detected.`);
+      alert(`${providerName.toUpperCase()} extension or provider not detected.`);
       return;
     }
 
@@ -1562,6 +1599,7 @@ async function requestLiveWallet(providerName){
       closeWalletModal();
     }
   } catch(err) {
+    console.error("Wallet connection error:", err);
     closeWalletModal();
   }
 }
@@ -1921,7 +1959,7 @@ async function renderAdminQueue(){
         <div style="flex:1">
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
-              <span class="badge">${esc(item.category)} · ${esc(item.duration)} · Paid in ${esc(item.currency === "Native Token" ? (item.nativeTokenName || "Token") : (item.currency || "SOL"))} · Max: ${item.maxParticipants || '∞'}</span>
+              <span class="badge">${esc(item.category)} · ${esc(item.duration)} · Paid in ${esc(item.currency === "Native Token" ? (item.nativeTokenName || "Token") : (item.currency === "SOL" ? "SOL" : item.currency))} · Max: ${item.maxParticipants || '∞'}</span>
               <h3 style="margin:6px 0">${esc(item.name)}</h3>
             </div>
             <b style="color:var(--brand2);font-size:18px">${money(item.budget)}</b>
@@ -1967,8 +2005,11 @@ async function renderAdminQueue(){
   } else {
     activeContainer.innerHTML = db.campaigns.map(item => {
       const participantsList = (item.yappers || []).map(y => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #ffffff10">
-          <span class="small"><b>${esc(y[0])}</b> — ${y[1]} XP (${y[2]} Reach)</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #ffffff10;flex-wrap:wrap;gap:8px">
+          <div>
+            <span class="small"><b>${esc(y[0])}</b> — ${y[1]} XP (${y[2]} Reach)</span>
+            <div class="small" style="color:var(--brand2);font-family:monospace">Wallet: ${esc(y[4] || "Not Connected")}</div>
+          </div>
           <button class="btn sm danger" onclick="adminRemoveParticipant(${item.id}, '${esc(y[0])}')">Remove</button>
         </div>
       `).join("") || `<div class="small" style="color:var(--muted)">No participants joined yet.</div>`;
@@ -1979,7 +2020,7 @@ async function renderAdminQueue(){
             <div style="display:flex;align-items:center;gap:12px">
               ${item.image ? `<img src="${safeImg(item.image)}" style="width:48px;height:48px;object-fit:cover;border-radius:6px">` : ''}
               <div>
-                <span class="badge">${esc(item.category)} · ${money(item.budget)} · Paid in ${esc(item.currency === "Native Token" ? (item.nativeTokenName || "Token") : (item.currency || "SOL"))}</span>
+                <span class="badge">${esc(item.category)} · ${money(item.budget)} · Paid in ${esc(item.currency === "Native Token" ? (item.nativeTokenName || "Token") : item.currency)}</span>
                 <h4 style="margin:4px 0">${esc(item.name)}</h4>
                 <span class="small">Participants: ${item.yappers ? item.yappers.length : 0} / ${item.maxParticipants || '∞'} · Proportional Reward Pool</span>
               </div>
@@ -1990,7 +2031,7 @@ async function renderAdminQueue(){
             </div>
           </div>
           <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">
-            <div class="small" style="font-weight:700;margin-bottom:6px;color:var(--brand2)">MANAGE PARTICIPANTS:</div>
+            <div class="small" style="font-weight:700;margin-bottom:6px;color:var(--brand2)">PARTICIPANTS & PAYOUT WALLET ADDRESSES:</div>
             ${participantsList}
           </div>
         </div>
@@ -2089,7 +2130,7 @@ async function loadGlobalCampaigns() {
 
     const normalize = (c) => {
       const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
-      const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, null]);
+      const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, p.wallet_address || null]);
 
       return {
         id: Number(c.id),
