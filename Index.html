@@ -783,8 +783,13 @@ const DURATION_LIMITS = {
   "30 days": { min: 50, max: 250000 }
 };
 
+let savedUser = null;
+try {
+  savedUser = JSON.parse(localStorage.getItem("lived_current_user_cache"));
+} catch (e) {}
+
 let db = {
-  currentUser: {
+  currentUser: savedUser || {
     handle: "@userProof",
     passId: Math.floor(1000 + Math.random() * 9000),
     joinedCount: 0,
@@ -1237,7 +1242,7 @@ function getCardProfile(){
   let progressText = `${pts} / 70 PTS to Verified`;
 
   const badges = [
-    { label: "✍️️ REGISTERED CONTRIBUTOR", cls: "badge-creator" }
+    { label: "✍ REGISTERED CONTRIBUTOR", cls: "badge-creator" }
   ];
 
   if(db.currentUser.wallet) badges.push({ label: "⚡ WEB3 CONNECTED", cls: "badge-verified" });
@@ -1321,6 +1326,7 @@ async function updateHandle(){
 
 async function syncProfileToSupabase() {
   try {
+    localStorage.setItem("lived_current_user_cache", JSON.stringify(db.currentUser));
     const client = requireBackend();
     const payload = {
       handle: db.currentUser.handle,
@@ -1346,10 +1352,13 @@ async function loadProfileFromSupabase() {
 
     if (data && !error) {
       db.currentUser.handle = data.handle || db.currentUser.handle;
-      db.currentUser.wallet = data.wallet_address || null;
-      db.currentUser.xHandle = data.x_handle || null;
+      db.currentUser.wallet = data.wallet_address || db.currentUser.wallet;
+      db.currentUser.xHandle = data.x_handle || db.currentUser.xHandle;
       db.currentUser.passId = data.pass_id || db.currentUser.passId;
-      db.currentUser.totalPoints = data.total_points || 0;
+      db.currentUser.totalPoints = data.total_points || db.currentUser.totalPoints;
+      
+      localStorage.setItem("lived_current_user_cache", JSON.stringify(db.currentUser));
+      renderLivedCard();
     } else {
       await syncProfileToSupabase();
     }
