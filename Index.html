@@ -290,7 +290,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           <div>✓ Structured Campaigns</div>
           <div>✓ Contributor Submissions</div>
           <div>✓ XP & Score Leaderboards</div>
-          <div>✓ 100% Cloud-Native</div>
+          <div>✓ Multi-Wallet Web & Mobile Support</div>
         </div>
 
         <button class="net-btn net-btn-play" onclick="enterPlatform()">
@@ -339,7 +339,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <div class="modal-overlay" id="walletModal">
   <div class="modal-card">
     <h3 style="margin-top:0">Connect Solana Wallet</h3>
-    <p class="small">Select your preferred preferred Web3 wallet.</p>
+    <p class="small">Select your preferred Web3 wallet.</p>
     <div style="margin-top:16px;display:grid;gap:10px">
       <button type="button" class="wallet-option" onclick="requestLiveWallet('phantom')">
         <div style="display:flex;align-items:center;gap:12px">
@@ -796,7 +796,7 @@ let db = {
   pendingRequests: []
 };
 
-function save(){ /* Cloud-native: state persisted directly in Supabase */ }
+function save(){ /* Cloud-native profile state saved in Supabase */ }
 function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
 function safeImg(s){ return /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(s||"")) ? s : ""; }
 function safeUrl(s){ return /^https?:\/\//i.test(String(s||"")) ? s : "#"; }
@@ -820,7 +820,7 @@ async function fetchLiveSolPrice() {
       updateBudgetCalculations();
     }
   } catch (err) {
-    console.warn("Using fallback SOL conversion price:", err);
+    console.warn("Using fallback SOL conversion price due to network limits:", err);
   }
 }
 
@@ -1014,7 +1014,6 @@ function leaderboardHTML(c, pool, currencyLabel="SOL"){
   const rows = yList.map((y,i)=>{
     const badge = i === 0 ? '👑 #1' : `#${i+1}`;
     const userPoints = Number(y[1] || 0);
-    const userWallet = y[4] ? `<br><span class="small" style="color:var(--brand2);font-family:monospace">${esc(y[4])}</span>` : `<br><span class="small" style="color:var(--muted)">No wallet linked</span>`;
     
     let payoutVal = 0;
     if (totalPoints > 0 && userPoints > 0) {
@@ -1028,7 +1027,7 @@ function leaderboardHTML(c, pool, currencyLabel="SOL"){
 
     return `<tr>
       <td class="rank">${badge}</td>
-      <td><span class="avatar">${esc(y[0].replace("@","").slice(0,2).toUpperCase())}</span>${esc(y[0])} ${userWallet}</td>
+      <td><span class="avatar">${esc(y[0].replace("@","").slice(0,2).toUpperCase())}</span>${esc(y[0])}</td>
       <td class="score">${userPoints} XP</td>
       <td>${Number(y[2] || 0).toLocaleString()}</td>
       <td>${Number(y[3] || 0).toLocaleString()}</td>
@@ -1040,7 +1039,7 @@ function leaderboardHTML(c, pool, currencyLabel="SOL"){
 
   return `<table class="leaderboard">
     <thead>
-      <tr><th>Rank</th><th>Contributor & Payout Wallet</th><th>Score/XP</th><th>Reach</th><th>Interactions</th><th>${payoutHeaderLabel} (${currencyLabel})</th></tr>
+      <tr><th>Rank</th><th>Contributor</th><th>Score/XP</th><th>Reach</th><th>Interactions</th><th>${payoutHeaderLabel} (${currencyLabel})</th></tr>
     </thead>
     <tbody>${rows||'<tr><td colspan="6">No contributors joined yet. All entries start at 0.</td></tr>'}</tbody>
   </table>`;
