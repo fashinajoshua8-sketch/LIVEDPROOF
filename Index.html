@@ -2142,6 +2142,17 @@ async function deleteActiveCampaign(id){
   }
 }
 
+function parseDurationToMs(durationStr) {
+  if (!durationStr) return 7 * 24 * 60 * 60 * 1000;
+  const parts = durationStr.toLowerCase().split(" ");
+  const num = parseInt(parts[0]) || 1;
+  if (parts[1]?.includes("day")) return num * 24 * 60 * 60 * 1000;
+  if (parts[1]?.includes("hour")) return num * 60 * 60 * 1000;
+  if (parts[1]?.includes("week")) return num * 7 * 24 * 60 * 60 * 1000;
+  if (parts[1]?.includes("month")) return num * 30 * 24 * 60 * 60 * 1000;
+  return 7 * 24 * 60 * 60 * 1000;
+}
+
 async function loadGlobalCampaigns() {
   try {
     const cachedCampaigns = localStorage.getItem("lived_campaigns_cache");
@@ -2172,6 +2183,11 @@ async function loadGlobalCampaigns() {
       const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
       const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, p.wallet_address || null]);
 
+      const createdAtMs = c.created_at ? new Date(c.created_at).getTime() : Date.now();
+      const durationMs = parseDurationToMs(c.duration);
+      const isExpired = (Date.now() - createdAtMs) > durationMs;
+      const finalStatus = (isExpired && c.status === 'ACTIVE') ? 'COMPLETED' : c.status;
+
       return {
         id: Number(c.id),
         name: c.name,
@@ -2186,7 +2202,7 @@ async function loadGlobalCampaigns() {
         targetLinks: c.target_links || c.targetLinks || [],
         brief: c.brief || "",
         requirements: c.requirements || "Open contribution",
-        status: c.status,
+        status: finalStatus,
         payerWallet: c.payer_wallet || c.payerWallet,
         solPaid: Number(c.sol_paid || 0),
         yappers: formattedYappers,
@@ -2195,7 +2211,12 @@ async function loadGlobalCampaigns() {
     };
 
     db.campaigns = sourceData
-      .filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED')
+      .filter(c => {
+        const createdAtMs = c.created_at ? new Date(c.created_at).getTime() : Date.now();
+        const isExpired = (Date.now() - createdAtMs) > parseDurationToMs(c.duration);
+        const computedStatus = (isExpired && c.status === 'ACTIVE') ? 'COMPLETED' : c.status;
+        return computedStatus === 'ACTIVE' || computedStatus === 'COMPLETED';
+      })
       .map(normalize);
 
     db.pendingRequests = sourceData
