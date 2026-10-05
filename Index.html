@@ -1143,35 +1143,31 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
   try {
     const client = requireBackend();
     
-    let earnedXP = 50;
-    let reachVal = 100;
-    let interactionsVal = 25;
-
-    try {
-      const { data, error: funcError } = await client.functions.invoke('verify-tweet-metrics', {
-        body: { 
-          campaignId: campaignId, 
-          handle: db.currentUser.handle, 
-          postUrl: postUrl 
-        }
-      });
-
-      if (!funcError && data && !data.error) {
-        earnedXP = data.earnedXP || 50;
-        reachVal = data.impressions || 100;
-        interactionsVal = (data.likes || 0) + (data.reposts || 0) + (data.comments || 0);
-      } else {
-        console.warn("Edge function returned error, using verified fallback score:", funcError || data?.error);
+    const { data, error: funcError } = await client.functions.invoke('verify-tweet-metrics', {
+      body: { 
+        campaignId: campaignId, 
+        handle: db.currentUser.handle, 
+        postUrl: postUrl 
       }
-    } catch (edgeErr) {
-      console.warn("Edge function unreachable, engaging fallback verification mode:", edgeErr);
+    });
+
+    if (funcError) {
+      throw new Error(funcError.message || "Edge function invocation failed");
     }
+
+    if (data && data.error) {
+      throw new Error(data.error);
+    }
+
+    const earnedXP = data.earnedXP || 50;
+    const reachVal = data.impressions || 100;
+    const interactionsVal = (data.likes || 0) + (data.reposts || 0) + (data.comments || 0);
 
     const { error: subError } = await client.from("campaign_submissions").insert([{
       campaign_id: campaignId,
       handle: db.currentUser.handle,
       post_url: postUrl,
-      metrics: { source: "verified_submission" },
+      metrics: { impressions: reachVal, likes: data.likes, reposts: data.reposts, comments: data.comments },
       score: earnedXP
     }]);
 
@@ -1207,14 +1203,16 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
       }]);
     }
 
-    alert(`🎉 Post Verified & Locked Successfully!\n+${earnedXP} XP added to your score.`);
-    db.currentUser.totalPoints += earnedXP;
+    db.currentUser.totalPoints = Number(db.currentUser.totalPoints || 0) + Number(earnedXP);
     await syncProfileToSupabase();
+    renderLivedCard();
     closeSubmitModal();
     await loadGlobalCampaigns();
     openCampaign(campaignId);
+
+    alert(`🎉 Post Verified & Locked Successfully!\nMetrics: ${data.impressions} Views, ${data.likes} Likes, ${data.reposts} Reposts, ${data.comments} Comments\n+${earnedXP} XP added.`);
   } catch (err) {
-    alert("Error: " + err.message);
+    alert("Verification Error: " + err.message);
   } finally {
     btn.textContent = "Verify & Submit Post →";
     btn.disabled = false;
@@ -2274,7 +2272,7 @@ async function initApp() {
   const safe = async (fn) => { try { await fn(); } catch(e){ console.error(e); } };
   const status = document.getElementById("backendStatus");
   if (status) {
-    status.textContent = BACKEND_CONFIGURED ? "● Supabase backend configured" : "● Supabase backend not configured";
+    status.textContent = BACKEND_CONFIGURED ? "● Supabase backend configured" : "● Supbackend not configured";
     status.style.color = BACKEND_CONFIGURED ? "var(--good)" : "var(--warn)";
   }
   await safe(restoreAdminSession);
