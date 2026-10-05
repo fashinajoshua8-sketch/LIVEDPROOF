@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LIVED PROOF — Web3 Engagement, Identity & Marketing Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- Solana Web3 Browser Bundle -->
 <script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
@@ -18,6 +21,8 @@
   --muted:#9c9388;--line:#ffffff20;--brand:#ff6a00;--brand2:#ff8a33;
   --seal:#c4162a;--good:#4ade80;--warn:#ffc857;--gold:#ffd700;
   --discord:#5865F2;--telegram:#229ED9;
+  --display:"Space Grotesk","Segoe UI",sans-serif;
+  --sans:"DM Sans","Segoe UI",system-ui,sans-serif;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -32,20 +37,21 @@ body{
   background-size:cover, 480px auto;
   background-attachment:fixed;
   color:var(--fg);
-  font-family:Arial,Helvetica,sans-serif;
+  font-family:var(--sans);
   min-height:100vh;
 }
 button,input,textarea,select{font:inherit}
 button{cursor:pointer}
 a{color:inherit;text-decoration:none}
+h1,h2,h3,h4,h5,h6{font-family:var(--display);font-weight:700}
 .shell{max-width:1180px;margin:auto;padding:0 22px}
 
 nav{position:sticky;top:0;z-index:20;background:#050505ee;border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
 .navin{min-height:72px;display:flex;align-items:center;justify-content:space-between;padding:10px 0;gap:12px;flex-wrap:wrap}
-.logo{font-weight:900;letter-spacing:3px;font-size:26px;text-transform:uppercase;text-shadow:0 0 15px rgba(255,106,0,0.4)}
-.logo span{color:var(--brand);font-weight:900}
+.logo{font-family:var(--display);font-weight:700;letter-spacing:3px;font-size:26px;text-transform:uppercase;text-shadow:0 0 15px rgba(255,106,0,0.4)}
+.logo span{color:var(--brand);font-weight:700}
 .navlinks{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.navlinks button, .navlinks a.nav-btn{border:1px solid transparent;background:transparent;color:var(--muted);padding:9px 12px;border-radius:8px;display:inline-flex;align-items:center;font-weight:700;font-size:13px;white-space:nowrap}
+.navlinks button, .navlinks a.nav-btn{border:1px solid transparent;background:transparent;color:var(--muted);padding:9px 12px;border-radius:8px;display:inline-flex;align-items:center;font-family:var(--display);font-weight:700;font-size:13px;white-space:nowrap}
 .navlinks button:hover,.navlinks button.active,.navlinks a.nav-btn:hover{color:var(--fg);border-color:var(--line);background:#ffffff08}
 
 .hero{padding:76px 0 45px;display:grid;grid-template-columns:1.25fr .75fr;gap:30px;align-items:center}
@@ -55,7 +61,7 @@ h2{margin:0 0 12px}
 p{color:var(--muted);line-height:1.65}
 .hero p{max-width:680px;font-size:17px}
 .cta{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}
-.btn{border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:12px 16px;border-radius:9px;font-weight:800}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:12px 16px;border-radius:9px;font-family:var(--display);font-weight:700}
 .btn.primary{background:var(--brand);color:#0a0a0a;border-color:var(--brand)}
 .btn.success{background:var(--good);color:#0a0a0a;border-color:var(--good)}
 .btn.danger{background:var(--seal);color:#fff;border-color:var(--seal)}
@@ -184,7 +190,7 @@ input:focus,textarea:focus,select:focus{border-color:#ff6a0066}
 .netflix-title{
   color:var(--fg);
   font-size:2.2rem;
-  font-weight:900;
+  font-weight:700;
   letter-spacing:-0.5px;
   margin-bottom:16px;
   line-height:1.2;
@@ -322,7 +328,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <div class="modal-overlay" id="submitPostModal">
   <div class="modal-card" style="max-width:460px;text-align:left">
     <h3 style="margin-top:0">Submit Campaign Post</h3>
-    <p class="small">Paste your X post URL below. Unique tweet locking will verify and prevent duplicate farming.</p>
+    <p class="small">Paste your X post URL below. Verified metrics (Min: 10 likes, 5 reposts, 5 comments, 50-100 views) will determine your points.</p>
     <form id="submitPostForm" class="form" style="margin-top:15px">
       <input type="hidden" id="targetCampaignId">
       <div><label>X Post URL</label><input type="url" id="postUrlInput" placeholder="https://x.com/username/status/..." required></div>
@@ -1131,29 +1137,31 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
   }
 
   const btn = document.getElementById("submitPostBtn");
-  btn.textContent = "Verifying & Locking Post...";
+  btn.textContent = "Validating Metrics via X API...";
   btn.disabled = true;
 
   try {
     const client = requireBackend();
-    const fixedXP = 50;
-    const reachVal = 1000;
-    const interactionsVal = 25;
-
-    const { error: subError } = await client.from("campaign_submissions").insert([{
-      campaign_id: campaignId,
-      handle: db.currentUser.handle,
-      post_url: postUrl,
-      metrics: { source: "manual_verified_submission" },
-      score: fixedXP
-    }]);
-
-    if (subError) {
-      if (subError.code === "23505") {
-        throw new Error("X-TWEET-LOCK: This exact X post URL has already been submitted and cannot be farmed twice.");
+    
+    const { data, error: funcError } = await client.functions.invoke('verify-tweet-metrics', {
+      body: { 
+        campaignId: campaignId, 
+        handle: db.currentUser.handle, 
+        postUrl: postUrl 
       }
-      throw subError;
+    });
+
+    if (funcError) {
+      throw new Error(funcError.message || "Edge function invocation failed");
     }
+
+    if (data && data.error) {
+      throw new Error(data.error);
+    }
+
+    const earnedXP = data.earnedXP || 50;
+    const reachVal = data.impressions || 100;
+    const interactionsVal = (data.likes || 0) + (data.reposts || 0) + (data.comments || 0);
 
     const { data: existingPart } = await client
       .from("campaign_participants")
@@ -1164,7 +1172,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
 
     if (existingPart) {
       await client.from("campaign_participants").update({
-        score: (existingPart.score || 0) + fixedXP,
+        score: (existingPart.score || 0) + earnedXP,
         reach: (existingPart.reach || 0) + reachVal,
         interactions: (existingPart.interactions || 0) + interactionsVal,
         wallet_address: db.currentUser.wallet || existingPart.wallet_address
@@ -1173,21 +1181,21 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
       await client.from("campaign_participants").insert([{
         campaign_id: campaignId,
         handle: db.currentUser.handle,
-        score: fixedXP,
+        score: earnedXP,
         reach: reachVal,
         interactions: interactionsVal,
         wallet_address: db.currentUser.wallet || null
       }]);
     }
 
-    alert(`🎉 Post Verified & Locked Successfully!\n+${fixedXP} XP added to your score.`);
-    db.currentUser.totalPoints += fixedXP;
+    alert(`🎉 Post Verified & Locked Successfully!\nMetrics: ${data.impressions} Views, ${data.likes} Likes, ${data.reposts} Reposts, ${data.comments} Comments\n+${earnedXP} XP added.`);
+    db.currentUser.totalPoints += earnedXP;
     await syncProfileToSupabase();
     closeSubmitModal();
     await loadGlobalCampaigns();
     openCampaign(campaignId);
   } catch (err) {
-    alert("Error: " + err.message);
+    alert("Verification Error: " + err.message);
   } finally {
     btn.textContent = "Verify & Submit Post →";
     btn.disabled = false;
