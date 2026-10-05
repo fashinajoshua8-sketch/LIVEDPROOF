@@ -1212,7 +1212,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
 
     alert(`🎉 Post Verified & Locked Successfully!\nMetrics: ${data.impressions} Views, ${data.likes} Likes, ${data.reposts} Reposts, ${data.comments} Comments\n+${earnedXP} XP added.`);
   } catch (err) {
-    alert("Verification Error: " + err.message);
+    alert("❌ Submission Unsuccessful\n\n" + err.message);
   } finally {
     btn.textContent = "Verify & Submit Post →";
     btn.disabled = false;
