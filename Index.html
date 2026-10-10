@@ -774,13 +774,21 @@ try {
   
   if (BACKEND_CONFIGURED && window.supabase && typeof window.supabase.createClient === 'function') {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+      auth: { 
+        persistSession: true, 
+        autoRefreshToken: true, 
+        detectSessionInUrl: true,
+        storage: window.localStorage
+      },
+      global: {
+        headers: { 'apikey': SUPABASE_ANON_KEY }
+      }
     });
+    console.log("Supabase client initialized successfully.");
   }
 } catch (e) {
-  console.warn("Supabase client  note:", e);
+  console.error("Supabase client init error:", e);
 }
-
 function requireBackend(){
   if (!BACKEND_CONFIGURED || !supabaseClient) {
     alert("LIVED Proof backend is not configured yet.");
