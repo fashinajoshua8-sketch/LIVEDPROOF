@@ -1692,14 +1692,21 @@ async function loadGlobalCampaigns() {
   console.log("loadGlobalCampaigns started...");
   try {
     const client = requireBackend();
-    console.log("Supabase client obtained. Executing queries...");
+    console.log("Supabase client obtained. Executing queries with a 4s timeout...");
 
-    const [campRes, partRes] = await Promise.all([
+    // Wrap the Supabase network queries in a strict 4-second timeout race
+    const queryPromise = Promise.all([
       client.from('campaigns').select('*').order('created_at', { ascending: false }),
       client.from('campaign_participants').select('*')
     ]);
 
-    console.log("Supabase queries finished. CampRes:", campRes);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Supabase query network request timed out after 4s")), 4000)
+    );
+
+    const [campRes, partRes] = await Promise.race([queryPromise, timeoutPromise]);
+
+    console.log("Supabase queries finished successfully!", campRes);
 
     if (campRes.error) {
       console.error("Supabase campaign fetch error details:", campRes.error);
@@ -1747,9 +1754,9 @@ async function loadGlobalCampaigns() {
     if (isAdminLoggedIn) renderAdminQueue();
     console.log("Global campaigns rendered successfully!");
   } catch (err) {
-    console.error("Critical error inside loadGlobalCampaigns catch block:", err);
+    console.warn("Network request caught by fallback timeout:", err.message);
     
-    // Fallback to cache so the UI still loads
+    // Fallback gracefully to local cache so the page renders instantly
     const cachedCampaigns = localStorage.getItem("lived_campaigns_cache");
     if (cachedCampaigns) {
       const parsed = JSON.parse(cachedCampaigns);
@@ -1759,6 +1766,7 @@ async function loadGlobalCampaigns() {
       renderCampaigns();
       renderHome();
       if (isAdminLoggedIn) renderAdminQueue();
+      console.log("Fallback to local cache completed successfully.");
     }
   }
 }
