@@ -1689,17 +1689,20 @@ async function adminDeductParticipantXP(campaignId, handle) {
 }
 
 async function loadGlobalCampaigns() {
+  console.log("loadGlobalCampaigns started...");
   try {
     const client = requireBackend();
-    
-    // Fetch directly with a generous timeout or standard await to ensure data integrity
+    console.log("Supabase client obtained. Executing queries...");
+
     const [campRes, partRes] = await Promise.all([
       client.from('campaigns').select('*').order('created_at', { ascending: false }),
       client.from('campaign_participants').select('*')
     ]);
 
+    console.log("Supabase queries finished. CampRes:", campRes);
+
     if (campRes.error) {
-      console.error("Campaign fetch error:", campRes.error.message);
+      console.error("Supabase campaign fetch error details:", campRes.error);
       return;
     }
 
@@ -1742,9 +1745,11 @@ async function loadGlobalCampaigns() {
     renderCampaigns();
     renderHome();
     if (isAdminLoggedIn) renderAdminQueue();
+    console.log("Global campaigns rendered successfully!");
   } catch (err) {
-    console.warn("Using cached fallback due to network error:", err.message);
-    // Fallback to local cache if network fails completely
+    console.error("Critical error inside loadGlobalCampaigns catch block:", err);
+    
+    // Fallback to cache so the UI still loads
     const cachedCampaigns = localStorage.getItem("lived_campaigns_cache");
     if (cachedCampaigns) {
       const parsed = JSON.parse(cachedCampaigns);
