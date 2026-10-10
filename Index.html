@@ -1697,20 +1697,35 @@ async function adminDeductParticipantXP(campaignId, handle) {
 }
 
 async function loadGlobalCampaigns() {
-  console.log("Loading campaigns directly from Supabase...");
+  console.log("Loading campaigns with fast cache fallback...");
+  
+  // 1. Instantly render from local cache so the UI never waits
+  const cachedCampaigns = localStorage.getItem("lived_campaigns_cache");
+  if (cachedCampaigns) {
+    try {
+      const parsed = JSON.parse(cachedCampaigns);
+      db.campaigns = parsed.campaigns || [];
+      db.pendingRequests = parsed.pendingRequests || [];
+      db.allAdminCampaigns = parsed.allAdminCampaigns || [];
+      renderCampaigns();
+      renderHome();
+      if (isAdminLoggedIn) renderAdminQueue();
+    } catch (e) {}
+  }
+
   try {
     const client = requireBackend();
 
-    // Fetch campaigns and participants independently so one blocked query won't hang the other
-    const campPromise = client.from('campaigns').select('*').order('created_at', { ascending: false });
-    const partPromise = client.from('campaign_participants').select('*');
+    // 2. Fetch in background without blocking the UI thread
+    const [campRes, partRes] = await Promise.all([
+      client.from('campaigns').select('id, name, category, currency, native_token_name, budget, duration, max_participants, top_rewarded, target_links, brief, requirements, status, created_at').order('created_at', { ascending: false }),
+      client.from('campaign_participants').select('*')
+    ]);
 
-    const [campRes, partRes] = await Promise.allSettled([campPromise, partPromise]);
+    if (campRes.error) return;
 
-    const sourceData = campRes.status === 'fulfilled' && !campRes.value.error ? (campRes.value.data || []) : [];
-    const allParticipants = partRes.status === 'fulfilled' && !partRes.value.error ? (partRes.value.data || []) : [];
-
-    console.log(`Fetched ${sourceData.length} campaigns and ${allParticipants.length} participants.`);
+    const sourceData = campRes.data || [];
+    const allParticipants = partRes.data || [];
 
     const normalize = (c) => {
       const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
@@ -1721,7 +1736,7 @@ async function loadGlobalCampaigns() {
         category: c.category,
         currency: c.currency || "SOL",
         nativeTokenName: c.native_token_name || null,
-        image: c.image,
+        image: c.image || "",
         budget: Number(c.budget),
         duration: c.duration,
         maxParticipants: c.max_participants || 50,
@@ -1748,9 +1763,9 @@ async function loadGlobalCampaigns() {
     renderCampaigns();
     renderHome();
     if (isAdminLoggedIn) renderAdminQueue();
-    console.log("Campaigns rendered successfully!");
+    console.log("Background sync and UI refresh completed successfully!");
   } catch (err) {
-    console.error("Error in loadGlobalCampaigns:", err);
+    console.warn("Background fetch delayed:", err.message);
   }
 }
 
