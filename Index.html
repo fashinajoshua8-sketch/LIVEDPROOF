@@ -778,7 +778,7 @@ try {
     });
   }
 } catch (e) {
-  console.warn("Supabase client init note:", e);
+  console.warn("Supabase client  note:", e);
 }
 
 function requireBackend(){
@@ -1989,18 +1989,43 @@ async function renderAdminQueue(){
 }
 
 async function initApp() {
-  await restoreAdminSession();
-  await loadProfileFromSupabase();
+  console.log("Initializing LIVED Proof App...");
+  try {
+    await restoreAdminSession();
+    console.log("Admin session restored.");
+  } catch (e) { console.warn("Admin session error:", e); }
+
+  try {
+    await loadProfileFromSupabase();
+    console.log("Profile loaded.");
+  } catch (e) { console.warn("Profile load error:", e); }
+
   if (BACKEND_CONFIGURED) {
-    await loadGlobalCampaigns();
-    subscribeToNotifications();
-    supabaseClient.channel('schema-db-changes').on('postgres_changes', { event: '*', schema: 'public' }, () => {
-      loadGlobalCampaigns();
-    }).subscribe();
+    console.log("Backend is configured. Loading global campaigns...");
+    try {
+      await loadGlobalCampaigns();
+      console.log("Global campaigns loaded successfully.");
+    } catch (e) { console.error("Global campaigns load failed:", e); }
+
+    try {
+      subscribeToNotifications();
+    } catch (e) { console.warn("Notifications subscription error:", e); }
+
+    try {
+      supabaseClient.channel('schema-db-changes').on('postgres_changes', { event: '*', schema: 'public' }, () => {
+        loadGlobalCampaigns();
+      }).subscribe();
+    } catch (e) { console.warn("Realtime channel error:", e); }
+
+    try {
+      fetchLiveSolPrice();
+    } catch (e) { console.warn("Sol price fetch error:", e); }
+  } else {
+    console.warn("BACKEND_CONFIGURED is false! Check Supabase keys.");
   }
+
   renderHome();
   renderLivedCard();
-  if (BACKEND_CONFIGURED) fetchLiveSolPrice();
 }
 
 initApp();
