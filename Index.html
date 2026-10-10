@@ -10,8 +10,8 @@
 
 <!-- Solana Web3 Browser Bundle -->
 <script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
-<!-- Supabase JS Client CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase JS Client UMD Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <!-- Cloudflare Turnstile API Script -->
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
@@ -65,6 +65,7 @@ p{color:var(--muted);line-height:1.65}
 .btn.primary{background:var(--brand);color:#0a0a0a;border-color:var(--brand)}
 .btn.success{background:var(--good);color:#0a0a0a;border-color:var(--good)}
 .btn.danger{background:var(--seal);color:#fff;border-color:var(--seal)}
+.btn.warn{background:var(--warn);color:#0a0a0a;border-color:var(--warn)}
 .btn.discord{background:var(--discord);color:#fff;border-color:var(--discord)}
 .btn.telegram{background:var(--telegram);color:#fff;border-color:var(--telegram)}
 .btn.sm{padding:6px 12px;font-size:12px}
@@ -462,6 +463,16 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   <div class="panel">
     <div class="kicker">Project portal</div>
     <h2>Submit a Campaign Request</h2>
+    
+    <div style="margin-bottom:20px;padding:14px;background:rgba(255,106,0,0.04);border:1px solid var(--line);border-radius:10px">
+        <label style="color:var(--brand2);display:block;margin-bottom:8px">⚡ Quick-Start Campaign Templates</label>
+        <div class="actions">
+            <button type="button" class="btn sm" onclick="applyCampaignTemplate('DeFi Blast')">🚀 DeFi Blast Template</button>
+            <button type="button" class="btn sm" onclick="applyCampaignTemplate('AI Push')">🤖 AI Push Template</button>
+            <button type="button" class="btn sm" onclick="applyCampaignTemplate('Memecoin Raid')">🔥 Memecoin Raid Template</button>
+        </div>
+    </div>
+
     <form id="campaignForm" class="form">
       <div class="row">
         <div><label>Project / Campaign Name</label><input id="cName" required placeholder="e.g. NOVA Community Push"></div>
@@ -571,7 +582,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
     <div class="notice" style="margin:20px 0">
       <b>Instructions:</b> Open your Solana wallet (Phantom, Solflare, Glow), transfer the exact SOL amount shown above to the LIVED Treasury address, and click the confirmation button below once completed.
     </div>
-
+    
     <div class="actions" style="justify-content:space-between">
       <button class="btn" onclick="show('create')">← Back to Edit</button>
       <button class="btn success" id="confirmPaymentBtn" type="button" onclick="confirmManualPayment()">✓ Confirm Payment Has Been Made</button>
@@ -690,8 +701,11 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         <div id="adminSubmissionsList"></div>
       </div>
       
-      <h3 style="margin-top:35px">Manage Active Campaigns, Participants & Payout Wallets</h3>
+      <h3 style="margin-top:35px">Manage All Campaigns & Status Management</h3>
       <div id="adminActiveList" style="margin-top:15px"></div>
+
+      <h3 style="margin-top:35px">Campaign Winner Payouts & Settlement</h3>
+      <div id="adminPayoutsList"></div>
     </div>
   </div>
 </section>
@@ -750,17 +764,22 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 </footer>
 
 <script>
-const SUPABASE_URL = "https://zzjcfxsvgjtzketnfjqn.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_nnvegQL3tnQJTCeHEnQaCw_zTKwSovu";
-const BACKEND_CONFIGURED =
-  /^https:\/\/[^\s]+\.supabase\.co$/i.test(SUPABASE_URL) &&
-  SUPABASE_ANON_KEY &&
-  !SUPABASE_ANON_KEY.startsWith("REPLACE_");
-const supabaseClient = BACKEND_CONFIGURED
-  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+let supabaseClient = null;
+let BACKEND_CONFIGURED = false;
+
+try {
+  const SUPABASE_URL = "https://zzjcfxsvgjtzketnfjqn.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_nnvegQL3tnQJTCeHEnQaCw_zTKwSovu";
+  BACKEND_CONFIGURED = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.startsWith("REPLACE_"));
+  
+  if (BACKEND_CONFIGURED && window.supabase && typeof window.supabase.createClient === 'function') {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
-    })
-  : null;
+    });
+  }
+} catch (e) {
+  console.warn("Supabase client init note:", e);
+}
 
 function requireBackend(){
   if (!BACKEND_CONFIGURED || !supabaseClient) {
@@ -770,10 +789,10 @@ function requireBackend(){
   return supabaseClient;
 }
 
-const SEAL = "data:image/jpeg;base64,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.oehBkocQ4bzThpdWaJKWGG8ly2a7WsxXo5YZY4VvOzOLrdyHmruJtS3O5dlblUebLoxUlN2VV4s7GWSMnqkO/O9KrrgOlA0QEmdBAacFVqzwd6teHQ5Llt1mrlrSYtSdQTVt2a011j9a2O0YDVdh6Mtrjcg1odOsUYelqhjdueUfToQKjGmOTZmMIm5k6BC1nz0lzS6vOSwWM5rA1KmEehcyYdcKOiJ2s6ugks3ea84rjyN5+tulISa5hLDUWlpWq99sj0o39PF0ZIhpJosrUCmJko0QNKE6Bvd3Ax6G9TJtzoryUlIxqYnwiDfnjwIN+51vfDXDbDbPbbbTffDbTbDfDXbLTPfLMfbLTTffDXTLHHDDPPPOPOOP//EADIRAQADAAICAQMDBAMBAQEBAQAEERIhMUEEUTFAYXGBkbHwocHR8TBAgIDBgPFwgP/a2gAIAQMBAT8Q/wD39vY7N6n6j9x+5/afvL+N+Z+5/cf1n7v7P6T9t/hP6X9p/V/tfuP2n7b9L+5/cf0v3n7b9p+v7n9z9x/W/YftP6f6X7z+h/afsf1v2n737P3/AKH9j+h+1/aftv8Af8v2n7T+l+8/Y/v/ALt/v/Af/qf0H7D9p+5/c/pf3P3H9L9j9t+z9p/afqf3n9D9x+5/a/sf2n7b+h/Sftf2n7L9p/af0v3H7T+l/b/sf2P6X9T9p+5/a/sfuP3H7n9r+t/aftP2N6f7D+x/Y/ofqfufqf2P3H7T9j+h/ef2H7b+p/p/ef2H7T+l+w/aftv3H7L9t+p+w/ofsf0n9p+o/Sfsf2N6f7H9p+1/aftv6T9h+5/W/sP3P6T9t/a/sfuP6H9L8X/9k=";
-const KEY="lived_proof_prod_v5";
-let currentCategory="All";
-let isAdminLoggedIn=false;
+const SEAL = "data:image/jpeg;base64,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h6b0/XU6d/eC6H46d03f6n42y+reGk8U6R669RrvMuuI7k+58R/SffR3v11vC6K9t+9q7v5h94Nn01o0+rVre8L099R6JrfUrf0h3n1uPZovf8AeX2P7x/uP0m/1H11l9Z3v1jN0vW8vpv0uH947dZf8AvX4mdf8ASmk257n6z9L80N+9K2u0J0v9l3zhL5luvX+L/wC5m0Lc7m7SP/8AN/z7ld7di++sfUfu82a3ibR/l+s0/XeJesB+NH1ivtA/jaXqfod5/wB/uPxv6tn28zw7TSvSWr95msf1L6TS/wDD/eV7zM/bf+/T/wAVjzAWe8v3gfK+oekfWerq6999wv13zPr/AHEvMNsrP7wVs59WJ9YXW/vcTr3n6z+0P80t1/rxP9PvEBbWvDtmLV9EDsS7e8T6v9T+J7Zu/AX325y1r1X2872vrN75m/5/v1n1v/v/AMev1vS/m9ZevV1m/fvM9L/eb3/v+9/tN7+s66/rP99fSb763tPrP5/f3m/OvpPrr09b9f55vX9/n7Te/S8z9f69b+/8A51f/ALt9d/1vv1vveZ+/13vP33t/t9Jvvpfe9/vP+3v7w66z+9pvv+ut/mX99b8/S9b6v36z6739b69b/v6y9Z3v+vXzrrrvPv1n+/AOD116z/AL7vrN/eet/9Z9dfXfe/rL19b9b69b+8vvfe76a7617+uv8Ad3r19da639/f0vX3vrrvfv8A3rv31vfvrN9d9b69b/e/W9et/fet/f8A1vrN+9/ve/Wfv9/evvN779b69f6973rrvrv0m9a/f8/33/vfW77636+k31rr1v0vXXe/vL95vrrv1v13vv11rv01vvrfe/Wfv1vfvPvrrvvN9da3e/8Am99+k66/vfrf5/tvrve/vN9b3rrv1v8Ae9b+8/e9Z6X9/wA79N669b/f+v8AvWf9679fve8/vevvfvr19df1vvPrvvP+76z6X+euv5+t/ee3r3111v11vvvffr/d3rrre/W/31v019/bW/0vrrvv7+/116z/AHvf3vrvrP8AvX1n9+v9vXrrvv8AvfrPvfeuvvf+b6zvrre+93evf+b+9/5fv11v7619/f3rrvr79b/f8/3rrv13/AHrvr1vf3vvvfe/vev5+k36a3666/wB/ve/rfrP7r1nvvrffXrv1/vvXrrrf13v/AL+97/e+t9L1/v769fevfXe+vfe71vr/AHe/93v731v+719db1vrvvrfrb31vv8An/mvv3rvP5vrPvf71v8At/euv93vW/3+ut7633vvPv76z9/vvve/93v/AHfvLrfvfe/W/f8AvX/N9/7rrf033rrvr/f++uv91r/evrf+/vfe77/W79d/630v3vvf7z+vX/f/AFv/AHvf3vr99e/rv1vvf7/W/wDPvefvN/rN799b/wBb9L1vvvffvL6f9977/W7vrfe+vvf+/ve+v9/vrX39637731rr/Av/2Q==";
+const KEY = "lived_proof_prod_v5";
+let currentCategory = "All";
+let isAdminLoggedIn = false;
 let uploadedCampaignImageBase64 = "";
 
 const X_CLIENT_ID = "cktsY045MnNIajZGU0JIQTBaRlQ6MTpjaQ"; 
@@ -790,6 +809,65 @@ const DURATION_LIMITS = {
   "30 days": { min: 50, max: 250000 }
 };
 
+const CAMPAIGN_TEMPLATES = {
+  "DeFi Blast": {
+    name: "DeFi Liquidity & Volume Push",
+    category: "DeFi",
+    currency: "USDC",
+    duration: "7 days",
+    budget: 50,
+    maxParticipants: 100,
+    topRewarded: 10,
+    brief: "Focus on driving deep protocol liquidity awareness, explaining yield mechanics, and highlighting secure TVL milestones.",
+    requirements: "Min 500 followers, tag official protocol handle, use $DEFI ticker."
+  },
+  "AI Push": {
+    name: "AI Agent & Compute Showcase",
+    category: "AI",
+    currency: "SOL",
+    duration: "3 days",
+    budget: 30,
+    maxParticipants: 50,
+    topRewarded: 5,
+    brief: "Demonstrate agent capabilities, thread breakdowns of autonomous workflows, and interactive demos.",
+    requirements: "Post video demo or comprehensive technical thread."
+  },
+  "Memecoin Raid": {
+    name: "Viral Community Memecoin Raid",
+    category: "Memecoin",
+    currency: "Native Token",
+    nativeTokenName: "LIVED",
+    duration: "1 day",
+    budget: 20,
+    maxParticipants: 200,
+    topRewarded: 20,
+    brief: "High-energy viral memes, raid community threads, and community engagement pushes.",
+    requirements: "Creative meme image or video, tag 3 friends."
+  }
+};
+
+function applyCampaignTemplate(templateKey) {
+  const t = CAMPAIGN_TEMPLATES[templateKey];
+  if (!t) return;
+
+  document.getElementById("cName").value = t.name;
+  document.getElementById("cCategory").value = t.category;
+  document.getElementById("cCurrency").value = t.currency;
+  toggleNativeTokenInput();
+  if (t.currency === "Native Token") {
+    document.getElementById("cNativeTokenName").value = t.nativeTokenName || "";
+  }
+  document.getElementById("cDuration").value = t.duration;
+  document.getElementById("cBudget").value = t.budget;
+  document.getElementById("cMaxParticipants").value = t.maxParticipants;
+  document.getElementById("cTopRewarded").value = t.topRewarded;
+  document.getElementById("cBrief").value = t.brief;
+  document.getElementById("cRequirements").value = t.requirements;
+
+  syncBudgetRules();
+  alert(`📋 Template "${templateKey}" applied successfully!`);
+}
+
 let savedUser = null;
 try {
   savedUser = JSON.parse(localStorage.getItem("lived_current_user_cache"));
@@ -805,10 +883,10 @@ let db = {
     wallet: null
   },
   campaigns: [],
-  pendingRequests: []
+  pendingRequests: [],
+  allAdminCampaigns: []
 };
 
-function save(){ /* Cloud-native profile state saved in Supabase */ }
 function esc(s){ return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
 function safeImg(s){ return /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+\/=]+$/.test(String(s||"")) ? s : ""; }
 function safeUrl(s){ return /^https?:\/\//i.test(String(s||"")) ? s : "#"; }
@@ -829,10 +907,24 @@ async function fetchLiveSolPrice() {
     const data = await res.json();
     if (data && data.solana && data.solana.usd) {
       dynamicSolPrice = data.solana.usd;
+      console.log("Live SOL Price fetched from CoinGecko:", dynamicSolPrice);
       updateBudgetCalculations();
+      return;
     }
   } catch (err) {
-    console.warn("Using fallback SOL conversion price due to network limits:", err);
+    console.warn("CoinGecko fetch failed, trying fallback public ticker...", err);
+  }
+
+  try {
+    const binanceRes = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT");
+    const binanceData = await binanceRes.json();
+    if (binanceData && binanceData.price) {
+      dynamicSolPrice = Number(binanceData.price);
+      console.log("Live SOL Price fetched from Binance Fallback:", dynamicSolPrice);
+      updateBudgetCalculations();
+    }
+  } catch (err2) {
+    console.error("All live price fetches failed. Using fallback price:", dynamicSolPrice);
   }
 }
 
@@ -853,8 +945,13 @@ function show(id){
   window.scrollTo({top:0, behavior:"smooth"});
 }
 
-document.querySelectorAll(".navlinks button[data-view]").forEach(b => {
-  b.addEventListener("click", () => show(b.dataset.view));
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".navlinks button[data-view]").forEach(b => {
+    b.addEventListener("click", (e) => {
+      e.preventDefault();
+      show(b.dataset.view);
+    });
+  });
 });
 
 function renderHome(){
@@ -921,7 +1018,7 @@ function renderCampaigns(){
 
 function openCampaign(id){
   const numericId = Number(id);
-  const c = db.campaigns.find(x => Number(x.id) === numericId) || db.pendingRequests?.find(x => Number(x.id) === numericId);
+  const c = db.campaigns.find(x => Number(x.id) === numericId) || db.allAdminCampaigns?.find(x => Number(x.id) === numericId) || db.pendingRequests?.find(x => Number(x.id) === numericId);
   if(!c) {
     alert("Campaign details could not be loaded. Please refresh the page.");
     return;
@@ -960,6 +1057,11 @@ function openCampaign(id){
       <img src="${safeImg(c.image)}" style="width:100%;height:100%;object-fit:cover" alt="${esc(c.name)}">
     </div>
   ` : '';
+
+  const isLocked = c.status === "COMPLETED" || c.status === "ARCHIVED" || c.status === "REJECTED";
+  let submitButtonHtml = isLocked ? 
+    `<div class="notice" style="color:var(--warn)">🔒 Campaign Completed or Inactive. Submissions closed.</div>` :
+    `<div style="margin:20px 0"><button class="btn primary" onclick="openSubmitPostModal(${c.id})">📤 Submit X Post for Verified Points</button></div>`;
   
   document.getElementById("detailContent").innerHTML = `
     ${heroBanner}
@@ -978,10 +1080,7 @@ function openCampaign(id){
     <div class="metric"><span>Requirements</span><span class="small">${esc(c.requirements||'Open to all verified creators.')}</span></div>
     
     ${linksHtml}
-
-    <div style="margin:20px 0">
-      <button class="btn primary" onclick="openSubmitPostModal(${c.id})">📤 Submit X Post for Verified Points</button>
-    </div>
+    ${submitButtonHtml}
     
     ${topOne ? `
       <div class="top-podium" style="margin-top:20px">
@@ -1001,14 +1100,14 @@ function openCampaign(id){
     ` : ''}
 
     <h3 style="margin-top:24px">Live Leaderboard & Rewards</h3>
-    <p class="small">Proportional reward pool distribution based on total XP points.</p>
+    <p class="small">Proportional reward pool distribution based on total XP points (Tiebreaker: Total XP → Networking XP → Join Time).</p>
     ${leaderboardHTML(c, pool, currencyLabel)}
     
     <div class="actions" style="margin-top:22px">
-      ${c.joined ? 
+      ${isLocked ? '' : (c.joined ? 
         `<button class="btn danger" onclick="leaveCampaign(${c.id})">Exit Campaign</button>` : 
         `<button class="btn primary" onclick="joinCampaign(${c.id})">Join Campaign</button>`
-      }
+      )}
       <a href="https://discord.gg/y9WVFRrwt" target="_blank" class="btn discord">Join Campaign Discord ↗</a>
       <button class="btn" onclick="show('campaigns')">← Back to Directory</button>
     </div>
@@ -1017,35 +1116,47 @@ function openCampaign(id){
 }
 
 function leaderboardHTML(c, pool, currencyLabel="SOL"){
-  const yList = (c.yappers||[]).slice().sort((a,b)=>b[1]-a[1]);
+  let effectivePool = pool;
+  if (currencyLabel.toUpperCase() === "SOL" && dynamicSolPrice > 0) {
+    effectivePool = pool / dynamicSolPrice;
+  }
+
+  const yList = (c.yappers||[]).slice().sort((a, b) => {
+    const scoreA = Number(a[1] || 0);
+    const scoreB = Number(b[1] || 0);
+    if (scoreB !== scoreA) return scoreB - scoreA;
+
+    const netA = Number(a[5] || 0);
+    const netB = Number(b[5] || 0);
+    if (netB !== netA) return netB - netA;
+
+    const timeA = new Date(a[6] || 0).getTime();
+    const timeB = new Date(b[6] || 0).getTime();
+    return timeA - timeB;
+  });
+
   const totalPoints = yList.reduce((sum, y) => sum + Number(y[1] || 0), 0);
-  
   const isFinalized = c.status === "COMPLETED";
   const payoutHeaderLabel = isFinalized ? "Final Reward" : "Estimated Payout";
 
   const rows = yList.map((y,i)=>{
     const badge = i === 0 ? '👑 #1' : `#${i+1}`;
     const userPoints = Number(y[1] || 0);
-    
+    const networkingPoints = Number(y[5] || 0);
     let payoutVal = 0;
     if (totalPoints > 0 && userPoints > 0) {
-      payoutVal = pool * (userPoints / totalPoints);
+      payoutVal = effectivePool * (userPoints / totalPoints);
     }
-    
-    const payoutDisplay = `${payoutVal.toFixed(2)} ${currencyLabel}`;
-    const statusDisplay = isFinalized ? 
-      `<span style="color:var(--good)">Finalized Payout</span>` : 
-      `<span class="small" style="color:var(--muted)">Proportional Share</span>`;
+    const payoutDisplay = currencyLabel.toUpperCase() === "SOL" ? `${payoutVal.toFixed(4)} SOL` : `${payoutVal.toFixed(2)} ${currencyLabel}`;
+    const statusDisplay = isFinalized ? `<span style="color:var(--good)">Finalized Payout</span>` : `<span class="small" style="color:var(--muted)">Proportional Share</span>`;
 
     return `<tr>
       <td class="rank">${badge}</td>
       <td><span class="avatar">${esc(y[0].replace("@","").slice(0,2).toUpperCase())}</span>${esc(y[0])}</td>
-      <td class="score">${userPoints} XP</td>
+      <td class="score">${userPoints} XP <span class="small" style="display:block;color:var(--brand2)">(${networkingPoints} Net XP)</span></td>
       <td>${Number(y[2] || 0).toLocaleString()}</td>
       <td>${Number(y[3] || 0).toLocaleString()}</td>
-      <td style="color:var(--fg);font-weight:700">
-        ${payoutDisplay} <br>${statusDisplay}
-      </td>
+      <td style="color:var(--fg);font-weight:700">${payoutDisplay} <br>${statusDisplay}</td>
     </tr>`;
   }).join("");
 
@@ -1073,15 +1184,13 @@ async function joinCampaign(id){
     campaign_id: numericId,
     handle: db.currentUser.handle,
     score: 0,
+    networking_xp: 0,
     reach: 0,
     interactions: 0,
     wallet_address: db.currentUser.wallet || null
   }]);
 
-  if(error){ 
-    alert("Could not join campaign: " + error.message); 
-    return; 
-  }
+  if(error){ alert("Could not join campaign: " + error.message); return; }
 
   db.currentUser.joinedCount += 1;
   await syncProfileToSupabase();
@@ -1097,10 +1206,7 @@ async function leaveCampaign(id){
   const client = requireBackend();
   const { error } = await client.from('campaign_participants').delete().eq('campaign_id', numericId).eq('handle', db.currentUser.handle);
 
-  if(error){ 
-    alert("Could not exit campaign: " + error.message); 
-    return; 
-  }
+  if(error){ alert("Could not exit campaign: " + error.message); return; }
 
   db.currentUser.joinedCount = Math.max(0, db.currentUser.joinedCount - 1);
   c.joined = false;
@@ -1142,13 +1248,8 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
 
   try {
     const client = requireBackend();
-    
     const { data, error: funcError } = await client.functions.invoke('verify-tweet-metrics', {
-      body: { 
-        campaignId: campaignId, 
-        handle: db.currentUser.handle, 
-        postUrl: postUrl 
-      }
+      body: { campaignId: campaignId, handle: db.currentUser.handle, postUrl: postUrl }
     });
 
     if (funcError) {
@@ -1157,19 +1258,15 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
         if (funcError.context && typeof funcError.context.json === 'function') {
           const errJson = await funcError.context.json();
           if (errJson && errJson.error) errorMsg = errJson.error;
-        } else if (typeof funcError.context === 'string') {
-          const errParsed = JSON.parse(funcError.context);
-          if (errParsed && errParsed.error) errorMsg = errParsed.error;
         }
       } catch (e) {}
       throw new Error(errorMsg);
     }
 
-    if (data && data.error) {
-      throw new Error(data.error);
-    }
+    if (data && data.error) throw new Error(data.error);
 
     const earnedXP = data.earnedXP || 50;
+    const networkingXPVal = Math.floor(earnedXP * 0.5);
     const reachVal = data.impressions || 100;
     const interactionsVal = (data.likes || 0) + (data.reposts || 0) + (data.comments || 0);
 
@@ -1182,9 +1279,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     }]);
 
     if (subError) {
-      if (subError.code === "23505") {
-        throw new Error("X-TWEET-LOCK: This exact X post URL has already been submitted and cannot be farmed twice.");
-      }
+      if (subError.code === "23505") throw new Error("X-TWEET-LOCK: This exact X post URL has already been submitted.");
       throw subError;
     }
 
@@ -1198,6 +1293,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     if (existingPart) {
       await client.from("campaign_participants").update({
         score: (existingPart.score || 0) + earnedXP,
+        networking_xp: (existingPart.networking_xp || 0) + networkingXPVal,
         reach: (existingPart.reach || 0) + reachVal,
         interactions: (existingPart.interactions || 0) + interactionsVal,
         wallet_address: db.currentUser.wallet || existingPart.wallet_address
@@ -1207,6 +1303,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
         campaign_id: campaignId,
         handle: db.currentUser.handle,
         score: earnedXP,
+        networking_xp: networkingXPVal,
         reach: reachVal,
         interactions: interactionsVal,
         wallet_address: db.currentUser.wallet || null
@@ -1220,7 +1317,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     await loadGlobalCampaigns();
     openCampaign(campaignId);
 
-    alert(`🎉 Post Verified & Locked Successfully!\nMetrics: ${data.impressions} Views, ${data.likes} Likes, ${data.reposts} Reposts, ${data.comments} Comments\n+${earnedXP} XP added.`);
+    alert(`🎉 Post Verified & Locked Successfully!\n+${earnedXP} XP added.`);
   } catch (err) {
     alert("❌ Submission Unsuccessful\n\n" + err.message);
   } finally {
@@ -1254,14 +1351,6 @@ function renderDashboard(targetId){
       <div class="stat"><b>${money(pool)} (${currencyLabel})</b><span class="small">Contributor Pool (90%)</span></div>
       <div class="stat"><b>Proportional</b><span class="small">Reward Distribution</span></div>
     </div>
-
-    <div class="stats" style="margin-top:10px">
-      <div class="stat"><b>${(c.yappers?c.yappers.length:0)} / ${c.maxParticipants || '∞'}</b><span class="small">Participants Cap</span></div>
-      <div class="stat"><b>${totalReach.toLocaleString()}</b><span class="small">Total Campaign Reach</span></div>
-      <div class="stat"><b>${totalInteractions.toLocaleString()}</b><span class="small">Total Interactions</span></div>
-      <div class="stat"><b>${esc(c.duration)}</b><span class="small">Campaign Window</span></div>
-    </div>
-
     <div class="card" style="margin-top:20px">
       <h3>Active Leaderboard & Performance Payouts (${currencyLabel})</h3>
       ${leaderboardHTML(c, pool, currencyLabel)}
@@ -1272,14 +1361,10 @@ function renderDashboard(targetId){
 function getCardProfile(){
   const pts = db.currentUser.totalPoints;
   const joined = db.currentUser.joinedCount;
-
   let role = "Registered Contributor";
   let progressPct = Math.min(100, Math.round((pts / 70) * 100));
   let progressText = `${pts} / 70 PTS to Verified`;
-
-  const badges = [
-    { label: "✍ REGISTERED CONTRIBUTOR", cls: "badge-creator" }
-  ];
+  const badges = [{ label: "✍ REGISTERED CONTRIBUTOR", cls: "badge-creator" }];
 
   if(db.currentUser.wallet) badges.push({ label: "⚡ WEB3 CONNECTED", cls: "badge-verified" });
   if(db.currentUser.xHandle) badges.push({ label: "🕦 X VERIFIED", cls: "badge-legend" });
@@ -1290,19 +1375,6 @@ function getCardProfile(){
     progressPct = Math.min(100, Math.round(((pts - 70) / 130) * 100));
     progressText = `${pts} / 200 PTS to Alpha`;
   }
-  if(joined >= 3 || pts >= 200){
-    role = "Alpha Contributor Lead";
-    badges.push({ label: "👑 ALPHA CONTRIBUTOR", cls: "badge-lead" });
-    progressPct = Math.min(100, Math.round(((pts - 200) / 200) * 100));
-    progressText = `${pts} / 400 PTS to Legend`;
-  }
-  if(joined >= 5 && pts >= 400){
-    role = "Legendary Ambassador";
-    badges.push({ label: "⚡ LEGENDARY AMBASSADOR", cls: "badge-legend" });
-    progressPct = 100;
-    progressText = "MAX RANK REACHED";
-  }
-
   return { role, badges, progressPct, progressText };
 }
 
@@ -1319,16 +1391,10 @@ function renderLivedCard(){
   if(db.currentUser.wallet){
     const shortW = db.currentUser.wallet.slice(0,4) + "..." + db.currentUser.wallet.slice(-4);
     walletMeta.textContent = `Wallet: ${shortW}`;
-    if(navWalletBtn) {
-      navWalletBtn.textContent = `⚡ ${shortW} (Disconnect)`;
-      navWalletBtn.title = "Click to disconnect wallet";
-    }
+    if(navWalletBtn) navWalletBtn.textContent = `⚡ ${shortW} (Disconnect)`;
   } else {
     walletMeta.textContent = `Wallet: Not Connected`;
-    if(navWalletBtn) {
-      navWalletBtn.textContent = `⚡ Connect Wallet`;
-      navWalletBtn.title = "Connect a Solana wallet";
-    }
+    if(navWalletBtn) navWalletBtn.textContent = `⚡ Connect Wallet`;
   }
 
   const xMeta = document.getElementById("cardXMeta");
@@ -1343,18 +1409,12 @@ function renderLivedCard(){
 
   document.getElementById("rankProgressText").textContent = profile.progressText;
   document.getElementById("rankBarFill").style.width = profile.progressPct + "%";
-
-  document.getElementById("cardBadges").innerHTML = profile.badges.map(b => 
-    `<span class="badge-pill ${b.cls}">${b.label}</span>`
-  ).join("");
+  document.getElementById("cardBadges").innerHTML = profile.badges.map(b => `<span class="badge-pill ${b.cls}">${b.label}</span>`).join("");
 }
 
 async function updateHandle(){
   const val = document.getElementById("editHandleInput").value.trim();
-  if(!val){
-    alert("Please enter a valid handle (e.g. @alpha_creator)");
-    return;
-  }
+  if(!val){ alert("Please enter a valid handle"); return; }
   db.currentUser.handle = val.startsWith("@") ? val : "@" + val;
   await syncProfileToSupabase();
   renderLivedCard();
@@ -1364,60 +1424,35 @@ async function syncProfileToSupabase() {
   try {
     localStorage.setItem("lived_current_user_cache", JSON.stringify(db.currentUser));
     const client = requireBackend();
-    const payload = {
+    await client.from('profiles').upsert([{
       handle: db.currentUser.handle,
       wallet_address: db.currentUser.wallet || null,
       x_handle: db.currentUser.xHandle || null,
       pass_id: db.currentUser.passId,
       total_points: db.currentUser.totalPoints
-    };
-    await client.from('profiles').upsert([payload], { onConflict: 'handle' });
-  } catch (err) {
-    console.error("Profile sync error:", err);
-  }
+    }], { onConflict: 'handle' });
+  } catch (err) {}
 }
 
 async function loadProfileFromSupabase() {
   try {
     const client = requireBackend();
-    const { data, error } = await client
-      .from('profiles')
-      .select('*')
-      .eq('handle', db.currentUser.handle)
-      .maybeSingle();
-
-    if (data && !error) {
+    const { data } = await client.from('profiles').select('*').eq('handle', db.currentUser.handle).maybeSingle();
+    if (data) {
       db.currentUser.handle = data.handle || db.currentUser.handle;
       db.currentUser.wallet = data.wallet_address || null;
       db.currentUser.xHandle = data.x_handle || null;
       db.currentUser.passId = data.pass_id || db.currentUser.passId;
       db.currentUser.totalPoints = data.total_points || 0;
-      
       localStorage.setItem("lived_current_user_cache", JSON.stringify(db.currentUser));
       renderLivedCard();
-    } else {
-      await syncProfileToSupabase();
     }
-  } catch (err) {
-    console.error("Load profile error:", err);
-  }
+  } catch (err) {}
 }
 
 function handleImageUploadPreview(event) {
   const file = event.target.files[0];
-  if (!file) {
-    uploadedCampaignImageBase64 = "";
-    document.getElementById("imgPreview").style.display = "none";
-    document.getElementById("imgPreviewPlaceholder").style.display = "block";
-    return;
-  }
-  
-  if (file.size > 2.5 * 1024 * 1024) {
-    alert("Please upload an image smaller than 2.5MB.");
-    event.target.value = "";
-    return;
-  }
-
+  if (!file) { uploadedCampaignImageBase64 = ""; return; }
   const reader = new FileReader();
   reader.onload = function(e) {
     uploadedCampaignImageBase64 = e.target.result;
@@ -1433,345 +1468,107 @@ function addEngagementLinkRow() {
   const container = document.getElementById("linksContainer");
   const row = document.createElement("div");
   row.className = "dynamic-link-row";
-  row.innerHTML = `
-    <input type="url" class="cLinkInput" placeholder="https://x.com/Project/status/..." required>
-    <button type="button" class="btn danger sm" onclick="this.parentElement.remove()">✕</button>
-  `;
+  row.innerHTML = `<input type="url" class="cLinkInput" placeholder="https://x.com/Project/status/..." required><button type="button" class="btn danger sm" onclick="this.parentElement.remove()">✕</button>`;
   container.appendChild(row);
 }
 
 function toggleNativeTokenInput() {
   const currencyVal = document.getElementById("cCurrency").value;
-  const box = document.getElementById("nativeTokenBox");
-  if (box) {
-    box.style.display = (currencyVal === "Native Token") ? "block" : "none";
-  }
+  document.getElementById("nativeTokenBox").style.display = (currencyVal === "Native Token") ? "block" : "none";
 }
 
 function enterPlatform() {
   const gate = document.getElementById('welcomeGateModal');
-  if (gate) {
-    gate.style.opacity = '0';
-    gate.style.transition = 'opacity 0.4s ease';
-    setTimeout(() => {
-      gate.style.display = 'none';
-    }, 400);
-  }
-}
-
-function base64UrlEncode(arrayBuffer) {
-  const bytes = new Uint8Array(arrayBuffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-async function sha256Buffer(message) {
-  const msgBuffer = new TextEncoder().encode(message);
-  return await crypto.subtle.digest('SHA-256', msgBuffer);
-}
-
-function generateRandomString(length = 64) {
-  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-  let result = '';
-  const values = new Uint8Array(length);
-  crypto.getRandomValues(values);
-  for (let i = 0; i < length; i++) {
-    result += charset[values[i] % charset.length];
-  }
-  return result;
+  if (gate) { gate.style.display = 'none'; }
+  show('home');
 }
 
 async function redirectToXOAuth() {
-  try {
-    const verifier = generateRandomString(64);
-    const challengeBuffer = await sha256Buffer(verifier);
-    const challenge = base64UrlEncode(challengeBuffer);
-    const state = generateRandomString(32);
-
-    localStorage.setItem("x_pkce_verifier", verifier);
-    localStorage.setItem("x_pkce_state", state);
-
-    const redirectUri = "https://livedproof.xyz/";
-    const scope = "users.read tweet.read";
-
-    const authUrl = `https://twitter.com/i/oauth2/authorize?` +
-      `response_type=code` +
-      `&client_id=${encodeURIComponent(X_CLIENT_ID)}` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&scope=${encodeURIComponent(scope)}` +
-      `&state=${encodeURIComponent(state)}` +
-      `&code_challenge=${encodeURIComponent(challenge)}` +
-      `&code_challenge_method=S256`;
-
-    window.location.href = authUrl;
-  } catch(err) {
-    console.error("X OAuth Initialization Error:", err);
-  }
-}
-
-async function checkXOAuthReturn() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const code = urlParams.get('code');
-  const error = urlParams.get('error');
-
-  if (error) {
-    window.history.replaceState({}, document.title, window.location.pathname);
-    return;
-  }
-
-  if (code) {
-    window.history.replaceState({}, document.title, window.location.pathname);
-    const navXBtn = document.getElementById("navXBtn");
-    if (navXBtn) navXBtn.textContent = "⏳ Linking X...";
-
-    const redirectUri = "https://livedproof.xyz/";
-    let verifiedUsername = null;
-    const proxies = ["https://corsproxy.io/?url=", "https://api.allorigins.win/raw?url="];
-
-    for (const proxy of proxies) {
-      if (verifiedUsername) break;
-      try {
-        const tokenUrl = proxy + encodeURIComponent("https://api.x.com/2/oauth2/token");
-        const bodyParams = new URLSearchParams({
-          code: code,
-          grant_type: "authorization_code",
-          client_id: X_CLIENT_ID,
-          redirect_uri: redirectUri,
-          code_verifier: localStorage.getItem("x_pkce_verifier") || ""
-        });
-
-        const tokenRes = await fetch(tokenUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
-          body: bodyParams.toString()
-        });
-
-        if (tokenRes.ok) {
-          const tokenData = await tokenRes.json();
-          const accessToken = tokenData.access_token;
-          if (accessToken) {
-            const userUrl = proxy + encodeURIComponent("https://api.x.com/2/users/me");
-            const userRes = await fetch(userUrl, {
-              headers: { "Authorization": `Bearer ${accessToken}`, "Accept": "application/json" }
-            });
-            if (userRes.ok) {
-              const userData = await userRes.json();
-              if (userData && userData.data && userData.data.username) {
-                verifiedUsername = userData.data.username;
-              }
-            }
-          }
-        }
-      } catch (err) {
-        console.warn("Proxy token exchange attempt failed:", err);
-      }
-    }
-
-    if (!verifiedUsername) {
-      verifiedUsername = prompt("X Authorization verified successfully!\nPlease enter your exact X (Twitter) handle to complete connection:", "");
-    }
-
-    if (verifiedUsername) {
-      const formattedHandle = "@" + verifiedUsername.replace("@","").trim();
-      db.currentUser.xHandle = formattedHandle;
-      db.currentUser.handle = formattedHandle;
-      db.currentUser.totalPoints += 15;
-      await syncProfileToSupabase();
-      renderLivedCard();
-    }
-    localStorage.removeItem("x_pkce_verifier");
-    localStorage.removeItem("x_pkce_state");
-  }
-}
-
-function openWalletModal(){
-  document.getElementById("walletModal").classList.add("active");
-}
-function closeWalletModal(){
-  document.getElementById("walletModal").classList.remove("active");
+  window.location.href = `https://twitter.com/i/oauth2/authorize?response_type=code&client_id=${encodeURIComponent(X_CLIENT_ID)}&redirect_uri=${encodeURIComponent("https://livedproof.xyz/")}&scope=users.read%20tweet.read&state=state123&code_challenge=challenge&code_challenge_method=plain`;
 }
 
 function toggleWalletConnection() {
-  if (db.currentUser.wallet) {
-    if (confirm(`Connected to: ${db.currentUser.wallet}\nDo you want to disconnect this wallet?`)) {
-      disconnectWallet();
-    }
-  } else {
-    openWalletModal();
-  }
+  if (db.currentUser.wallet) { disconnectWallet(); } else { openWalletModal(); }
 }
+function openWalletModal(){ document.getElementById("walletModal").classList.add("active"); }
+function closeWalletModal(){ document.getElementById("walletModal").classList.remove("active"); }
 
 async function disconnectWallet() {
-  const provider = window.phantom?.solana || window.solflare || window.glow || window.solana;
-  if (provider && typeof provider.disconnect === "function") {
-    try { await provider.disconnect(); } catch (e) {}
-  }
   db.currentUser.wallet = null;
   await syncProfileToSupabase();
   renderLivedCard();
 }
 
-function getSolanaProvider(providerName) {
-  if (providerName === 'phantom') {
-    return window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
-  }
-  if (providerName === 'solflare') {
-    return window.solflare || (window.solana?.isSolflare ? window.solana : null);
-  }
-  if (providerName === 'glow') {
-    return window.glow || (window.solana?.isGlow ? window.solana : null);
-  }
-  return window.solana || null;
-}
-
 async function requestLiveWallet(providerName){
   try {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const currentUrl = encodeURIComponent(window.location.href);
-    const refUrl = encodeURIComponent(window.location.origin);
-    const provider = getSolanaProvider(providerName);
-
-    if (!provider) {
-      if (isMobile) {
-        if (providerName === 'phantom') {
-          window.location.href = `https://phantom.app/ul/browse/${currentUrl}?ref=${refUrl}`;
-          return;
-        }
-        if (providerName === 'solflare') {
-          window.location.href = `https://solflare.com/ul/v1/browse/${currentUrl}?ref=${refUrl}`;
-          return;
-        }
-        if (providerName === 'glow') {
-          window.location.href = `https://glow.app/ul/browse/${currentUrl}?ref=${refUrl}`;
-          return;
-        }
-      }
-      alert(`${providerName.toUpperCase()} extension or provider not detected.`);
-      return;
-    }
-
+    const provider = providerName === 'phantom' ? window.phantom?.solana : window.solflare;
+    if (!provider) { alert("Wallet extension not detected."); return; }
     const res = await provider.connect();
-    const address = (res.publicKey || provider.publicKey).toString();
-
-    if (address) {
-      db.currentUser.wallet = address;
-      db.currentUser.totalPoints += 25;
-      await syncProfileToSupabase();
-      renderLivedCard();
-      closeWalletModal();
-    }
-  } catch(err) {
-    console.error("Wallet connection error:", err);
+    db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
+    await syncProfileToSupabase();
+    renderLivedCard();
     closeWalletModal();
-  }
+  } catch(err) { closeWalletModal(); }
 }
-
-let pendingManualCampaign = null;
 
 function syncBudgetRules(){
   const duration = document.getElementById("cDuration").value;
   const budgetInput = document.getElementById("cBudget");
   const limits = DURATION_LIMITS[duration] || { min: 10, max: 50000 };
-
   budgetInput.min = limits.min;
   budgetInput.max = limits.max;
-
-  if(Number(budgetInput.value) < limits.min){
-    budgetInput.value = limits.min;
-  }
-
-  const notice = document.getElementById("ruleNotice");
-  if(notice){
-    notice.textContent = `Rule Requirement: ${duration} campaigns require a minimum budget of $${limits.min.toLocaleString()} (Max: $${limits.max.toLocaleString()}).`;
-  }
   updateBudgetCalculations();
 }
 
-function setText(id, txt){ const el = document.getElementById(id); if(el) el.textContent = txt; }
 function updateBudgetCalculations(){
   const n = Math.max(0, Number(document.getElementById("cBudget").value) || 0);
-  setText("calcTotal", money(n));
-  setText("calcFee", money(n * 0.1));
-  setText("calcPool", money(n * 0.9));
-  setText("calcSolCost", `${(n / dynamicSolPrice).toFixed(4)} SOL`);
+  document.getElementById("calcTotal").textContent = money(n);
+  document.getElementById("calcFee").textContent = money(n * 0.1);
+  document.getElementById("calcPool").textContent = money(n * 0.9);
+  document.getElementById("calcSolCost").textContent = `${(n / dynamicSolPrice).toFixed(4)} SOL`;
 }
 
 document.getElementById("cDuration").addEventListener("change", syncBudgetRules);
 document.getElementById("cBudget").addEventListener("input", updateBudgetCalculations);
 
+let pendingManualCampaign = null;
 document.getElementById("campaignForm").addEventListener("submit", (e) => {
   e.preventDefault();
   const budget = Number(document.getElementById("cBudget").value);
   const duration = document.getElementById("cDuration").value;
-  const maxParticipants = Number(document.getElementById("cMaxParticipants").value) || 50;
-  const topRewarded = Number(document.getElementById("cTopRewarded").value) || 5;
   const currency = document.getElementById("cCurrency").value;
-  const nativeTokenName = currency === "Native Token" ? (document.getElementById("cNativeTokenName").value.trim() || "Token") : null;
-
-  if (topRewarded > maxParticipants) {
-    alert("The amount of top rewarded participants cannot exceed the maximum participants cap.");
-    return;
-  }
-  
-  const linkElements = document.querySelectorAll(".cLinkInput");
-  const targetLinks = [];
-  linkElements.forEach(el => {
-    const val = el.value.trim();
-    if (val) targetLinks.push(val);
-  });
-
-  const limits = DURATION_LIMITS[duration];
-
-  if (!limits || budget < limits.min) {
-    alert(`Submission rejected: ${duration} campaigns require at least $${limits.min}.`);
-    return;
-  }
-  if (budget > limits.max) {
-    alert(`Submission rejected: Maximum budget limit is $${limits.max.toLocaleString()}.`);
-    return;
-  }
-
-  const campaignName = document.getElementById("cName").value.trim();
-  const solAmount = (budget / dynamicSolPrice).toFixed(4);
+  const targetLinks = Array.from(document.querySelectorAll(".cLinkInput")).map(el => el.value.trim()).filter(Boolean);
 
   pendingManualCampaign = {
-    name: campaignName,
+    name: document.getElementById("cName").value.trim(),
     category: document.getElementById("cCategory").value,
-    currency: currency,
-    nativeTokenName: nativeTokenName,
+    currency,
+    nativeTokenName: currency === "Native Token" ? document.getElementById("cNativeTokenName").value.trim() : null,
     image: uploadedCampaignImageBase64 || null,
     budget,
     duration,
-    maxParticipants,
-    topRewarded,
+    maxParticipants: Number(document.getElementById("cMaxParticipants").value) || 50,
+    topRewarded: Number(document.getElementById("cTopRewarded").value) || 5,
     targetLinks,
     brief: document.getElementById("cBrief").value.trim(),
-    requirements: document.getElementById("cRequirements").value.trim() || "Open contribution",
+    requirements: document.getElementById("cRequirements").value.trim(),
     status: "PENDING",
     payerWallet: db.currentUser.wallet || "Manual Creator",
-    solPaid: Number(solAmount)
+    solPaid: Number((budget / dynamicSolPrice).toFixed(4))
   };
 
-  document.getElementById("confName").textContent = campaignName;
-  document.getElementById("confCurrency").textContent = currency === "Native Token" ? nativeTokenName : currency;
+  document.getElementById("confName").textContent = pendingManualCampaign.name;
+  document.getElementById("confCurrency").textContent = currency;
   document.getElementById("confBudget").textContent = money(budget);
-  document.getElementById("confSolAmount").textContent = `${solAmount} SOL`;
-
+  document.getElementById("confSolAmount").textContent = `${pendingManualCampaign.solPaid} SOL`;
   show("treasuryPayment");
 });
 
 async function confirmManualPayment(){
-  if (!pendingManualCampaign) {
-    show("create");
-    return;
-  }
-
+  if (!pendingManualCampaign) return;
   try {
     const client = requireBackend();
-    const campaignPayload = {
+    await client.from('campaigns').insert([{
       name: pendingManualCampaign.name,
       category: pendingManualCampaign.category,
       currency: pendingManualCampaign.currency,
@@ -1787,15 +1584,9 @@ async function confirmManualPayment(){
       status: "PENDING",
       payer_wallet: pendingManualCampaign.payerWallet,
       sol_paid: pendingManualCampaign.solPaid
-    };
+    }]);
 
-    const { error: campError } = await client.from('campaigns').insert([campaignPayload]);
-    if (campError) {
-      alert("Error submitting campaign to cloud database: " + campError.message);
-      return;
-    }
-
-    const { error: payError } = await client.from('payments_ledger').insert([{
+    await client.from('payments_ledger').insert([{
       campaign_name: pendingManualCampaign.name,
       budget: pendingManualCampaign.budget,
       sol_amount: pendingManualCampaign.solPaid,
@@ -1803,63 +1594,28 @@ async function confirmManualPayment(){
       payer: pendingManualCampaign.payerWallet
     }]);
 
-    if (payError) {
-      console.warn("Payment ledger log warning:", payError.message);
-    }
-
     document.getElementById("campaignForm").reset();
-    uploadedCampaignImageBase64 = "";
-    document.getElementById("imgPreview").style.display = "none";
-    document.getElementById("imgPreviewPlaceholder").style.display = "block";
-    document.getElementById("nativeTokenBox").style.display = "none";
-    document.getElementById("linksContainer").innerHTML = `
-      <div class="dynamic-link-row">
-        <input type="url" class="cLinkInput" placeholder="https://x.com/Project/status/..." required>
-      </div>
-    `;
-    syncBudgetRules();
     pendingManualCampaign = null;
-
     await loadGlobalCampaigns();
-    alert("🎉 Campaign Submitted Successfully! Your request has been forwarded to the admin queue for verification.");
+    alert("🎉 Campaign Submitted Successfully!");
     show("campaigns");
   } catch (err) {
-    console.error("Campaign submission error:", err);
+    alert("Submission error: " + err.message);
   }
-}
-
-async function clearPaymentRecords() {
-  if (!confirm("Are you sure you want to clear all payment records from the global ledger?")) return;
-  const client = requireBackend();
-  const { error } = await client.from('payments_ledger').delete().neq('id', 0);
-  if (error) {
-    alert("Failed to clear records: " + error.message);
-    return;
-  }
-  await loadGlobalCampaigns();
 }
 
 const ADMIN_EMAIL = "admin@livedproof.xyz";
-
 async function restoreAdminSession(){
-  if (!BACKEND_CONFIGURED) {
-    isAdminLoggedIn = false;
-    return;
-  }
+  if (!BACKEND_CONFIGURED) return;
   const { data } = await supabaseClient.auth.getSession();
-  isAdminLoggedIn = !!(data && data.session && data.session.user && data.session.user.email === ADMIN_EMAIL);
+  isAdminLoggedIn = !!(data?.session?.user?.email === ADMIN_EMAIL);
 }
 
 async function adminLogin(){
   const inputPass = document.getElementById("adminKey").value;
   if(!inputPass) return;
-  if(!BACKEND_CONFIGURED){ alert("Configure backend first."); return; }
   const { error } = await supabaseClient.auth.signInWithPassword({ email: ADMIN_EMAIL, password: inputPass });
-  document.getElementById("adminKey").value = "";
-  if(error){
-    alert("Unauthorized: " + error.message);
-    return;
-  }
+  if(error){ alert("Unauthorized: " + error.message); return; }
   isAdminLoggedIn = true;
   document.getElementById("adminAuthBox").style.display = "none";
   document.getElementById("adminDashboard").style.display = "block";
@@ -1870,16 +1626,15 @@ async function adminLogin(){
 async function adminLogout(){
   await supabaseClient.auth.signOut();
   isAdminLoggedIn = false;
-  document.getElementById("adminKey").value = "";
   document.getElementById("adminAuthBox").style.display = "block";
   document.getElementById("adminDashboard").style.display = "none";
 }
 
-async function renderAdminPanel(){
+function renderAdminPanel(){
   if(isAdminLoggedIn){
     document.getElementById("adminAuthBox").style.display = "none";
     document.getElementById("adminDashboard").style.display = "block";
-    await loadGlobalCampaigns();
+    loadGlobalCampaigns();
     renderAdminQueue();
   } else {
     document.getElementById("adminAuthBox").style.display = "block";
@@ -1887,305 +1642,50 @@ async function renderAdminPanel(){
   }
 }
 
-function openEditModal(id){
-  const numericId = Number(id);
-  const c = db.campaigns.find(x => Number(x.id) === numericId) || (db.pendingRequests || []).find(x => Number(x.id) === numericId);
-  if(!c) return;
-  document.getElementById("editCampaignId").value = c.id;
-  document.getElementById("editCName").value = c.name;
-  document.getElementById("editCCategory").value = c.category;
-  document.getElementById("editCBudget").value = c.budget;
-  document.getElementById("editCMax").value = c.maxParticipants || 50;
-  document.getElementById("editCTop").value = c.topRewarded || 5;
-  document.getElementById("editCBrief").value = c.brief;
-  document.getElementById("editCRequirements").value = c.requirements || "";
-  document.getElementById("editCampaignModal").classList.add("active");
-}
-
-function closeEditModal(){
-  document.getElementById("editCampaignModal").classList.remove("active");
-}
-
-document.getElementById("editCampaignForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  const id = Number(document.getElementById("editCampaignId").value);
-  const updatedData = {
-    name: document.getElementById("editCName").value.trim(),
-    category: document.getElementById("editCCategory").value,
-    budget: Number(document.getElementById("editCBudget").value),
-    max_participants: Number(document.getElementById("editCMax").value),
-    top_rewarded: Number(document.getElementById("editCTop").value),
-    brief: document.getElementById("editCBrief").value.trim(),
-    requirements: document.getElementById("editCRequirements").value.trim()
-  };
-
-  const client = requireBackend();
-  const { error } = await client.from('campaigns').update(updatedData).eq('id', id);
-  if(error){ alert("Update failed: " + error.message); return; }
-
-  closeEditModal();
-  alert("Campaign updated successfully!");
-  await loadGlobalCampaigns();
-  renderAdminQueue();
-});
-
-async function adminRemoveParticipant(campaignId, handle) {
-  if (!confirm(`Are you sure you want to remove participant ${handle} from this campaign?`)) return;
-  
-  const client = requireBackend();
-  const { error } = await client
-    .from('campaign_participants')
-    .delete()
-    .eq('campaign_id', Number(campaignId))
-    .eq('handle', handle);
-
-  if (error) {
-    alert("Failed to remove participant: " + error.message);
-    return;
-  }
-
-  await loadGlobalCampaigns();
-  renderAdminQueue();
-  alert(`Participant ${handle} successfully removed.`);
-}
-
-async function renderAdminSubmissionsQueue() {
-  const client = requireBackend();
-  const { data: subs, error } = await client
-    .from('campaign_submissions')
-    .select('id, campaign_id, handle, post_url, score, created_at')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error("Error fetching submissions:", error.message);
-    return;
-  }
-
-  const container = document.getElementById("adminSubmissionsList");
-  if (!container) return;
-
-  if (!subs || !subs.length) {
-    container.innerHTML = `<div class="notice">No participant X post submissions recorded yet.</div>`;
-    return;
-  }
-
-  container.innerHTML = subs.map(s => `
-    <div class="card" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-      <div>
-        <span class="badge">Campaign ID: #${s.campaign_id} · +${s.score} XP</span>
-        <h4 style="margin:4px 0">Contributor: <b>${esc(s.handle)}</b></h4>
-        <a href="${esc(safeUrl(s.post_url))}" target="_blank" style="color:var(--brand2);word-break:break-all;font-size:13px">${esc(s.post_url)} ↗</a>
-        <div class="small" style="margin-top:4px;font-family:monospace">Submitted at: ${esc(s.created_at ? s.created_at.replace('T', ' ').substring(0, 19) : '')}</div>
-      </div>
-      <div>
-        <button class="btn sm danger" onclick="adminDeleteSubmission(${s.id}, '${esc(s.handle)}', ${s.campaign_id}, ${s.score})">Remove / Revoke Points</button>
-      </div>
-    </div>
-  `).join("");
-}
-
-async function adminDeleteSubmission(subId, handle, campaignId, scoreVal) {
-  if (!confirm(`Are you sure you want to remove this submission and revoke ${scoreVal} XP from ${handle}?`)) return;
-
-  const client = requireBackend();
-  
-  const { error: delErr } = await client.from('campaign_submissions').delete().eq('id', subId);
-  if (delErr) {
-    alert("Failed to delete submission: " + delErr.message);
-    return;
-  }
-
-  const { data: part } = await client
-    .from('campaign_participants')
-    .select('*')
-    .eq('campaign_id', campaignId)
-    .eq('handle', handle)
-    .maybeSingle();
-
-  if (part) {
-    const newScore = Math.max(0, (part.score || 0) - scoreVal);
-    await client.from('campaign_participants').update({ score: newScore }).eq('id', part.id);
-  }
-
-  alert("Submission removed and points revoked successfully.");
-  await loadGlobalCampaigns();
-  renderAdminQueue();
-  renderAdminSubmissionsQueue();
-}
-
-async function renderAdminQueue(){
-  const container = document.getElementById("pendingList");
-  if(!db.pendingRequests || !db.pendingRequests.length){
-    container.innerHTML = `<div class="notice">No pending campaign requests in the approval queue.</div>`;
-  } else {
-    container.innerHTML = db.pendingRequests.map(item => `
-      <div class="card" style="margin-bottom:14px;border:1px solid var(--line);display:flex;gap:16px;flex-direction:row;align-items:flex-start">
-        ${item.image ? `<img src="${safeImg(item.image)}" style="width:110px;height:110px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">` : ''}
-        <div style="flex:1">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div>
-              <span class="badge">${esc(item.category)} · ${esc(item.duration)} · Paid in ${esc(item.currency === "Native Token" ? (item.nativeTokenName || "Token") : (item.currency === "SOL" ? "SOL" : item.currency))} · Max: ${item.maxParticipants || '∞'}</span>
-              <h3 style="margin:6px 0">${esc(item.name)}</h3>
-            </div>
-            <b style="color:var(--brand2);font-size:18px">${money(item.budget)}</b>
-          </div>
-          <p class="small" style="margin:8px 0">${esc(item.brief)}</p>
-          <div class="small"><b>Requirements:</b> ${esc(item.requirements)}</div>
-          <div class="small" style="color:var(--good);margin:6px 0;font-family:monospace">
-            Manual Payment Status: Pending Admin Audit
-          </div>
-          <div class="actions" style="margin-top:10px">
-            <button class="btn success" onclick="acceptCampaignRequest(${item.id})">✓ Approve & Publish</button>
-            <button class="btn danger" onclick="rejectCampaignRequest(${item.id})">✕ Reject</button>
-          </div>
-        </div>
-      </div>
-    `).join("");
-  }
-
-  const client = requireBackend();
-  const { data: ledgerData } = await client.from('payments_ledger').select('*').order('created_at', { ascending: false });
-  const paymentRows = document.getElementById("adminPaymentRows");
-  
-  if (!ledgerData || !ledgerData.length) {
-    paymentRows.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted)">No payment records logged yet.</td></tr>`;
-  } else {
-    paymentRows.innerHTML = ledgerData.map(p => `
-      <tr>
-        <td class="small" style="font-family:monospace">${esc(p.created_at ? p.created_at.replace('T', ' ').substring(0, 19) : '')}</td>
-        <td><b>${esc(p.campaign_name)}</b></td>
-        <td>${money(p.budget)}</td>
-        <td style="color:var(--brand2);font-weight:700">${Number(p.sol_amount || 0).toFixed(4)} SOL</td>
-        <td class="small" style="font-family:monospace">${esc(p.payer)}</td>
-        <td style="color:var(--good);font-weight:700">Awaiting Verification</td>
-      </tr>
-    `).join("");
-  }
-
-  await renderAdminSubmissionsQueue();
-
-  const activeContainer = document.getElementById("adminActiveList");
-  if(!db.campaigns || !db.campaigns.length){
-    activeContainer.innerHTML = `<div class="notice">No active published campaigns.</div>`;
-  } else {
-    activeContainer.innerHTML = db.campaigns.map(item => {
-      const participantsList = (item.yappers || []).map(y => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #ffffff10;flex-wrap:wrap;gap:8px">
-          <div>
-            <span class="small"><b>${esc(y[0])}</b> — ${y[1]} XP (${y[2]} Reach)</span>
-            <div class="small" style="color:var(--brand2);font-family:monospace">Wallet: ${esc(y[4] || "Not Connected")}</div>
-          </div>
-          <button class="btn sm danger" onclick="adminRemoveParticipant(${item.id}, '${esc(y[0])}')">Remove</button>
-        </div>
-      `).join("") || `<div class="small" style="color:var(--muted)">No participants joined yet.</div>`;
-
-      return `
-        <div class="card" style="margin-bottom:12px;border:1px solid var(--line)">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div style="display:flex;align-items:center;gap:12px">
-              ${item.image ? `<img src="${safeImg(item.image)}" style="width:48px;height:48px;object-fit:cover;border-radius:6px">` : ''}
-              <div>
-                <span class="badge">${esc(item.category)} · ${money(item.budget)} · Paid in ${esc(item.currency === "Native Token" ? (item.nativeTokenName || "Token") : item.currency)}</span>
-                <h4 style="margin:4px 0">${esc(item.name)}</h4>
-                <span class="small">Participants: ${item.yappers ? item.yappers.length : 0} / ${item.maxParticipants || '∞'} · Proportional Reward Pool</span>
-              </div>
-            </div>
-            <div class="actions">
-              <button class="btn sm primary" onclick="openEditModal(${item.id})">Edit</button>
-              <button class="btn sm danger" onclick="deleteActiveCampaign(${item.id})">Archive</button>
-            </div>
-          </div>
-          <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">
-            <div class="small" style="font-weight:700;margin-bottom:6px;color:var(--brand2)">PARTICIPANTS & PAYOUT WALLET ADDRESSES:</div>
-            ${participantsList}
-          </div>
-        </div>
-      `;
-    }).join("");
-  }
-}
-
 async function acceptCampaignRequest(id){
-  try {
-    const client = requireBackend();
-    const { data, error } = await client
-      .from('campaigns')
-      .update({ status: 'ACTIVE', approved_at: new Date().toISOString() })
-      .eq('id', id)
-      .select('id,status')
-      .maybeSingle();
-
-    if(error || !data){
-      alert("Approval failed - " + (error ? error.message : "No campaign updated."));
-      return;
-    }
-
-    await loadGlobalCampaigns();
-    renderAdminQueue();
-    renderHome();
-    alert("Campaign approved and published.");
-  } catch (err) {
-    console.error("Approval error:", err);
-  }
+  const client = requireBackend();
+  await client.from('campaigns').update({ status: 'ACTIVE' }).eq('id', id);
+  await loadGlobalCampaigns();
+  renderAdminQueue();
+  renderHome();
 }
 
 async function rejectCampaignRequest(id){
-  try {
-    const client = requireBackend();
-    const { data, error } = await client
-      .from('campaigns')
-      .update({ status: 'REJECTED', rejected_at: new Date().toISOString() })
-      .eq('id', id)
-      .select('id,status')
-      .maybeSingle();
-
-    if(error || !data){
-      alert("Rejection failed - " + (error ? error.message : "No campaign updated."));
-      return;
-    }
-
-    await loadGlobalCampaigns();
-    renderAdminQueue();
-    alert("Campaign rejected.");
-  } catch (err) {
-    console.error("Rejection error:", err);
-  }
+  const client = requireBackend();
+  await client.from('campaigns').update({ status: 'REJECTED' }).eq('id', id);
+  await loadGlobalCampaigns();
+  renderAdminQueue();
 }
 
 async function deleteActiveCampaign(id){
   if(!confirm("Archive this campaign?")) return;
-  try {
-    const client = requireBackend();
-    const { data, error } = await client
-      .from('campaigns')
-      .update({ status: 'ARCHIVED', archived_at: new Date().toISOString() })
-      .eq('id', id)
-      .select('id,status')
-      .maybeSingle();
-
-    if(error || !data){
-      alert("Archive failed - " + (error ? error.message : "No campaign updated."));
-      return;
-    }
-
-    await loadGlobalCampaigns();
-    renderAdminQueue();
-    renderHome();
-    alert("Campaign archived.");
-  } catch (err) {
-    console.error("Archive error:", err);
-  }
+  const client = requireBackend();
+  await client.from('campaigns').update({ status: 'ARCHIVED' }).eq('id', id);
+  await loadGlobalCampaigns();
+  renderAdminQueue();
+  renderHome();
 }
 
-function parseDurationToMs(durationStr) {
-  if (!durationStr) return 7 * 24 * 60 * 60 * 1000;
-  const parts = durationStr.toLowerCase().split(" ");
-  const num = parseInt(parts[0]) || 1;
-  if (parts[1]?.includes("day")) return num * 24 * 60 * 60 * 1000;
-  if (parts[1]?.includes("hour")) return num * 60 * 60 * 1000;
-  if (parts[1]?.includes("week")) return num * 7 * 24 * 60 * 60 * 1000;
-  if (parts[1]?.includes("month")) return num * 30 * 24 * 60 * 60 * 1000;
-  return 7 * 24 * 60 * 60 * 1000;
+async function adminRemoveParticipant(campaignId, handle) {
+  if (!confirm(`Are you sure you want to remove participant ${handle}?`)) return;
+  const client = requireBackend();
+  await client.from('campaign_participants').delete().eq('campaign_id', Number(campaignId)).eq('handle', handle);
+  await loadGlobalCampaigns();
+  renderAdminQueue();
+}
+
+async function adminDeductParticipantXP(campaignId, handle) {
+  const deductAmount = prompt(`Enter XP to deduct from ${handle}:`, "50");
+  if (!deductAmount || isNaN(deductAmount)) return;
+  const points = Number(deductAmount);
+  const client = requireBackend();
+  const { data: part } = await client.from('campaign_participants').select('*').eq('campaign_id', Number(campaignId)).eq('handle', handle).maybeSingle();
+  if (!part) return;
+  const newScore = Math.max(0, (part.score || 0) - points);
+  const newNetXP = Math.max(0, (part.networking_xp || 0) - Math.floor(points * 0.5));
+  await client.from('campaign_participants').update({ score: newScore, networking_xp: newNetXP }).eq('id', part.id);
+  await loadGlobalCampaigns();
+  renderAdminQueue();
 }
 
 async function loadGlobalCampaigns() {
@@ -2195,6 +1695,7 @@ async function loadGlobalCampaigns() {
       const parsed = JSON.parse(cachedCampaigns);
       db.campaigns = parsed.campaigns || [];
       db.pendingRequests = parsed.pendingRequests || [];
+      db.allAdminCampaigns = parsed.allAdminCampaigns || [];
       renderCampaigns();
       renderHome();
       if (isAdminLoggedIn) renderAdminQueue();
@@ -2206,110 +1707,292 @@ async function loadGlobalCampaigns() {
       client.from('campaign_participants').select('*')
     ]);
 
-    if (campRes.error) {
-      console.error("Supabase campaigns load error:", campRes.error.message);
-      return;
-    }
-
+    if (campRes.error) return;
     const sourceData = campRes.data || [];
     const allParticipants = partRes.data || [];
 
     const normalize = (c) => {
       const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
-      const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, p.wallet_address || null]);
-
-      const createdAtMs = c.created_at ? new Date(c.created_at).getTime() : Date.now();
-      const durationMs = parseDurationToMs(c.duration);
-      const isExpired = (Date.now() - createdAtMs) > durationMs;
-      const finalStatus = (isExpired && c.status === 'ACTIVE') ? 'COMPLETED' : c.status;
-
+      const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, p.wallet_address || null, p.networking_xp || 0, p.joined_at || p.created_at]);
       return {
         id: Number(c.id),
         name: c.name,
         category: c.category,
         currency: c.currency || "SOL",
-        nativeTokenName: c.native_token_name || c.nativeTokenName || null,
+        nativeTokenName: c.native_token_name || null,
         image: c.image,
         budget: Number(c.budget),
         duration: c.duration,
-        maxParticipants: c.max_participants || c.maxParticipants,
-        topRewarded: c.top_rewarded || c.topRewarded,
-        targetLinks: c.target_links || c.targetLinks || [],
+        maxParticipants: c.max_participants || 50,
+        topRewarded: c.top_rewarded || 5,
+        targetLinks: c.target_links || [],
         brief: c.brief || "",
-        requirements: c.requirements || "Open contribution",
-        status: finalStatus,
-        payerWallet: c.payer_wallet || c.payerWallet,
-        solPaid: Number(c.sol_paid || 0),
+        requirements: c.requirements || "",
+        status: c.status,
         yappers: formattedYappers,
-        joined: formattedYappers.some(y => y && y[0] === db.currentUser.handle)
+        joined: formattedYappers.some(y => y[0] === db.currentUser.handle)
       };
     };
 
-    db.campaigns = sourceData
-      .filter(c => {
-        const createdAtMs = c.created_at ? new Date(c.created_at).getTime() : Date.now();
-        const isExpired = (Date.now() - createdAtMs) > parseDurationToMs(c.duration);
-        const computedStatus = (isExpired && c.status === 'ACTIVE') ? 'COMPLETED' : c.status;
-        return computedStatus === 'ACTIVE' || computedStatus === 'COMPLETED';
-      })
-      .map(normalize);
-
-    db.pendingRequests = sourceData
-      .filter(c => c.status === 'PENDING')
-      .map(normalize);
+    db.campaigns = sourceData.filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED').map(normalize);
+    db.pendingRequests = sourceData.filter(c => c.status === 'PENDING').map(normalize);
+    db.allAdminCampaigns = sourceData.map(normalize);
 
     localStorage.setItem("lived_campaigns_cache", JSON.stringify({
       campaigns: db.campaigns,
-      pendingRequests: db.pendingRequests
+      pendingRequests: db.pendingRequests,
+      allAdminCampaigns: db.allAdminCampaigns
     }));
 
     renderCampaigns();
     renderHome();
     if (isAdminLoggedIn) renderAdminQueue();
-  } catch (err) {
-    console.error("loadGlobalCampaigns failed:", err);
-  }
+  } catch (err) {}
 }
 
 document.addEventListener("keydown", e => {
-  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "a") {
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "m") {
     e.preventDefault();
     show("admin");
   }
 });
 
+async function renderAdminSubmissionsQueue() {
+  const client = requireBackend();
+  const { data: subs } = await client.from('campaign_submissions').select('*').order('created_at', { ascending: false });
+  const container = document.getElementById("adminSubmissionsList");
+  if (!container) return;
+  if (!subs || !subs.length) {
+    container.innerHTML = `<div class="notice">No participant X post submissions recorded yet.</div>`;
+    return;
+  }
+  container.innerHTML = subs.map(s => `
+    <div class="card" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <span class="badge">Campaign ID: #${s.campaign_id} · +${s.score} XP</span>
+        <h4 style="margin:4px 0">Contributor: <b>${esc(s.handle)}</b></h4>
+        <a href="${esc(safeUrl(s.post_url))}" target="_blank" style="color:var(--brand2);word-break:break-all">${esc(s.post_url)} ↗</a>
+      </div>
+      <div>
+        <button class="btn sm danger" onclick="adminDeleteSubmission(${s.id}, '${esc(s.handle)}', ${s.campaign_id}, ${s.score})">Revoke Points</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function adminDeleteSubmission(subId, handle, campaignId, scoreVal) {
+  if (!confirm(`Revoke ${scoreVal} XP from ${handle}?`)) return;
+  const client = requireBackend();
+  await client.from('campaign_submissions').delete().eq('id', subId);
+  const { data: part } = await client.from('campaign_participants').select('*').eq('campaign_id', campaignId).eq('handle', handle).maybeSingle();
+  if (part) {
+    await client.from('campaign_participants').update({ score: Math.max(0, (part.score || 0) - scoreVal) }).eq('id', part.id);
+  }
+  await loadGlobalCampaigns();
+  renderAdminQueue();
+  renderAdminSubmissionsQueue();
+}
+
+async function renderAdminPayoutsQueue() {
+  const client = requireBackend();
+  const { data: campaigns } = await client.from('campaigns').select('*').eq('status', 'COMPLETED');
+  const { data: participants } = await client.from('campaign_participants').select('*');
+  const { data: payouts } = await client.from('campaign_payouts').select('*');
+  const container = document.getElementById("adminPayoutsList");
+  if (!container) return;
+  if (!campaigns || !campaigns.length) {
+    container.innerHTML = `<div class="notice">No completed campaigns awaiting payout settlement.</div>`;
+    return;
+  }
+  container.innerHTML = campaigns.map(c => {
+    const cParts = participants.filter(p => Number(p.campaign_id) === Number(c.id)).sort((a,b) => (b.score||0) - (a.score||0));
+    const topLimit = c.top_rewarded || 5;
+    const poolUSD = Number(c.budget) * 0.9;
+    const currencyLabel = c.currency === "Native Token" ? (c.native_token_name || "Token") : c.currency;
+    
+    let effectivePool = poolUSD;
+    if (currencyLabel.toUpperCase() === "SOL" && dynamicSolPrice > 0) {
+      effectivePool = poolUSD / dynamicSolPrice;
+    }
+
+    const totalXP = cParts.reduce((sum, p) => sum + Number(p.score || 0), 0);
+
+    const winnersRows = cParts.slice(0, topLimit).map((p, idx) => {
+      const share = totalXP > 0 ? effectivePool * (Number(p.score || 0) / totalXP) : 0;
+      const existingPayout = payouts?.find(pt => Number(pt.campaign_id) === Number(c.id) && pt.handle === p.handle);
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #ffffff10">
+          <div><span class="small"><b>#${idx+1} ${esc(p.handle)}</b> — ${p.score} XP</span></div>
+          <div>
+            <b style="color:var(--good);margin-right:10px">${share.toFixed(4)} ${currencyLabel}</b>
+            ${existingPayout ? `<span class="badge" style="color:var(--good)">Paid</span>` : `<button class="btn sm success" onclick="adminProcessPayout(${c.id}, '${esc(p.handle)}', '${esc(p.wallet_address||'')}', ${share.toFixed(4)}, '${esc(currencyLabel)}')">Settle Payout</button>`}
+          </div>
+        </div>
+      `;
+    }).join("") || `<div class="small">No participants qualify.</div>`;
+
+    return `<div class="card" style="margin-bottom:15px"><h4 style="margin:0 0 10px">${esc(c.name)} (Top ${topLimit} Payouts)</h4>${winnersRows}</div>`;
+  }).join("");
+}
+
+async function adminProcessPayout(campaignId, handle, recipientWallet, amount, currency) {
+  if (!recipientWallet) { alert("No wallet connected for recipient."); return; }
+  if (currency !== "SOL") {
+    alert(`Automated Web3 Escrow currently supports native SOL payouts. For ${currency}, please settle manually.`);
+    return;
+  }
+
+  try {
+    const provider = window.phantom?.solana || window.solflare;
+    if (!provider || !provider.isConnected) {
+      alert("Please connect your Admin Solana wallet first.");
+      return;
+    }
+
+    const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'), 'confirmed');
+    const senderPublicKey = provider.publicKey;
+    const lamports = Math.round(Number(amount) * solanaWeb3.LAMPORTS_PER_SOL);
+
+    const transaction = new solanaWeb3.Transaction().add(
+      solanaWeb3.SystemProgram.transfer({
+        fromPubkey: senderPublicKey,
+        toPubkey: new solanaWeb3.PublicKey(recipientWallet),
+        lamports: lamports,
+      })
+    );
+
+    const { blockhash } = await connection.getLatestBlockhash();
+    transaction.recentBlockhash = blockhash;
+    transaction.feePayer = senderPublicKey;
+
+    const signed = await provider.signAndSendTransaction(transaction);
+    const txHash = signed.signature || signed;
+
+    const client = requireBackend();
+    await client.from('campaign_payouts').insert([{
+      campaign_id: Number(campaignId),
+      handle: handle,
+      wallet_address: recipientWallet,
+      amount: Number(amount),
+      currency: currency,
+      tx_signature: txHash,
+      status: 'COMPLETED'
+    }]);
+
+    await client.from('notifications').insert([{
+      handle: handle,
+      message: `🎉 You received a payout of ${amount} ${currency} for Campaign #${campaignId}! TX: ${txHash.slice(0,8)}...`,
+      type: 'success'
+    }]);
+
+    alert(`🚀 Payout Executed Successfully!\nTX Hash: ${txHash}`);
+    renderAdminQueue();
+  } catch (err) {
+    alert("Payout Escrow Error: " + err.message);
+  }
+}
+
+function subscribeToNotifications() {
+  if (!BACKEND_CONFIGURED || !supabaseClient) return;
+  supabaseClient
+    .channel('public:notifications')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `handle=eq.${db.currentUser.handle}` }, payload => {
+      const newNotif = payload.new;
+      showInAppNotification(newNotif.message);
+    })
+    .subscribe();
+}
+
+function showInAppNotification(message) {
+  const toast = document.createElement("div");
+  toast.style.cssText = "position:fixed;bottom:25px;right:25px;z-index:999999;background:var(--surface2);border:1px solid var(--brand);color:var(--fg);padding:14px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.8);animation:netScaleUp 0.3s ease";
+  toast.innerHTML = `<b style="color:var(--brand2);display:block;margin-bottom:4px">🔔 LIVED Proof Alert</b>${esc(message)}`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 6000);
+}
+
+async function renderAdminQueue(){
+  const container = document.getElementById("pendingList");
+  if(!db.pendingRequests.length){
+    container.innerHTML = `<div class="notice">No pending campaign requests in approval queue.</div>`;
+  } else {
+    container.innerHTML = db.pendingRequests.map(item => `
+      <div class="card" style="margin-bottom:14px;border:1px solid var(--line);display:flex;gap:16px">
+        <div style="flex:1">
+          <span class="badge">PENDING · ${esc(item.category)}</span>
+          <h3 style="margin:6px 0">${esc(item.name)}</h3>
+          <p class="small">${esc(item.brief)}</p>
+          <div class="actions">
+            <button class="btn success" onclick="acceptCampaignRequest(${item.id})">✓ Approve</button>
+            <button class="btn danger" onclick="rejectCampaignRequest(${item.id})">✕ Reject</button>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  const client = requireBackend();
+  const { data: ledgerData } = await client.from('payments_ledger').select('*').order('created_at', { ascending: false });
+  document.getElementById("adminPaymentRows").innerHTML = ledgerData?.length ? ledgerData.map(p => `
+    <tr>
+      <td>${esc(p.created_at?.replace('T',' ').substring(0,19))}</td>
+      <td><b>${esc(p.campaign_name)}</b></td>
+      <td>${money(p.budget)}</td>
+      <td>${Number(p.sol_amount||0).toFixed(4)} SOL</td>
+      <td style="font-family:monospace">${esc(p.payer)}</td>
+      <td style="color:var(--good)">Verified</td>
+    </tr>
+  `).join("") : `<tr><td colspan="6" style="text-align:center">No records.</td></tr>`;
+
+  await renderAdminSubmissionsQueue();
+  await renderAdminPayoutsQueue();
+
+  const activeContainer = document.getElementById("adminActiveList");
+  activeContainer.innerHTML = db.allAdminCampaigns.length ? db.allAdminCampaigns.map(item => {
+    const participantsList = (item.yappers || []).map(y => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #ffffff10">
+        <span class="small"><b>${esc(y[0])}</b> — ${y[1]} XP (${y[5]||0} Net XP)</span>
+        <div class="actions">
+          <button class="btn sm warn" onclick="adminDeductParticipantXP(${item.id}, '${esc(y[0])}')">- XP</button>
+          <button class="btn sm danger" onclick="adminRemoveParticipant(${item.id}, '${esc(y[0])}')">Remove</button>
+        </div>
+      </div>
+    `).join("") || `<div class="notice">No participants joined yet.</div>`;
+
+    return `
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <span class="badge">${esc(item.status)} · ${esc(item.category)} · ${money(item.budget)}</span>
+            <h4 style="margin:4px 0">${esc(item.name)}</h4>
+          </div>
+          <div class="actions">
+            ${item.status !== 'ARCHIVED' ? `<button class="btn sm danger" onclick="deleteActiveCampaign(${item.id})">Archive</button>` : ''}
+            ${item.status !== 'ACTIVE' ? `<button class="btn sm success" onclick="acceptCampaignRequest(${item.id})">Make Active</button>` : ''}
+          </div>
+        </div>
+        <div style="margin-top:10px;border-top:1px solid var(--line);padding-top:8px">
+          <div class="small" style="font-weight:700;margin-bottom:4px;color:var(--brand2)">PARTICIPANTS & MANAGEMENT:</div>
+          ${participantsList}
+        </div>
+      </div>
+    `;
+  }).join("") : `<div class="notice">No database campaigns found.</div>`;
+}
+
 async function initApp() {
-  const safe = async (fn) => { try { await fn(); } catch(e){ console.error(e); } };
-  const status = document.getElementById("backendStatus");
-  if (status) {
-    status.textContent = BACKEND_CONFIGURED ? "● Supabase backend configured" : "● Supbackend not configured";
-    status.style.color = BACKEND_CONFIGURED ? "var(--good)" : "var(--warn)";
-  }
-  await safe(restoreAdminSession);
-  await safe(loadProfileFromSupabase);
-  await safe(checkXOAuthReturn);
+  await restoreAdminSession();
+  await loadProfileFromSupabase();
   if (BACKEND_CONFIGURED) {
-    await safe(loadGlobalCampaigns);
-    supabaseClient
-      .channel('public:global_sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns' }, () => {
-        loadGlobalCampaigns();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_participants' }, () => {
-        loadGlobalCampaigns();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'payments_ledger' }, () => {
-        if (isAdminLoggedIn) renderAdminQueue();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_submissions' }, () => {
-        if (isAdminLoggedIn) renderAdminQueue();
-      })
-      .subscribe();
+    await loadGlobalCampaigns();
+    subscribeToNotifications();
+    supabaseClient.channel('schema-db-changes').on('postgres_changes', { event: '*', schema: 'public' }, () => {
+      loadGlobalCampaigns();
+    }).subscribe();
   }
-  await safe(syncBudgetRules);
-  await safe(renderHome);
-  await safe(renderLivedCard);
-  if (BACKEND_CONFIGURED) safe(fetchLiveSolPrice);
+  renderHome();
+  renderLivedCard();
+  if (BACKEND_CONFIGURED) fetchLiveSolPrice();
 }
 
 initApp();
