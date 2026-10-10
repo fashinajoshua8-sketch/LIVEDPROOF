@@ -1701,18 +1701,16 @@ async function loadGlobalCampaigns() {
   try {
     const client = requireBackend();
 
-    const [campRes, partRes] = await Promise.all([
-      client.from('campaigns').select('*').order('created_at', { ascending: false }),
-      client.from('campaign_participants').select('*')
-    ]);
+    // Fetch campaigns and participants independently so one blocked query won't hang the other
+    const campPromise = client.from('campaigns').select('*').order('created_at', { ascending: false });
+    const partPromise = client.from('campaign_participants').select('*');
 
-    if (campRes.error) {
-      console.error("Supabase campaign fetch error:", campRes.error);
-      return;
-    }
+    const [campRes, partRes] = await Promise.allSettled([campPromise, partPromise]);
 
-    const sourceData = campRes.data || [];
-    const allParticipants = partRes.data || [];
+    const sourceData = campRes.status === 'fulfilled' && !campRes.value.error ? (campRes.value.data || []) : [];
+    const allParticipants = partRes.status === 'fulfilled' && !partRes.value.error ? (partRes.value.data || []) : [];
+
+    console.log(`Fetched ${sourceData.length} campaigns and ${allParticipants.length} participants.`);
 
     const normalize = (c) => {
       const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
@@ -1750,9 +1748,9 @@ async function loadGlobalCampaigns() {
     renderCampaigns();
     renderHome();
     if (isAdminLoggedIn) renderAdminQueue();
-    console.log("Campaigns loaded and rendered successfully from Supabase database!");
+    console.log("Campaigns rendered successfully!");
   } catch (err) {
-    console.error("Error loading campaigns:", err);
+    console.error("Error in loadGlobalCampaigns:", err);
   }
 }
 
