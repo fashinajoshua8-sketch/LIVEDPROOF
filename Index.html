@@ -1697,9 +1697,7 @@ async function adminDeductParticipantXP(campaignId, handle) {
 }
 
 async function loadGlobalCampaigns() {
-  console.log("Loading campaigns with fast cache fallback...");
-  
-  // 1. Instantly render from local cache so the UI never waits
+  // 1. Instant render from local cache (Zero UI lag)
   const cachedCampaigns = localStorage.getItem("lived_campaigns_cache");
   if (cachedCampaigns) {
     try {
@@ -1713,17 +1711,15 @@ async function loadGlobalCampaigns() {
     } catch (e) {}
   }
 
+  // 2. Silent background sync with optimized column selection
   try {
     const client = requireBackend();
-
-    // 2. Fetch in background without blocking the UI thread
     const [campRes, partRes] = await Promise.all([
-      client.from('campaigns').select('id, name, category, currency, native_token_name, budget, duration, max_participants, top_rewarded, target_links, brief, requirements, status, created_at').order('created_at', { ascending: false }),
+      client.from('campaigns').select('id, name, category, currency, native_token_name, image, budget, duration, max_participants, top_rewarded, target_links, brief, requirements, status, created_at').order('created_at', { ascending: false }),
       client.from('campaign_participants').select('*')
     ]);
 
     if (campRes.error) return;
-
     const sourceData = campRes.data || [];
     const allParticipants = partRes.data || [];
 
@@ -1763,12 +1759,8 @@ async function loadGlobalCampaigns() {
     renderCampaigns();
     renderHome();
     if (isAdminLoggedIn) renderAdminQueue();
-    console.log("Background sync and UI refresh completed successfully!");
-  } catch (err) {
-    console.warn("Background fetch delayed:", err.message);
-  }
+  } catch (err) {}
 }
-
 document.addEventListener("keydown", e => {
   if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "m") {
     e.preventDefault();
