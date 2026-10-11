@@ -329,7 +329,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <div class="modal-overlay" id="submitPostModal">
   <div class="modal-card" style="max-width:460px;text-align:left">
     <h3 style="margin-top:0">Submit Campaign Post</h3>
-    <p class="small">Paste your X post URL below. Verified metrics (Min: 10 likes, 5 reposts, 5 comments, 50-100 views) will determine your points.</p>
+    <p class="small">Paste your X post URL below. Verified metrics configured for this campaign will determine your points.</p>
     <form id="submitPostForm" class="form" style="margin-top:15px">
       <input type="hidden" id="targetCampaignId">
       <div><label>X Post URL</label><input type="url" id="postUrlInput" placeholder="https://x.com/username/status/..." required></div>
@@ -380,30 +380,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       </button>
     </div>
     <button type="button" class="btn" style="margin-top:20px;width:100%" onclick="closeWalletModal()">Cancel</button>
-  </div>
-</div>
-
-<div class="modal-overlay" id="editCampaignModal">
-  <div class="modal-card" style="max-width:550px;text-align:left">
-    <h3 style="margin-top:0">Edit Campaign</h3>
-    <form id="editCampaignForm" class="form" style="margin-top:15px">
-      <input type="hidden" id="editCampaignId">
-      <div><label>Project / Campaign Name</label><input id="editCName" required></div>
-      <div class="row">
-        <div><label>Category</label><select id="editCCategory"><option>DeFi</option><option>Memecoin</option><option>AI</option><option>Infrastructure</option><option>NFT</option></select></div>
-        <div><label>Total Budget (USD)</label><input id="editCBudget" type="number" required></div>
-      </div>
-      <div class="row">
-        <div><label>Max Participants Cap</label><input id="editCMax" type="number" required></div>
-        <div><label>Top Rewarded Cutoff</label><input id="editCTop" type="number" required></div>
-      </div>
-      <div><label>Campaign Objective & Brief</label><textarea id="editCBrief" required></textarea></div>
-      <div><label>Participation Requirements</label><input id="editCRequirements" required></div>
-      <div class="actions" style="margin-top:15px;justify-content:flex-end">
-        <button type="button" class="btn" onclick="closeEditModal()">Cancel</button>
-        <button type="submit" class="btn primary">Save Changes</button>
-      </div>
-    </form>
   </div>
 </div>
 
@@ -536,6 +512,19 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         <div>
           <label>Top Participants Splitting Reward Pool</label>
           <input id="cTopRewarded" type="number" min="1" value="5" required placeholder="e.g. Top 3, 5, or 10 creators">
+        </div>
+      </div>
+
+      <!-- Custom Dynamic Metric Thresholds Set by Creator -->
+      <div style="background:rgba(255,106,0,0.03);border:1px solid var(--line);padding:14px;border-radius:10px;margin:10px 0">
+        <label style="color:var(--brand2);display:block;margin-bottom:8px">⚙️ Custom Verification Metric Thresholds</label>
+        <div class="row">
+          <div><label>Min Likes</label><input id="cMinLikes" type="number" min="0" value="10" required></div>
+          <div><label>Min Reposts</label><input id="cMinReposts" type="number" min="0" value="5" required></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div><label>Min Comments</label><input id="cMinComments" type="number" min="0" value="5" required></div>
+          <div><label>Min Views / Impressions</label><input id="cMinViews" type="number" min="0" value="50" required></div>
         </div>
       </div>
 
@@ -774,21 +763,13 @@ try {
   
   if (BACKEND_CONFIGURED && window.supabase && typeof window.supabase.createClient === 'function') {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { 
-        persistSession: true, 
-        autoRefreshToken: true, 
-        detectSessionInUrl: true,
-        storage: window.localStorage
-      },
-      global: {
-        headers: { 'apikey': SUPABASE_ANON_KEY }
-      }
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
-    console.log("Supabase client initialized successfully.");
   }
 } catch (e) {
-  console.error("Supabase client init error:", e);
+  console.warn("Supabase client init note:", e);
 }
+
 function requireBackend(){
   if (!BACKEND_CONFIGURED || !supabaseClient) {
     alert("LIVED Proof backend is not configured yet.");
@@ -915,25 +896,19 @@ async function fetchLiveSolPrice() {
     const data = await res.json();
     if (data && data.solana && data.solana.usd) {
       dynamicSolPrice = data.solana.usd;
-      console.log("Live SOL Price fetched from CoinGecko:", dynamicSolPrice);
       updateBudgetCalculations();
       return;
     }
-  } catch (err) {
-    console.warn("CoinGecko fetch failed, trying fallback public ticker...", err);
-  }
+  } catch (err) {}
 
   try {
     const binanceRes = await fetch("https://api.binance.com/api/v3/ticker/price?symbol=SOLUSDT");
     const binanceData = await binanceRes.json();
     if (binanceData && binanceData.price) {
       dynamicSolPrice = Number(binanceData.price);
-      console.log("Live SOL Price fetched from Binance Fallback:", dynamicSolPrice);
       updateBudgetCalculations();
     }
-  } catch (err2) {
-    console.error("All live price fetches failed. Using fallback price:", dynamicSolPrice);
-  }
+  } catch (err2) {}
 }
 
 function show(id){
@@ -1086,6 +1061,7 @@ function openCampaign(id){
     <div class="metric"><span>Max Participants Cap</span><b>${c.maxParticipants || 'Unlimited'}</b></div>
     <div class="metric"><span>Rewarded Rank Cutoff</span><b style="color:var(--good)">Top ${c.topRewarded || 5} Contributors</b></div>
     <div class="metric"><span>Requirements</span><span class="small">${esc(c.requirements||'Open to all verified creators.')}</span></div>
+    <div class="metric"><span>Min Thresholds</span><span class="small">❤️ ${c.minLikes || 10} Likes · 🔄 ${c.minReposts || 5} Reposts · 💬 ${c.minComments || 5} Comments · 👁️ ${c.minViews || 50} Views</span></div>
     
     ${linksHtml}
     ${submitButtonHtml}
@@ -1250,6 +1226,16 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     return;
   }
 
+  const activeCampaign = db.campaigns.find(c => Number(c.id) === campaignId) || 
+                         db.allAdminCampaigns?.find(c => Number(c.id) === campaignId);
+
+  const thresholds = {
+    minLikes: activeCampaign ? activeCampaign.minLikes : 10,
+    minReposts: activeCampaign ? activeCampaign.minReposts : 5,
+    minComments: activeCampaign ? activeCampaign.minComments : 5,
+    minViews: activeCampaign ? activeCampaign.minViews : 50
+  };
+
   const btn = document.getElementById("submitPostBtn");
   btn.textContent = "Validating Metrics via X API...";
   btn.disabled = true;
@@ -1257,7 +1243,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
   try {
     const client = requireBackend();
     const { data, error: funcError } = await client.functions.invoke('verify-tweet-metrics', {
-      body: { campaignId: campaignId, handle: db.currentUser.handle, postUrl: postUrl }
+      body: { campaignId: campaignId, handle: db.currentUser.handle, postUrl: postUrl, thresholds: thresholds }
     });
 
     if (funcError) {
@@ -1287,7 +1273,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     }]);
 
     if (subError) {
-      if (subError.code === "23505") throw new Error("X-TWEET-LOCK: This exact X post URL has already been submitted.");
+      if (subError.code === "23505") throw new Error("X-TWEET-LOCK: This exact X post URL has already been successfully submitted and rewarded.");
       throw subError;
     }
 
@@ -1560,6 +1546,10 @@ document.getElementById("campaignForm").addEventListener("submit", (e) => {
     targetLinks,
     brief: document.getElementById("cBrief").value.trim(),
     requirements: document.getElementById("cRequirements").value.trim(),
+    min_likes: Number(document.getElementById("cMinLikes").value) || 10,
+    min_reposts: Number(document.getElementById("cMinReposts").value) || 5,
+    min_comments: Number(document.getElementById("cMinComments").value) || 5,
+    min_views: Number(document.getElementById("cMinViews").value) || 50,
     status: "PENDING",
     payerWallet: db.currentUser.wallet || "Manual Creator",
     solPaid: Number((budget / dynamicSolPrice).toFixed(4))
@@ -1589,6 +1579,10 @@ async function confirmManualPayment(){
       target_links: pendingManualCampaign.targetLinks,
       brief: pendingManualCampaign.brief,
       requirements: pendingManualCampaign.requirements,
+      min_likes: pendingManualCampaign.min_likes,
+      min_reposts: pendingManualCampaign.min_reposts,
+      min_comments: pendingManualCampaign.min_comments,
+      min_views: pendingManualCampaign.min_views,
       status: "PENDING",
       payer_wallet: pendingManualCampaign.payerWallet,
       sol_paid: pendingManualCampaign.solPaid
@@ -1697,10 +1691,9 @@ async function adminDeductParticipantXP(campaignId, handle) {
 }
 
 async function loadGlobalCampaigns() {
-  // 1. Instant render from local cache (Zero UI lag)
-  const cachedCampaigns = localStorage.getItem("lived_campaigns_cache");
-  if (cachedCampaigns) {
-    try {
+  try {
+    const cachedCampaigns = localStorage.getItem("lived_campaigns_cache");
+    if (cachedCampaigns) {
       const parsed = JSON.parse(cachedCampaigns);
       db.campaigns = parsed.campaigns || [];
       db.pendingRequests = parsed.pendingRequests || [];
@@ -1708,14 +1701,11 @@ async function loadGlobalCampaigns() {
       renderCampaigns();
       renderHome();
       if (isAdminLoggedIn) renderAdminQueue();
-    } catch (e) {}
-  }
+    }
 
-  // 2. Silent background sync with optimized column selection
-  try {
     const client = requireBackend();
     const [campRes, partRes] = await Promise.all([
-      client.from('campaigns').select('id, name, category, currency, native_token_name, image, budget, duration, max_participants, top_rewarded, target_links, brief, requirements, status, created_at').order('created_at', { ascending: false }),
+      client.from('campaigns').select('*').order('created_at', { ascending: false }),
       client.from('campaign_participants').select('*')
     ]);
 
@@ -1732,7 +1722,7 @@ async function loadGlobalCampaigns() {
         category: c.category,
         currency: c.currency || "SOL",
         nativeTokenName: c.native_token_name || null,
-        image: c.image || "",
+        image: c.image,
         budget: Number(c.budget),
         duration: c.duration,
         maxParticipants: c.max_participants || 50,
@@ -1740,6 +1730,10 @@ async function loadGlobalCampaigns() {
         targetLinks: c.target_links || [],
         brief: c.brief || "",
         requirements: c.requirements || "",
+        minLikes: c.min_likes || 10,
+        minReposts: c.min_reposts || 5,
+        minComments: c.min_comments || 5,
+        minViews: c.min_views || 50,
         status: c.status,
         yappers: formattedYappers,
         joined: formattedYappers.some(y => y[0] === db.currentUser.handle)
@@ -1761,6 +1755,7 @@ async function loadGlobalCampaigns() {
     if (isAdminLoggedIn) renderAdminQueue();
   } catch (err) {}
 }
+
 document.addEventListener("keydown", e => {
   if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "m") {
     e.preventDefault();
@@ -1992,43 +1987,19 @@ async function renderAdminQueue(){
 }
 
 async function initApp() {
-  console.log("Initializing LIVED Proof App...");
-  try {
-    await restoreAdminSession();
-    console.log("Admin session restored.");
-  } catch (e) { console.warn("Admin session error:", e); }
-
-  try {
-    await loadProfileFromSupabase();
-    console.log("Profile loaded.");
-  } catch (e) { console.warn("Profile load error:", e); }
-
+  await restoreAdminSession();
+  await loadProfileFromSupabase();
   if (BACKEND_CONFIGURED) {
-    console.log("Backend is configured. Loading global campaigns...");
-    try {
-      await loadGlobalCampaigns();
-      console.log("Global campaigns loaded successfully.");
-    } catch (e) { console.error("Global campaigns load failed:", e); }
-
-    try {
-      subscribeToNotifications();
-    } catch (e) { console.warn("Notifications subscription error:", e); }
-
-    try {
-      supabaseClient.channel('schema-db-changes').on('postgres_changes', { event: '*', schema: 'public' }, () => {
-        loadGlobalCampaigns();
-      }).subscribe();
-    } catch (e) { console.warn("Realtime channel error:", e); }
-
-    try {
-      fetchLiveSolPrice();
-    } catch (e) { console.warn("Sol price fetch error:", e); }
-  } else {
-    console.warn("BACKEND_CONFIGURED is false! Check Supabase keys.");
+    loadGlobalCampaigns().catch(e => console.error("Global campaigns load failed:", e));
+    subscribeToNotifications();
+    supabaseClient.channel('public-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns' }, () => { loadGlobalCampaigns(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_participants' }, () => { loadGlobalCampaigns(); })
+      .subscribe();
   }
-
   renderHome();
   renderLivedCard();
+  if (BACKEND_CONFIGURED) fetchLiveSolPrice();
 }
 
 initApp();
