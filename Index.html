@@ -600,7 +600,11 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         <h3 style="margin:4px 0 2px;letter-spacing:-0.5px;font-size:22px" id="cardRole">Registered Contributor</h3>
         <div class="small" id="cardStats">0 PTS Aggregated · 0 Active Campaigns</div>
         <div class="small" id="cardWalletMeta" style="color:var(--brand2);margin-top:4px">Wallet: Not Connected</div>
-        <div class="small" id="cardXMeta" style="color:#38bdf8;margin-top:2px">X Handle: Not Linked</div>
+        
+        <div class="small" id="cardXMeta" style="color:#38bdf8;margin-top:2px;display:flex;justify-content:space-between;align-items:center">
+          <span>X Handle: Not Linked</span>
+          <button type="button" id="disconnectXBtn" class="btn sm danger" style="display:none;padding:2px 8px;font-size:10px" onclick="disconnectXAccount()">Disconnect X</button>
+        </div>
 
         <div style="margin:14px 0 8px">
           <div style="display:flex;justify-content:space-between" class="small">
@@ -1393,12 +1397,18 @@ function renderLivedCard(){
 
   const xMeta = document.getElementById("cardXMeta");
   const navXBtn = document.getElementById("navXBtn");
+  const disconnectXBtn = document.getElementById("disconnectXBtn");
+  
   if(db.currentUser.xHandle){
-    xMeta.textContent = `X Handle: ${db.currentUser.xHandle}`;
+    const spanEl = xMeta.querySelector("span");
+    if(spanEl) spanEl.textContent = `X Handle: ${db.currentUser.xHandle}`;
     if(navXBtn) navXBtn.textContent = `🔗 ${db.currentUser.xHandle}`;
+    if(disconnectXBtn) disconnectXBtn.style.display = "inline-block";
   } else {
-    xMeta.textContent = `X Handle: Not Linked`;
+    const spanEl = xMeta.querySelector("span");
+    if(spanEl) spanEl.textContent = `X Handle: Not Linked`;
     if(navXBtn) navXBtn.textContent = `🔗 Connect X`;
+    if(disconnectXBtn) disconnectXBtn.style.display = "none";
   }
 
   document.getElementById("rankProgressText").textContent = profile.progressText;
@@ -1412,6 +1422,14 @@ async function updateHandle(){
   db.currentUser.handle = val.startsWith("@") ? val : "@" + val;
   await syncProfileToSupabase();
   renderLivedCard();
+}
+
+async function disconnectXAccount() {
+  if (!confirm("Are you sure you want to disconnect your X account?")) return;
+  db.currentUser.xHandle = null;
+  await syncProfileToSupabase();
+  renderLivedCard();
+  alert("🔗 X account successfully disconnected.");
 }
 
 async function syncProfileToSupabase() {
