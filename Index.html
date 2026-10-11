@@ -1432,6 +1432,30 @@ async function disconnectXAccount() {
   alert("🔗 X account successfully disconnected.");
 }
 
+async function handleXOAuthCallback() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const code = urlParams.get('code');
+  
+  if (code && !db.currentUser.xHandle) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    try {
+      const client = requireBackend();
+      const { data, error } = await client.functions.invoke('exchange-x-token', {
+        body: { code: code, redirectUri: window.location.origin + "/" }
+      });
+
+      if (error || data?.error) throw new Error(data?.error || (error && error.message) || "OAuth exchange failed");
+
+      db.currentUser.xHandle = data.handle;
+      await syncProfileToSupabase();
+      renderLivedCard();
+      alert(`🎉 X Account (${data.handle}) Connected Successfully!`);
+    } catch (err) {
+      alert("Failed to authenticate X account: " + err.message);
+    }
+  }
+}
+
 async function syncProfileToSupabase() {
   try {
     localStorage.setItem("lived_current_user_cache", JSON.stringify(db.currentUser));
@@ -2007,6 +2031,8 @@ async function renderAdminQueue(){
 async function initApp() {
   await restoreAdminSession();
   await loadProfileFromSupabase();
+  await handleXOAuthCallback();
+  
   if (BACKEND_CONFIGURED) {
     loadGlobalCampaigns().catch(e => console.error("Global campaigns load failed:", e));
     subscribeToNotifications();
