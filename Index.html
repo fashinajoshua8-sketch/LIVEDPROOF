@@ -6,7 +6,7 @@
 <title>LIVED PROOF — Web3 Engagement, Identity & Marketing Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- Solana Web3 Browser Bundle -->
 <script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
@@ -22,7 +22,7 @@
   --seal:#c4162a;--good:#4ade80;--warn:#ffc857;--gold:#ffd700;
   --discord:#5865F2;--telegram:#229ED9;
   --display:"Space Grotesk","Segoe UI",sans-serif;
-  --sans:"Space Grotesk","Segoe UI",sans-serif;
+  --sans:"DM Sans","Segoe UI",system-ui,sans-serif;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -38,10 +38,9 @@ body{
   background-attachment:fixed;
   color:var(--fg);
   font-family:var(--sans);
-  font-weight:700;
   min-height:100vh;
 }
-button,input,textarea,select{font:inherit;font-family:var(--sans);font-weight:700}
+button,input,textarea,select{font:inherit}
 button{cursor:pointer}
 a{color:inherit;text-decoration:none}
 h1,h2,h3,h4,h5,h6{font-family:var(--display);font-weight:700}
@@ -1295,7 +1294,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
   };
 
   const btn = document.getElementById("submitPostBtn");
-  btn.textContent = "Validating Metrics via X API...";
+  btn.textContent = "Validating Metrics & Story Requirements...";
   btn.disabled = true;
 
   try {
@@ -1318,7 +1317,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     if (data && data.error) throw new Error(data.error);
 
     const earnedXP = data.earnedXP || 50;
-    const networkingXPVal = Math.floor(earnedXP * 0.5);
+    const networkingXPVal = data.networkingXP || Math.floor(earnedXP * 0.5);
     const reachVal = data.impressions || 100;
     const interactionsVal = (data.likes || 0) + (data.reposts || 0) + (data.comments || 0);
 
@@ -1327,7 +1326,8 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
       handle: db.currentUser.handle,
       post_url: postUrl,
       metrics: { impressions: reachVal, likes: data.likes, reposts: data.reposts, comments: data.comments },
-      score: earnedXP
+      score: earnedXP,
+      networking_xp: networkingXPVal
     }]);
 
     if (subError) {
@@ -1369,7 +1369,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     await loadGlobalCampaigns();
     openCampaign(campaignId);
 
-    alert(`🎉 Post Verified & Locked Successfully!\n+${earnedXP} XP added.`);
+    alert(`🎉 Story Verified & Tiered XP Locked Successfully!\n+${earnedXP} XP added.`);
   } catch (err) {
     alert("❌ Submission Unsuccessful\n\n" + err.message);
   } finally {
@@ -1391,8 +1391,6 @@ function renderDashboard(targetId){
   selector.innerHTML = activeCampaigns.map(item=>`<option value="${item.id}" ${Number(item.id)===Number(c.id)?'selected':''}>${esc(item.name)}</option>`).join("");
   
   const pool = Number(c.budget)*0.9;
-  const totalReach = (c.yappers||[]).reduce((a,y)=>a+y[2],0);
-  const totalInteractions = (c.yappers||[]).reduce((a,y)=>a+y[3],0);
   const currencyLabel = c.currency === "Native Token" ? (c.nativeTokenName || "Token") : (c.currency || "SOL");
   
   document.getElementById("dashTitle").textContent = `Campaign Overview: ${c.name}`;
