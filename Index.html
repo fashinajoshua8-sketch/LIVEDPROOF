@@ -383,6 +383,56 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   </div>
 </div>
 
+<!-- Admin Campaign Editor Modal -->
+<div class="modal-overlay" id="adminEditCampaignModal">
+  <div class="modal-card" style="max-width:650px;text-align:left;max-height:90vh;overflow-y:auto">
+    <h3 style="margin-top:0">Edit Campaign (Admin)</h3>
+    <form id="adminEditCampaignForm" class="form" style="margin-top:15px">
+      <input type="hidden" id="editCampId">
+      
+      <div class="row">
+        <div><label>Campaign Name</label><input id="editCampName" required></div>
+        <div><label>Category</label><select id="editCampCategory"><option>DeFi</option><option>Memecoin</option><option>AI</option><option>Infrastructure</option><option>NFT</option></select></div>
+      </div>
+
+      <div class="row">
+        <div><label>Status</label><select id="editCampStatus"><option value="ACTIVE">ACTIVE</option><option value="PENDING">PENDING</option><option value="COMPLETED">COMPLETED</option><option value="ARCHIVED">ARCHIVED</option><option value="REJECTED">REJECTED</option></select></div>
+        <div><label>Total Budget (USD)</label><input id="editCampBudget" type="number" step="1" required></div>
+      </div>
+
+      <div class="row">
+        <div><label>Duration</label><input id="editCampDuration" required></div>
+        <div><label>Reward Currency</label><input id="editCampCurrency" required></div>
+      </div>
+
+      <div class="row">
+        <div><label>Max Participants Cap</label><input id="editCampMaxPart" type="number" required></div>
+        <div><label>Top Rewarded Cutoff</label><input id="editCampTopRewarded" type="number" required></div>
+      </div>
+
+      <div style="background:rgba(255,106,0,0.03);border:1px solid var(--line);padding:10px;border-radius:8px">
+        <label style="color:var(--brand2);display:block;margin-bottom:6px">Thresholds</label>
+        <div class="row">
+          <div><label>Min Likes</label><input id="editCampMinLikes" type="number" required></div>
+          <div><label>Min Reposts</label><input id="editCampMinReposts" type="number" required></div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div><label>Min Comments</label><input id="editCampMinComments" type="number" required></div>
+          <div><label>Min Views</label><input id="editCampMinViews" type="number" required></div>
+        </div>
+      </div>
+
+      <div><label>Objective & Brief</label><textarea id="editCampBrief" required></textarea></div>
+      <div><label>Participation Requirements</label><input id="editCampRequirements"></div>
+
+      <div class="actions" style="margin-top:15px;justify-content:flex-end">
+        <button type="button" class="btn" onclick="document.getElementById('adminEditCampaignModal').classList.remove('active')">Cancel</button>
+        <button type="submit" class="btn primary">Save Changes →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <main class="shell">
 
 <section id="home" class="view active">
@@ -694,7 +744,10 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         <div id="adminSubmissionsList"></div>
       </div>
       
-      <h3 style="margin-top:35px">Manage All Campaigns & Status Management</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:35px">
+        <h3 style="margin:0">Manage All Campaigns & Status Management</h3>
+        <button class="btn sm danger" onclick="purgeArchivedCampaigns()">🗑️ Purge All Archived Records</button>
+      </div>
       <div id="adminActiveList" style="margin-top:15px"></div>
 
       <h3 style="margin-top:35px">Campaign Winner Payouts & Settlement</h3>
@@ -1441,6 +1494,91 @@ async function disconnectXAccount() {
   alert("🔗 X account successfully disconnected.");
 }
 
+async function purgeArchivedCampaigns() {
+  if (!confirm("Permanently delete all archived campaigns and their records from the database?")) return;
+  const client = requireBackend();
+  
+  const { data: archived } = await client.from('campaigns').select('id').eq('status', 'ARCHIVED');
+  if (!archived || !archived.length) {
+    alert("No archived campaigns found to purge.");
+    return;
+  }
+  
+  const ids = archived.map(c => c.id);
+
+  await client.from('campaign_submissions').delete().in('campaign_id', ids);
+  await client.from('campaign_participants').delete().in('campaign_id', ids);
+  const { error } = await client.from('campaigns').delete().eq('status', 'ARCHIVED');
+
+  if (error) {
+    alert("Error purging records: " + error.message);
+    return;
+  }
+
+  await loadGlobalCampaigns();
+  renderAdminQueue();
+  alert("🗑️ All archived campaign records successfully purged!");
+}
+
+function openAdminEditCampaign(id) {
+  const numericId = Number(id);
+  const c = db.allAdminCampaigns?.find(x => Number(x.id) === numericId);
+  if (!c) { alert("Campaign not found"); return; }
+
+  document.getElementById("editCampId").value = c.id;
+  document.getElementById("editCampName").value = c.name;
+  document.getElementById("editCampCategory").value = c.category;
+  document.getElementById("editCampStatus").value = c.status;
+  document.getElementById("editCampBudget").value = c.budget;
+  document.getElementById("editCampDuration").value = c.duration;
+  document.getElementById("editCampCurrency").value = c.currency;
+  document.getElementById("editCampMaxPart").value = c.maxParticipants;
+  document.getElementById("editCampTopRewarded").value = c.topRewarded;
+  document.getElementById("editCampMinLikes").value = c.minLikes;
+  document.getElementById("editCampMinReposts").value = c.minReposts;
+  document.getElementById("editCampMinComments").value = c.minComments;
+  document.getElementById("editCampMinViews").value = c.minViews;
+  document.getElementById("editCampBrief").value = c.brief;
+  document.getElementById("editCampRequirements").value = c.requirements || "";
+
+  document.getElementById("adminEditCampaignModal").classList.add("active");
+}
+
+document.getElementById("adminEditCampaignForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const id = Number(document.getElementById("editCampId").value);
+  
+  const updatedData = {
+    name: document.getElementById("editCampName").value.trim(),
+    category: document.getElementById("editCampCategory").value,
+    status: document.getElementById("editCampStatus").value,
+    budget: Number(document.getElementById("editCampBudget").value),
+    duration: document.getElementById("editCampDuration").value.trim(),
+    currency: document.getElementById("editCampCurrency").value.trim(),
+    max_participants: Number(document.getElementById("editCampMaxPart").value),
+    top_rewarded: Number(document.getElementById("editCampTopRewarded").value),
+    min_likes: Number(document.getElementById("editCampMinLikes").value),
+    min_reposts: Number(document.getElementById("editCampMinReposts").value),
+    min_comments: Number(document.getElementById("editCampMinComments").value),
+    min_views: Number(document.getElementById("editCampMinViews").value),
+    brief: document.getElementById("editCampBrief").value.trim(),
+    requirements: document.getElementById("editCampRequirements").value.trim()
+  };
+
+  const client = requireBackend();
+  const { error } = await client.from('campaigns').update(updatedData).eq('id', id);
+
+  if (error) {
+    alert("Failed to update campaign: " + error.message);
+    return;
+  }
+
+  document.getElementById("adminEditCampaignModal").classList.remove("active");
+  await loadGlobalCampaigns();
+  renderAdminQueue();
+  alert("✨ Campaign updated successfully!");
+});
+
 async function syncProfileToSupabase() {
   try {
     localStorage.setItem("lived_current_user_cache", JSON.stringify(db.currentUser));
@@ -1996,6 +2134,7 @@ async function renderAdminQueue(){
             <h4 style="margin:4px 0">${esc(item.name)}</h4>
           </div>
           <div class="actions">
+            <button class="btn sm primary" onclick="openAdminEditCampaign(${item.id})">✏️ Edit</button>
             ${item.status !== 'ARCHIVED' ? `<button class="btn sm danger" onclick="deleteActiveCampaign(${item.id})">Archive</button>` : ''}
             ${item.status !== 'ACTIVE' ? `<button class="btn sm success" onclick="acceptCampaignRequest(${item.id})">Make Active</button>` : ''}
           </div>
