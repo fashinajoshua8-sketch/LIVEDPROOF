@@ -1282,16 +1282,24 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     return;
   }
 
-  const activeCampaign = db.campaigns.find(c => Number(c.id) === campaignId) || 
+const activeCampaign = db.campaigns.find(c => Number(c.id) === campaignId) || 
                          db.allAdminCampaigns?.find(c => Number(c.id) === campaignId);
+
+  // Helper function to safely parse a tag from requirements if needed
+  const parseTag = (text) => {
+    if (!text) return "@LIVEDITglobal";
+    const match = text.match(/@[A-Za-z0-9_]+/);
+    return match ? match[0] : "@LIVEDITglobal";
+  };
 
   const thresholds = {
     minLikes: activeCampaign ? activeCampaign.minLikes : 10,
     minReposts: activeCampaign ? activeCampaign.minReposts : 5,
     minComments: activeCampaign ? activeCampaign.minComments : 5,
-    minViews: activeCampaign ? activeCampaign.minViews : 50
+    minViews: activeCampaign ? activeCampaign.minViews : 50,
+    requiredTag: activeCampaign?.required_tag || parseTag(activeCampaign?.requirements) // 👈 This was missing!
   };
-
+  
   const btn = document.getElementById("submitPostBtn");
   btn.textContent = "Validating Metrics & Story Requirements...";
   btn.disabled = true;
