@@ -1765,8 +1765,9 @@ document.getElementById("campaignForm").addEventListener("submit", (e) => {
   const duration = document.getElementById("cDuration").value;
   const currency = document.getElementById("cCurrency").value;
   const targetLinks = Array.from(document.querySelectorAll(".cLinkInput")).map(el => el.value.trim()).filter(Boolean);
-
-  pendingManualCampaign = {
+  const requirementsText = document.getElementById("cRequirements").value.trim();
+  const parsedTag = extractTagFromRequirements(requirementsText); // 👈 Added helper call
+pendingManualCampaign = {
     name: document.getElementById("cName").value.trim(),
     category: document.getElementById("cCategory").value,
     currency,
@@ -1777,8 +1778,9 @@ document.getElementById("campaignForm").addEventListener("submit", (e) => {
     maxParticipants: Number(document.getElementById("cMaxParticipants").value) || 50,
     topRewarded: Number(document.getElementById("cTopRewarded").value) || 5,
     targetLinks,
+    required_tag: parsedTag, // 👈 Added property here
     brief: document.getElementById("cBrief").value.trim(),
-    requirements: document.getElementById("cRequirements").value.trim(),
+    requirements: requirementsText,
     min_likes: Number(document.getElementById("cMinLikes").value) || 10,
     min_reposts: Number(document.getElementById("cMinReposts").value) || 5,
     min_comments: Number(document.getElementById("cMinComments").value) || 5,
@@ -1810,6 +1812,7 @@ async function confirmManualPayment(){
       max_participants: pendingManualCampaign.maxParticipants,
       top_rewarded: pendingManualCampaign.topRewarded,
       target_links: pendingManualCampaign.targetLinks,
+      required_tag: pendingManualCampaign.required_tag, // 👈 Added here
       brief: pendingManualCampaign.brief,
       requirements: pendingManualCampaign.requirements,
       min_likes: pendingManualCampaign.min_likes,
@@ -2236,6 +2239,12 @@ async function initApp() {
   renderHome();
   renderLivedCard();
   if (BACKEND_CONFIGURED) fetchLiveSolPrice();
+}
+
+function extractTagFromRequirements(requirementsText) {
+  if (!requirementsText) return "@LIVEDITglobal";
+  const match = requirementsText.match(/@[A-Za-z0-9_]+/);
+  return match ? match[0] : "@LIVEDITglobal";
 }
 
 initApp();
