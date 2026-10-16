@@ -282,26 +282,26 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <div class="netflix-hero-content">
         <div class="netflix-metadata">
           <span class="net-badge match">Web3 Campaign & Verification Hub</span>
-          <span class="net-badge rating">PROVED</span>
+          <span class="net-badge rating">PROVED V3</span>
         </div>
         
         <h1 class="netflix-title">
-          Don't just say you contributed. <span style="color: var(--brand2);">Prove it.</span>
+          Configurable Streaks. <span style="color: var(--brand2);">Proven Contribution.</span>
         </h1>
         
         <p class="netflix-description">
-          <strong>LIVED Proof</strong> is a Web3 campaign platform built to turn community participation into measurable, verifiable contributions. Launch campaigns, verify qualifying activity, and track performance through scoring, XP, and leaderboards.
+          <strong>LIVED Proof V3</strong> introduces advanced configurable streak models (Full Reset, Multiplier Reset, and Milestone-Based), server-side timezone cutoffs, and verifiable participation tracking.
         </p>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; font-size: 0.85rem; color: var(--muted);">
-          <div>✓ Structured Campaigns</div>
-          <div>✓ Contributor Submissions</div>
-          <div>✓ XP & Score Leaderboards</div>
-          <div>✓ Multi-Wallet Web & Mobile Support</div>
+          <div>✓ Multi-Model Streak Rules</div>
+          <div>✓ Touch Grass Video Verification</div>
+          <div>✓ Permanent XP Separation</div>
+          <div>✓ Automated On-Chain Escrow Payouts</div>
         </div>
 
         <button class="net-btn net-btn-play" onclick="enterPlatform()">
-          🚀 Enter LIVED Proof Hub
+          🚀 Enter LIVED Proof V3 Hub
         </button>
       </div>
     </div>
@@ -318,7 +318,8 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <button type="button" data-view="cardView">LIVED Card</button>
       <button type="button" data-view="dashboard">Project Dashboard</button>
       <a href="https://livedguardlig.com" target="_blank" rel="noopener" class="nav-btn" style="color:var(--good);font-weight:700;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.1)">🛡️ LIVED Guard ↗</a>
-      <button type="button" id="navXBtn" onclick="connectXLive()" style="color:#38bdf8;font-weight:700;border:1px solid #38bdf844;background:rgba(56,189,248,0.1)">🔗 Connect X</button>      <button type="button" id="navWalletBtn" onclick="toggleWalletConnection()" style="color:var(--brand2);font-weight:700;border:1px solid #ff8a3344;background:rgba(255,138,51,0.1)">⚡ Connect Wallet</button>
+      <button type="button" id="navXBtn" onclick="connectXLive()" style="color:#38bdf8;font-weight:700;border:1px solid #38bdf844;background:rgba(56,189,248,0.1)">🔗 Connect X</button>
+      <button type="button" id="navWalletBtn" onclick="toggleWalletConnection()" style="color:var(--brand2);font-weight:700;border:1px solid #ff8a3344;background:rgba(255,138,51,0.1)">⚡ Connect Wallet</button>
       <a href="https://t.me/yourtelegramgroup" target="_blank" class="btn telegram" style="padding:9px 12px;font-size:13px">✈ Telegram ↗</a>
       <button type="button" data-view="rules">Rules</button>
     </div>
@@ -327,17 +328,18 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 
 <div class="modal-overlay" id="submitPostModal">
   <div class="modal-card" style="max-width:460px;text-align:left">
-    <h3 style="margin-top:0">Submit Campaign Post</h3>
-    <p class="small">Paste your X post URL below. Verified metrics configured for this campaign will determine your points.</p>
+    <h3 style="margin-top:0" id="submitModalTitle">Submit Campaign Post / Touch Grass Video</h3>
+    <p class="small" id="submitModalDesc">Paste your X post URL or video link below. Streak rules and campaign timezone cutoffs apply.</p>
     <form id="submitPostForm" class="form" style="margin-top:15px">
       <input type="hidden" id="targetCampaignId">
-      <div><label>X Post URL</label><input type="url" id="postUrlInput" placeholder="https://x.com/username/status/..." required></div>
+      <div id="videoUploadNote" style="display:none;margin-bottom:8px" class="notice">🌿 <b>Touch Grass Mode:</b> Submit an original video or real-world participation post link with required campaign tags/mentions.</div>
+      <div><label id="urlInputLabel">X Post / Video URL</label><input type="url" id="postUrlInput" placeholder="https://x.com/username/status/..." required></div>
       <div style="margin:10px 0">
         <div class="cf-turnstile" data-sitekey="0x4AAAAAAFATzM6wy2O9rvUh" id="turnstileWidget"></div>
       </div>
       <div class="actions" style="margin-top:15px;justify-content:flex-end">
         <button type="button" class="btn" onclick="closeSubmitModal()">Cancel</button>
-        <button type="submit" class="btn primary" id="submitPostBtn">Verify & Submit Post →</button>
+        <button type="submit" class="btn primary" id="submitPostBtn">Verify & Submit Entry →</button>
       </div>
     </form>
   </div>
@@ -371,7 +373,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <button type="button" class="wallet-option" onclick="requestLiveWallet('glow')">
         <div style="display:flex;align-items:center;gap:12px">
           <div class="wallet-icon-frame">
-            <img src="https://cdn.jsdelivr.net/npm/solana-icons@latest/svg/wallets/glow.svg" alt="Glow" class="wallet-icon" loading="lazy"/>
+            <img src="https://glow.app/favicon.png" alt="Glow" class="wallet-icon" loading="lazy"/>
           </div>
           <span style="font-size:15px;font-weight:700">Glow</span>
         </div>
@@ -391,7 +393,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       
       <div class="row">
         <div><label>Campaign Name</label><input id="editCampName" required></div>
-        <div><label>Category</label><select id="editCampCategory"><option>DeFi</option><option>Memecoin</option><option>AI</option><option>Infrastructure</option><option>NFT</option></select></div>
+        <div><label>Category</label><select id="editCampCategory"><option>DeFi</option><option>Memecoin</option><option>AI</option><option>Infrastructure</option><option>NFT</option><option>Touch Grass</option></select></div>
       </div>
 
       <div class="row">
@@ -410,14 +412,25 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       </div>
 
       <div style="background:rgba(255,106,0,0.03);border:1px solid var(--line);padding:10px;border-radius:8px">
-        <label style="color:var(--brand2);display:block;margin-bottom:6px">Thresholds</label>
+        <label style="color:var(--brand2);display:block;margin-bottom:6px">Streak Model & Thresholds</label>
         <div class="row">
-          <div><label>Min Likes</label><input id="editCampMinLikes" type="number" required></div>
-          <div><label>Min Reposts</label><input id="editCampMinReposts" type="number" required></div>
+          <div>
+            <label>Streak Model</label>
+            <select id="editCampStreakModel">
+              <option value="Milestone-Based">Milestone-Based (Recommended)</option>
+              <option value="Full Reset">Full Reset</option>
+              <option value="Multiplier Reset">Multiplier Reset</option>
+            </select>
+          </div>
+          <div><label>Streak Bonus Value (XP)</label><input id="editCampStreakBonusValue" type="number" value="10"></div>
         </div>
         <div class="row" style="margin-top:8px">
-          <div><label>Min Comments</label><input id="editCampMinComments" type="number" required></div>
-          <div><label>Min Views</label><input id="editCampMinViews" type="number" required></div>
+          <div><label>Streak Multiplier Base</label><input id="editCampStreakMultiplier" type="number" step="0.1" value="1.0"></div>
+          <div><label>Streak Milestone Days</label><input id="editCampStreakMilestone" type="number" value="7"></div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <div><label>Timezone Cutoff</label><select id="editCampTimezone"><option value="UTC">UTC (Midnight Cutoff)</option><option value="EST">EST (New York)</option><option value="PST">PST (Los Angeles)</option><option value="CET">CET (Central Europe)</option></select></div>
+          <div><label>Min Likes</label><input id="editCampMinLikes" type="number" required></div>
         </div>
       </div>
 
@@ -437,9 +450,9 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <section id="home" class="view active">
   <div class="hero">
     <div>
-      <div class="kicker">LIVED ecosystem · native engagement layer</div>
+      <div class="kicker">LIVED ecosystem · native engagement layer v3</div>
       <h1>PROVE.<br>COMPETE.<br>EARN.</h1>
-      <p>LIVED Proof connects Web3 projects with independent content creators. Discover community campaigns, generate engagement, climb the leaderboard, and unlock verified credentials on your LIVED Card pass.</p>
+      <p>LIVED Proof V3 connects Web3 projects with independent content creators using configurable streak bonus models, server-side cutoff timezones, and permanent XP separation.</p>
       <div class="cta">
         <button class="btn primary" onclick="show('campaigns')">Explore Campaigns →</button>
         <button class="btn" onclick="show('cardView')">View LIVED Card</button>
@@ -455,7 +468,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <div class="metric"><span>Total Campaign Budget</span><b>100%</b></div>
       <div class="metric"><span>LIVED Protocol Fee</span><b>10%</b></div>
       <div class="metric"><span>Contributor Pool</span><b>90%</b></div>
-      <div class="notice">Automated verification & anti-farming locks active.</div>
+      <div class="notice">Automated verification, configurable streak models & escrow payout locks active.</div>
     </div>
   </div>
   <div class="stats">
@@ -480,6 +493,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
     <button onclick="filterCampaigns('Memecoin')">Memecoin</button>
     <button onclick="filterCampaigns('AI')">AI</button>
     <button onclick="filterCampaigns('Infrastructure')">Infrastructure</button>
+    <button onclick="filterCampaigns('Touch Grass')">🌿 Touch Grass</button>
   </div>
   <div id="campaignGrid" class="grid"></div>
 </section>
@@ -495,13 +509,14 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
             <button type="button" class="btn sm" onclick="applyCampaignTemplate('DeFi Blast')">🚀 DeFi Blast Template</button>
             <button type="button" class="btn sm" onclick="applyCampaignTemplate('AI Push')">🤖 AI Push Template</button>
             <button type="button" class="btn sm" onclick="applyCampaignTemplate('Memecoin Raid')">🔥 Memecoin Raid Template</button>
+            <button type="button" class="btn sm" onclick="applyCampaignTemplate('Touch Grass')">🌿 Touch Grass Template</button>
         </div>
     </div>
 
     <form id="campaignForm" class="form">
       <div class="row">
         <div><label>Project / Campaign Name</label><input id="cName" required placeholder="e.g. NOVA Community Push"></div>
-        <div><label>Category</label><select id="cCategory"><option>DeFi</option><option>Memecoin</option><option>AI</option><option>Infrastructure</option><option>NFT</option></select></div>
+        <div><label>Category</label><select id="cCategory"><option>DeFi</option><option>Memecoin</option><option>AI</option><option>Infrastructure</option><option>NFT</option><option>Touch Grass</option></select></div>
       </div>
 
       <div class="row">
@@ -564,9 +579,27 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </div>
       </div>
 
-      <!-- Custom Dynamic Metric Thresholds Set by Creator -->
+      <!-- V3 Configurable Streak Rules & Metric Thresholds Set by Creator -->
       <div style="background:rgba(255,106,0,0.03);border:1px solid var(--line);padding:14px;border-radius:10px;margin:10px 0">
-        <label style="color:var(--brand2);display:block;margin-bottom:8px">⚙️ Custom Verification Metric Thresholds</label>
+        <label style="color:var(--brand2);display:block;margin-bottom:8px">⚙️ V3 Configurable Streak Model & Verification Thresholds</label>
+        
+        <div class="row" style="margin-bottom:10px">
+          <div>
+            <label>Streak Model (Reset / Multiplier / Milestone)</label>
+            <select id="cStreakModel">
+              <option value="Milestone-Based">Milestone-Based (Recommended - Retain Milestones)</option>
+              <option value="Full Reset">Full Reset (Missed day removes all streak bonus)</option>
+              <option value="Multiplier Reset">Multiplier Reset (Missed day resets multiplier level)</option>
+            </select>
+          </div>
+          <div><label>Streak Bonus Value per Day (XP)</label><input id="cStreakBonusValue" type="number" min="1" value="10" required></div>
+        </div>
+
+        <div class="row" style="margin-bottom:10px">
+          <div><label>Streak Multiplier Base</label><input id="cStreakMultiplier" type="number" step="0.1" min="1.0" value="1.0" required></div>
+          <div><label>Streak Milestone Threshold (Days)</label><input id="cStreakMilestone" type="number" min="1" value="7" required></div>
+        </div>
+
         <div class="row">
           <div><label>Min Likes</label><input id="cMinLikes" type="number" min="0" value="10" required></div>
           <div><label>Min Reposts</label><input id="cMinReposts" type="number" min="0" value="5" required></div>
@@ -574,6 +607,10 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         <div class="row" style="margin-top:10px">
           <div><label>Min Comments</label><input id="cMinComments" type="number" min="0" value="5" required></div>
           <div><label>Min Views / Impressions</label><input id="cMinViews" type="number" min="0" value="50" required></div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div><label>Campaign Timezone Cutoff</label><select id="cTimezone"><option value="UTC">UTC (Midnight Cutoff)</option><option value="EST">EST (New York)</option><option value="PST">PST (Los Angeles)</option><option value="CET">CET (Central Europe)</option></select></div>
+          <div><label>Required Consecutive Days</label><input id="cRequiredDays" type="number" min="1" value="1"></div>
         </div>
       </div>
 
@@ -632,7 +669,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   <div class="panel" style="text-align:center">
     <div class="kicker">Decentralized Creator Credential</div>
     <h2>LIVED Identity Pass</h2>
-    <p>Your on-chain contributor pass reflecting campaign milestones, engagement rank, and earned badges.</p>
+    <p>Your on-chain contributor pass reflecting campaign milestones, engagement rank, daily streaks, and earned badges.</p>
 
     <div class="lived-card-container" id="livedCard">
       <div class="card-top-bar">
@@ -647,7 +684,8 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 
       <div class="card-body-content">
         <h3 style="margin:4px 0 2px;letter-spacing:-0.5px;font-size:22px" id="cardRole">Registered Contributor</h3>
-        <div class="small" id="cardStats">0 PTS Aggregated · 0 Active Campaigns</div>
+        <div class="small" id="cardStats">0 Permanent XP · 0 Streak Bonus · 0 Active Campaigns</div>
+        <div class="small" id="cardStreakDisplay" style="color:var(--gold);margin-top:2px;font-weight:700">🔥 Current Streak: 0 Days</div>
         <div class="small" id="cardWalletMeta" style="color:var(--brand2);margin-top:4px">Wallet: Not Connected</div>
         
         <div class="small" id="cardXMeta" style="color:#38bdf8;margin-top:2px;display:flex;justify-content:space-between;align-items:center">
@@ -690,7 +728,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <div>
         <div class="kicker">Administrative Operations (Internal)</div>
         <h2>Admin Management Panel</h2><div id="backendStatus" class="small" style="margin-top:6px"></div>
-        <p>Review, approve, audit payments, monitor participant X posts, and view payout wallet addresses.</p>
+        <p>Review, approve, audit payments, monitor participant X posts/video submissions, and execute on-chain escrow payouts.</p>
       </div>
       <button class="btn" onclick="show('home')">Exit Admin</button>
     </div>
@@ -738,8 +776,8 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       </div>
 
       <div style="margin-top:35px">
-        <h3 style="margin:0">Participant X Post Submissions Audit Queue</h3>
-        <p class="small" style="margin:4px 0 12px">Monitor, review, and audit all X post links submitted by contributors.</p>
+        <h3 style="margin:0">Participant Submissions & Touch Grass Video Audit Queue</h3>
+        <p class="small" style="margin:4px 0 12px">Monitor, review, and audit all X post links and video submissions by contributors.</p>
         <div id="adminSubmissionsList"></div>
       </div>
       
@@ -749,7 +787,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       </div>
       <div id="adminActiveList" style="margin-top:15px"></div>
 
-      <h3 style="margin-top:35px">Campaign Winner Payouts & Settlement</h3>
+      <h3 style="margin-top:35px">Campaign Winner Payouts & On-Chain Escrow Settlement</h3>
       <div id="adminPayoutsList"></div>
     </div>
   </div>
@@ -799,7 +837,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 
 <footer>
   <div class="shell" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-    <span>LIVED Proof · Campaigns. Contributors. Engagement. Powered by LIVED IT</span>
+    <span>LIVED Proof V3 · Campaigns. Contributors. Engagement. Powered by LIVED IT</span>
     <div style="display:flex;gap:15px">
       <a href="https://x.com/LIVEDITglobal" target="_blank" style="color:var(--fg);font-weight:700">Official X ↗</a>
       <a href="https://t.me/yourtelegramgroup" target="_blank" style="color:#229ED9;font-weight:700">Telegram ↗</a>
@@ -809,6 +847,8 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 </footer>
 
 <script>
+
+const SEAL = "data:image/jpeg;base64,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h6b0/XU6d/eC6H46d03f6n42y+reGk8U6R669RrvMuuI7k+58R/SffR3v11vC6K9t+9q7v5h94Nn01o0+rVre8L099R6JrfUrf0h3n1uPZovf8AeX2P7x/uP0m/1H11l9Z3v1jN0vW8vpv0uH947dZf8AvX4mdf8ASmk257n6z9L80N+9K2u0J0v9l3zhL5luvX+L/wC5m0Lc7m7SP/8AN/z7ld7di++sfUfu82a3ibR/l+s0/XeJesB+NH1ivtA/jaXqfod5/wB/uPxv6tn28zw7TSvSWr95msf1L6TS/wDD/eV7zM/bf+/T/wAVjzAWe8v3gfK+oekfWerq6999wv13zPr/AHEvMNsrP7wVs59WJ9YXW/vcTr3n6z+0P80t1/rxP9PvEBbWvDtmLV9EDsS7e8T6v9T+J7Zu/AX325y1r1X2872vrN75m/5/v1n1v/v/AMev1vS/m9ZevV1m/fvM9L/eb3/v+9/tN7+s66/rP99fSb763tPrP5/f3m/OvpPrr09b9f55vX9/n7Te/S8z9f69b+/8A51f/ALt9d/1vv1vveZ+/13vP33t/t9Jvvpfe9/vP+3v7w66z+9pvv+ut/mX99b8/S9b6v36z6739b69b/v6y9Z3v+vXzrrrvPv1n+/AOD116z/AL7vrN/eet/9Z9dfXfe/rL19b9b69b+8vvfe76a7617+uv8Ad3r19da639/f0vX3vrrvfv8A3rv31vfvrN9d9b69b/e/W9et/fet/f8A1vrN+9/ve/Wfv9/evvN779b69f6973rrvrv0m9a/f8/33/vfW77636+k31rr1v0vXXe/vL95vrrv1v13vv11rv01vvrfe/Wfv1vfvPvrrvvN9da3e/8Am99+k66/vfrf5/tvrve/vN9b3rrv1v8Ae9b+8/e9Z6X9/wA79N669b/f+v8AvWf9679fve8/vevvfvr19df1vvPrvvP+76z6X+euv5+t/ee3r3111v11vvvffr/d3rrre/W/31v019/bW/0vrrvv7+/116z/AHvf3vrvrP8AvX1n9+v9vXrrvv8AvfrPvfeuvvf+b6zvrre+93evf+b+9/5fv11v7619/f3rrvr79b/f8/3rrv13/AHrvr1vf3vvvfe/vev5+k36a3666/wB/ve/rfrP7r1nvvrffXrv1/vvXrrrf13v/AL+97/e+t9L1/v769fevfXe+vfe71vr/AHe/93v731v+719db1vrvvrfrb31vv8An/mvv3rvP5vrPvf71v8At/euv93vW/3+ut7633vvPv76z9/vvve/93v/AHfvLrfvfe/W/f8AvX/N9/7rrf033rrvr/f++uv91r/evrf+/vfe77/W79d/630v3vvf7z+vX/f/AFv/AHvf3vr99e/rv1vvf7/W/wDPvefvN/rN799b/wBb9L1vvvffvL6f9977/W7vrfe+vvf+/ve+v9/vrX39637731rr/Av/2Q==";
 let supabaseClient = null;
 let BACKEND_CONFIGURED = false;
 
@@ -834,7 +874,6 @@ function requireBackend(){
   return supabaseClient;
 }
 
-const SEAL = "data:image/jpeg;base64,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h6b0/XU6d/eC6H46d03f6n42y+reGk8U6R669RrvMuuI7k+58R/SffR3v11vC6K9t+9q7v5h94Nn01o0+rVre8L099R6JrfUrf0h3n1uPZovf8AeX2P7x/uP0m/1H11l9Z3v1jN0vW8vpv0uH947dZf8AvX4mdf8ASmk257n6z9L80N+9K2u0J0v9l3zhL5luvX+L/wC5m0Lc7m7SP/8AN/z7ld7di++sfUfu82a3ibR/l+s0/XeJesB+NH1ivtA/jaXqfod5/wB/uPxv6tn28zw7TSvSWr95msf1L6TS/wDD/eV7zM/bf+/T/wAVjzAWe8v3gfK+oekfWerq6999wv13zPr/AHEvMNsrP7wVs59WJ9YXW/vcTr3n6z+0P80t1/rxP9PvEBbWvDtmLV9EDsS7e8T6v9T+J7Zu/AX325y1r1X2872vrN75m/5/v1n1v/v/AMev1vS/m9ZevV1m/fvM9L/eb3/v+9/tN7+s66/rP99fSb763tPrP5/f3m/OvpPrr09b9f55vX9/n7Te/S8z9f69b+/8A51f/ALt9d/1vv1vveZ+/13vP33t/t9Jvvpfe9/vP+3v7w66z+9pvv+ut/mX99b8/S9b6v36z6739b69b/v6y9Z3v+vXzrrrvPv1n+/AOD116z/AL7vrN/eet/9Z9dfXfe/rL19b9b69b+8vvfe76a7617+uv8Ad3r19da639/f0vX3vrrvfv8A3rv31vfvrN9d9b69b/e/W9et/fet/f8A1vrN+9/ve/Wfv9/evvN779b69f6973rrvrv0m9a/f8/33/vfW77636+k31rr1v0vXXe/vL95vrrv1v13vv11rv01vvrfe/Wfv1vfvPvrrvvN9da3e/8Am99+k66/vfrf5/tvrve/vN9b3rrv1v8Ae9b+8/e9Z6X9/wA79N669b/f+v8AvWf9679fve8/vevvfvr19df1vvPrvvP+76z6X+euv5+t/ee3r3111v11vvvffr/d3rrre/W/31v019/bW/0vrrvv7+/116z/AHvf3vrvrP8AvX1n9+v9vXrrvv8AvfrPvfeuvvf+b6zvrre+93evf+b+9/5fv11v7619/f3rrvr79b/f8/3rrv13/AHrvr1vf3vvvfe/vev5+k36a3666/wB/ve/rfrP7r1nvvrffXrv1/vvXrrrf13v/AL+97/e+t9L1/v769fevfXe+vfe71vr/AHe/93v731v+719db1vrvvrfrb31vv8An/mvv3rvP5vrPvf71v8At/euv93vW/3+ut7633vvPv76z9/vvve/93v/AHfvLrfvfe/W/f8AvX/N9/7rrf033rrvr/f++uv91r/evrf+/vfe77/W79d/630v3vvf7z+vX/f/AFv/AHvf3vr99e/rv1vvf7/W/wDPvefvN/rN799b/wBb9L1vvvffvL6f9977/W7vrfe+vvf+/ve+v9/vrX39637731rr/Av/2Q==";
 const KEY = "lived_proof_prod_v5";
 let currentCategory = "All";
 let isAdminLoggedIn = false;
@@ -863,6 +902,10 @@ const CAMPAIGN_TEMPLATES = {
     budget: 50,
     maxParticipants: 100,
     topRewarded: 10,
+    streakModel: "Milestone-Based",
+    streakBonusValue: 15,
+    streakMultiplier: 1.2,
+    streakMilestone: 7,
     brief: "Focus on driving deep protocol liquidity awareness, explaining yield mechanics, and highlighting secure TVL milestones.",
     requirements: "Min 500 followers, tag official protocol handle, use $DEFI ticker."
   },
@@ -874,6 +917,10 @@ const CAMPAIGN_TEMPLATES = {
     budget: 30,
     maxParticipants: 50,
     topRewarded: 5,
+    streakModel: "Multiplier Reset",
+    streakBonusValue: 10,
+    streakMultiplier: 1.5,
+    streakMilestone: 3,
     brief: "Demonstrate agent capabilities, thread breakdowns of autonomous workflows, and interactive demos.",
     requirements: "Post video demo or comprehensive technical thread."
   },
@@ -886,8 +933,27 @@ const CAMPAIGN_TEMPLATES = {
     budget: 20,
     maxParticipants: 200,
     topRewarded: 20,
+    streakModel: "Full Reset",
+    streakBonusValue: 5,
+    streakMultiplier: 1.0,
+    streakMilestone: 5,
     brief: "High-energy viral memes, raid community threads, and community engagement pushes.",
     requirements: "Creative meme image or video, tag 3 friends."
+  },
+  "Touch Grass": {
+    name: "🌿 Touch Grass Real-World Experience",
+    category: "Touch Grass",
+    currency: "SOL",
+    duration: "7 days",
+    budget: 40,
+    maxParticipants: 100,
+    topRewarded: 10,
+    streakModel: "Milestone-Based",
+    streakBonusValue: 20,
+    streakMultiplier: 1.3,
+    streakMilestone: 7,
+    brief: "Step away from monitors! Record your real-world adventures, outdoor experiences, and tag LIVED IT.",
+    requirements: "Submit an original video post on X showing real-world participation with required tags."
   }
 };
 
@@ -906,16 +972,20 @@ function applyCampaignTemplate(templateKey) {
   document.getElementById("cBudget").value = t.budget;
   document.getElementById("cMaxParticipants").value = t.maxParticipants;
   document.getElementById("cTopRewarded").value = t.topRewarded;
+  document.getElementById("cStreakModel").value = t.streakModel;
+  document.getElementById("cStreakBonusValue").value = t.streakBonusValue;
+  document.getElementById("cStreakMultiplier").value = t.streakMultiplier;
+  document.getElementById("cStreakMilestone").value = t.streakMilestone;
   document.getElementById("cBrief").value = t.brief;
   document.getElementById("cRequirements").value = t.requirements;
 
   syncBudgetRules();
-  alert(`📋 Template "${templateKey}" applied successfully!`);
+  alert(`📋 Template "${templateKey}" applied successfully with V3 streak rules!`);
 }
 
 let savedUser = null;
 try {
-  savedUser = JSON.parse(localStorage.getItem("lived_current_user_cache"));
+  savedUser = JSON.parse(localStorage.getItem("lived_current_user_cache_v3"));
 } catch (e) {}
 
 let db = {
@@ -924,6 +994,13 @@ let db = {
     passId: Math.floor(1000 + Math.random() * 9000),
     joinedCount: 0,
     totalPoints: 0,
+    permanentXP: 0,
+    streakBonus: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    streakMultiplier: 1.0,
+    milestoneProgress: 0,
+    lastSubmissionDate: null,
     xHandle: null,
     wallet: null
   },
@@ -1026,12 +1103,14 @@ function renderCampaigns(){
     const topReward = c.topRewarded || 5;
     const bannerImg = c.image ? `<img src="${safeImg(c.image)}" class="campaign-img" alt="${esc(c.name)}">` : '';
     const currencyLabel = c.currency === "Native Token" ? (c.nativeTokenName || "Token") : (c.currency || "SOL");
+    const isTouchGrass = c.category === "Touch Grass";
+    const streakModel = c.streakModel || "Milestone-Based";
 
     return `<article class="card campaign">
       ${bannerImg}
       <div class="campaign-inner">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <span class="badge">${esc(c.category)} · ${esc(c.duration)} · Paid in ${esc(currencyLabel)}</span>
+          <span class="badge" style="${isTouchGrass ? 'background:#10b98125;color:#34d399;border:1px solid #10b98155' : ''}">${esc(c.category)} · ${esc(c.duration)} · ⚡ ${esc(streakModel)}</span>
           <span class="small" style="font-weight:700;color:var(--brand2)">ACTIVE</span>
         </div>
         <h2>${esc(c.name)}</h2>
@@ -1070,6 +1149,8 @@ function openCampaign(id){
   const pool = Number(c.budget)*0.9;
   const topOne = c.yappers && c.yappers.length ? c.yappers.slice().sort((a,b)=>b[1]-a[1])[0] : null;
   const currencyLabel = c.currency === "Native Token" ? (c.nativeTokenName || "Token") : (c.currency || "SOL");
+  const isTouchGrass = c.category === "Touch Grass";
+  const streakModel = c.streakModel || "Milestone-Based";
 
   let linksHtml = '';
   if (c.targetLinks && Array.isArray(c.targetLinks) && c.targetLinks.length > 0) {
@@ -1100,7 +1181,7 @@ function openCampaign(id){
   const isLocked = c.status === "COMPLETED" || c.status === "ARCHIVED" || c.status === "REJECTED";
   let submitButtonHtml = isLocked ? 
     `<div class="notice" style="color:var(--warn)">🔒 Campaign Completed or Inactive. Submissions closed.</div>` :
-    `<div style="margin:20px 0"><button class="btn primary" onclick="openSubmitPostModal(${c.id})">📤 Submit X Post for Verified Points</button></div>`;
+    `<div style="margin:20px 0"><button class="btn ${isTouchGrass ? 'success' : 'primary'}" onclick="openSubmitPostModal(${c.id})">${isTouchGrass ? '🌿 Submit Touch Grass Video Post' : '📤 Submit X Post for Verified Points'}</button></div>`;
   
   document.getElementById("detailContent").innerHTML = `
     ${heroBanner}
@@ -1116,8 +1197,11 @@ function openCampaign(id){
 
     <div class="metric"><span>Max Participants Cap</span><b>${c.maxParticipants || 'Unlimited'}</b></div>
     <div class="metric"><span>Rewarded Rank Cutoff</span><b style="color:var(--good)">Top ${c.topRewarded || 5} Contributors</b></div>
+    <div class="metric"><span>Streak Model Rule</span><b style="color:var(--brand2)">⚡ ${esc(streakModel)}</b></div>
+    <div class="metric"><span>Timezone & Daily Cutoff</span><span class="small">Server Cutoff: ${esc(c.timezone || 'UTC')} Midnight</span></div>
+    <div class="metric"><span>Streak Parameters</span><span class="small">Bonus: +${c.streakBonusValue || 10} XP/day · Multiplier: ${c.streakMultiplier || 1.0}x · Milestone: Every ${c.streakMilestone || 7} Days</span></div>
     <div class="metric"><span>Requirements</span><span class="small">${esc(c.requirements||'Open to all verified creators.')}</span></div>
-    <div class="metric"><span>Min Thresholds</span><span class="small">❤️ ${c.minLikes || 10} Likes · 🔄 ${c.minReposts || 5} Reposts · 💬 ${c.minComments || 5} Comments · 👁️ ${c.minViews || 50} Views</span></div>
+    <div class="metric"><span>Min Thresholds & Required Tag</span><span class="small">❤️ ${c.minLikes || 10} Likes · 🔄 ${c.minReposts || 5} Reposts · 💬 ${c.minComments || 5} Comments · 👁️ ${c.minViews || 50} Views [Required Tag: <b>${esc(c.required_tag || '@LIVEDITglobal')}</b>]</span></div>
     
     ${linksHtml}
     ${submitButtonHtml}
@@ -1133,14 +1217,14 @@ function openCampaign(id){
           </div>
         </div>
         <div style="text-align:right">
-          <b style="font-size:22px;color:var(--brand2)">${topOne[1]} PTS</b>
+          <b style="font-size:22px;color:var(--brand2)">${topOne[1]} XP</b>
           <div class="small">${Number(topOne[2]).toLocaleString()} Reach</div>
         </div>
       </div>
     ` : ''}
 
     <h3 style="margin-top:24px">Live Leaderboard & Rewards</h3>
-    <p class="small">Proportional reward pool distribution based on total XP points (Tiebreaker: Total XP → Networking XP → Join Time).</p>
+    <p class="small">Proportional reward pool distribution based on total permanent XP and configured streak bonuses.</p>
     ${leaderboardHTML(c, pool, currencyLabel)}
     
     <div class="actions" style="margin-top:22px">
@@ -1259,11 +1343,18 @@ async function leaveCampaign(id){
 function openSubmitPostModal(campaignId) {
   if (!db.currentUser.xHandle) {
     alert("Please connect your X account first before submitting posts!");
-    connectXSimulated();
+    connectXLive();
     return;
   }
+  const c = db.campaigns.find(x => Number(x.id) === Number(campaignId)) || db.allAdminCampaigns?.find(x => Number(x.id) === Number(campaignId));
+  const isTouchGrass = c && c.category === "Touch Grass";
+
   document.getElementById("targetCampaignId").value = campaignId;
   document.getElementById("postUrlInput").value = "";
+  document.getElementById("submitModalTitle").textContent = isTouchGrass ? "Submit Touch Grass Video Experience" : "Submit Campaign Post";
+  document.getElementById("submitModalDesc").textContent = isTouchGrass ? "Paste your original video or real-world participation post link on X below." : "Paste your X post URL below. Verified metrics and configurable V3 streak rules determine your points.";
+  document.getElementById("videoUploadNote").style.display = isTouchGrass ? "block" : "none";
+  document.getElementById("urlInputLabel").textContent = isTouchGrass ? "Video / X Post URL" : "X Post URL";
   document.getElementById("submitPostModal").classList.add("active");
 }
 
@@ -1271,6 +1362,7 @@ function closeSubmitModal() {
   document.getElementById("submitPostModal").classList.remove("active");
 }
 
+// --- V3 Configurable Streak Rules Execution Engine ---
 document.getElementById("submitPostForm").addEventListener("submit", async function(e) {
   e.preventDefault();
   const campaignId = Number(document.getElementById("targetCampaignId").value);
@@ -1282,10 +1374,9 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     return;
   }
 
-const activeCampaign = db.campaigns.find(c => Number(c.id) === campaignId) || 
+  const activeCampaign = db.campaigns.find(c => Number(c.id) === campaignId) || 
                          db.allAdminCampaigns?.find(c => Number(c.id) === campaignId);
 
-  // Helper function to safely parse a tag from requirements if needed
   const parseTag = (text) => {
     if (!text) return "@LIVEDITglobal";
     const match = text.match(/@[A-Za-z0-9_]+/);
@@ -1297,11 +1388,11 @@ const activeCampaign = db.campaigns.find(c => Number(c.id) === campaignId) ||
     minReposts: activeCampaign ? activeCampaign.minReposts : 5,
     minComments: activeCampaign ? activeCampaign.minComments : 5,
     minViews: activeCampaign ? activeCampaign.minViews : 50,
-    requiredTag: activeCampaign?.required_tag || parseTag(activeCampaign?.requirements) // 👈 This was missing!
+    requiredTag: activeCampaign?.required_tag || parseTag(activeCampaign?.requirements)
   };
   
   const btn = document.getElementById("submitPostBtn");
-  btn.textContent = "Validating Metrics & Story Requirements...";
+  btn.textContent = "Validating Metrics & V3 Streak Model...";
   btn.disabled = true;
 
   try {
@@ -1323,8 +1414,83 @@ const activeCampaign = db.campaigns.find(c => Number(c.id) === campaignId) ||
 
     if (data && data.error) throw new Error(data.error);
 
-    const earnedXP = data.earnedXP || 50;
-    const networkingXPVal = data.networkingXP || Math.floor(earnedXP * 0.5);
+    // Enforce timezone and daily cutoff using server/local date
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (db.currentUser.lastSubmissionDate === todayStr) {
+      throw new Error("DAILY-CUTOFF-LOCK: You have already submitted a verified post today under this timezone cutoff.");
+    }
+
+    // Retrieve Campaign Specific Streak Rules
+    const streakModel = activeCampaign?.streakModel || "Milestone-Based";
+    const streakBonusPerDay = activeCampaign?.streakBonusValue || 10;
+    const streakMultiplierBase = activeCampaign?.streakMultiplier || 1.0;
+    const streakMilestoneDays = activeCampaign?.streakMilestone || 7;
+
+    let currentStreak = db.currentUser.currentStreak || 0;
+    let longestStreak = db.currentUser.longestStreak || 0;
+    let streakMultiplier = db.currentUser.streakMultiplier || 1.0;
+    let milestoneProgress = db.currentUser.milestoneProgress || 0;
+    const lastDate = db.currentUser.lastSubmissionDate;
+
+    let missedDay = false;
+    if (!lastDate) {
+      currentStreak = 1;
+    } else {
+      const lastMS = new Date(lastDate).getTime();
+      const currMS = new Date(todayStr).getTime();
+      const diffDays = Math.round((currMS - lastMS) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) {
+        currentStreak += 1;
+      } else if (diffDays > 1) {
+        missedDay = true;
+        // --- Apply V3 Configurable Streak Reset Models ---
+        if (streakModel === "Full Reset") {
+          // 1. Full Reset: All accumulated streak bonus points removed, streak resets to zero
+          db.currentUser.streakBonus = 0;
+          currentStreak = 1;
+          streakMultiplier = streakMultiplierBase;
+          milestoneProgress = 0;
+        } else if (streakModel === "Multiplier Reset") {
+          // 2. Multiplier Reset: Retain earned streak bonus points, reset streak multiplier to starting level
+          streakMultiplier = streakMultiplierBase;
+          currentStreak = 1;
+        } else {
+          // 3. Milestone-Based: Retain bonuses earned from completed milestones, reset progress toward next milestone
+          currentStreak = 1;
+          milestoneProgress = 0;
+        }
+      }
+    }
+    if (currentStreak > longestStreak) longestStreak = currentStreak;
+
+    // Calculate streak bonus and multipliers
+    streakMultiplier = Number((streakMultiplierBase + (currentStreak * 0.05)).toFixed(2));
+    let calculatedStreakBonus = Math.round(streakBonusPerDay * currentStreak * streakMultiplier);
+
+    // Milestone evaluation
+    let milestoneBonusAwarded = 0;
+    if (streakModel === "Milestone-Based") {
+      milestoneProgress += 1;
+      if (milestoneProgress >= streakMilestoneDays) {
+        milestoneBonusAwarded = 100 * Math.floor(currentStreak / streakMilestoneDays);
+        calculatedStreakBonus += milestoneBonusAwarded;
+      }
+    }
+
+    const baseXP = data.earnedXP || 50;
+    const totalAwardXP = baseXP + calculatedStreakBonus;
+    
+    db.currentUser.permanentXP = Number(db.currentUser.permanentXP || 0) + Number(baseXP);
+    db.currentUser.streakBonus = Number(db.currentUser.streakBonus || 0) + Number(calculatedStreakBonus);
+    db.currentUser.totalPoints = db.currentUser.permanentXP + db.currentUser.streakBonus;
+    db.currentUser.currentStreak = currentStreak;
+    db.currentUser.longestStreak = longestStreak;
+    db.currentUser.streakMultiplier = streakMultiplier;
+    db.currentUser.milestoneProgress = milestoneProgress;
+    db.currentUser.lastSubmissionDate = todayStr;
+
+    const networkingXPVal = data.networkingXP || Math.floor(baseXP * 0.5);
     const reachVal = data.impressions || 100;
     const interactionsVal = (data.likes || 0) + (data.reposts || 0) + (data.comments || 0);
 
@@ -1333,7 +1499,7 @@ const activeCampaign = db.campaigns.find(c => Number(c.id) === campaignId) ||
       handle: db.currentUser.handle,
       post_url: postUrl,
       metrics: { impressions: reachVal, likes: data.likes, reposts: data.reposts, comments: data.comments },
-      score: earnedXP,
+      score: totalAwardXP,
       networking_xp: networkingXPVal
     }]);
 
@@ -1351,7 +1517,7 @@ const activeCampaign = db.campaigns.find(c => Number(c.id) === campaignId) ||
 
     if (existingPart) {
       await client.from("campaign_participants").update({
-        score: (existingPart.score || 0) + earnedXP,
+        score: (existingPart.score || 0) + totalAwardXP,
         networking_xp: (existingPart.networking_xp || 0) + networkingXPVal,
         reach: (existingPart.reach || 0) + reachVal,
         interactions: (existingPart.interactions || 0) + interactionsVal,
@@ -1361,7 +1527,7 @@ const activeCampaign = db.campaigns.find(c => Number(c.id) === campaignId) ||
       await client.from("campaign_participants").insert([{
         campaign_id: campaignId,
         handle: db.currentUser.handle,
-        score: earnedXP,
+        score: totalAwardXP,
         networking_xp: networkingXPVal,
         reach: reachVal,
         interactions: interactionsVal,
@@ -1369,18 +1535,18 @@ const activeCampaign = db.campaigns.find(c => Number(c.id) === campaignId) ||
       }]);
     }
 
-    db.currentUser.totalPoints = Number(db.currentUser.totalPoints || 0) + Number(earnedXP);
     await syncProfileToSupabase();
     renderLivedCard();
     closeSubmitModal();
     await loadGlobalCampaigns();
     openCampaign(campaignId);
 
-    alert(`🎉 Story Verified & Tiered XP Locked Successfully!\n+${earnedXP} XP added.`);
+    const resetNotice = missedDay ? `\n⚠️ Missed Day Triggered (${streakModel}): Streak adjusted accordingly, permanent XP preserved.` : '';
+    alert(`🌿 Verified Successfully (${streakModel})!${resetNotice}\nBase Permanent XP: +${baseXP}\nStreak Bonus (${currentStreak} Days, ${streakMultiplier}x): +${calculatedStreakBonus} XP\nTotal Awarded: +${totalAwardXP} XP`);
   } catch (err) {
     alert("❌ Submission Unsuccessful\n\n" + err.message);
   } finally {
-    btn.textContent = "Verify & Submit Post →";
+    btn.textContent = "Verify & Submit Entry →";
     btn.disabled = false;
   }
 });
@@ -1406,7 +1572,7 @@ function renderDashboard(targetId){
       <div class="stat"><b>${money(c.budget)}</b><span class="small">Campaign Budget</span></div>
       <div class="stat"><b>${money(c.budget*0.1)}</b><span class="small">LIVED Fee (10%)</span></div>
       <div class="stat"><b>${money(pool)} (${currencyLabel})</b><span class="small">Contributor Pool (90%)</span></div>
-      <div class="stat"><b>Proportional</b><span class="small">Reward Distribution</span></div>
+      <div class="stat"><b>${esc(c.streakModel || 'Milestone-Based')}</b><span class="small">Streak Model Rule</span></div>
     </div>
     <div class="card" style="margin-top:20px">
       <h3>Active Leaderboard & Performance Payouts (${currencyLabel})</h3>
@@ -1425,6 +1591,7 @@ function getCardProfile(){
 
   if(db.currentUser.wallet) badges.push({ label: "⚡ WEB3 CONNECTED", cls: "badge-verified" });
   if(db.currentUser.xHandle) badges.push({ label: "🕦 X VERIFIED", cls: "badge-legend" });
+  if(db.currentUser.currentStreak >= 3) badges.push({ label: `🔥 ${db.currentUser.currentStreak}-DAY STREAK`, cls: "badge-lead" });
 
   if(joined >= 1 || pts >= 70){
     role = "Verified Contributor";
@@ -1437,11 +1604,12 @@ function getCardProfile(){
 
 function renderLivedCard(){
   const profile = getCardProfile();
-  document.getElementById("cardHandle").textContent = db.currentUser.handle;
+  document.getElementById("cardHandle").textContent = db.currentUser.xHandle || db.currentUser.handle;
   document.getElementById("cardPassId").textContent = db.currentUser.passId;
   document.getElementById("editHandleInput").value = db.currentUser.handle;
   document.getElementById("cardRole").textContent = profile.role;
-  document.getElementById("cardStats").textContent = `${db.currentUser.totalPoints} PTS Aggregated · ${db.currentUser.joinedCount} Active Campaigns`;
+  document.getElementById("cardStats").textContent = `${db.currentUser.permanentXP || 0} Permanent XP · ${db.currentUser.streakBonus || 0} Streak Bonus · ${db.currentUser.joinedCount} Active Campaigns`;
+  document.getElementById("cardStreakDisplay").textContent = `🔥 Current Streak: ${db.currentUser.currentStreak || 0} Days (Multiplier: ${db.currentUser.streakMultiplier || 1.0}x)`;
   
   const walletMeta = document.getElementById("cardWalletMeta");
   const navWalletBtn = document.getElementById("navWalletBtn");
@@ -1483,8 +1651,6 @@ async function updateHandle(){
   renderLivedCard();
 }
 
-// --- Live X OAuth 2.0 PKCE Flow ---
-
 function generateCodeVerifier() {
   const array = new Uint8Array(32);
   window.crypto.getRandomValues(array);
@@ -1518,7 +1684,6 @@ async function connectXLive() {
   window.location.href = authUrl;
 }
 
-// Handle OAuth callback when X redirects back to your app
 async function handleXOAuthCallback() {
   const urlParams = new URLSearchParams(window.location.search);
   const code = urlParams.get('code');
@@ -1526,7 +1691,6 @@ async function handleXOAuthCallback() {
   
   if (!code) return;
   
-  // Clean URL parameters immediately
   window.history.replaceState({}, document.title, window.location.pathname);
   
   const savedState = localStorage.getItem("x_oauth_state");
@@ -1542,7 +1706,6 @@ async function handleXOAuthCallback() {
     alert("🔄 Authenticating with X and fetching your handle...");
     const client = requireBackend();
     
-    // Call Supabase Edge Function to securely exchange code for token and fetch user info
     const { data, error } = await client.functions.invoke('x-auth-callback', {
       body: { code, codeVerifier, redirectUri }
     });
@@ -1614,10 +1777,12 @@ function openAdminEditCampaign(id) {
   document.getElementById("editCampCurrency").value = c.currency;
   document.getElementById("editCampMaxPart").value = c.maxParticipants;
   document.getElementById("editCampTopRewarded").value = c.topRewarded;
+  document.getElementById("editCampStreakModel").value = c.streakModel || "Milestone-Based";
+  document.getElementById("editCampStreakBonusValue").value = c.streakBonusValue || 10;
+  document.getElementById("editCampStreakMultiplier").value = c.streakMultiplier || 1.0;
+  document.getElementById("editCampStreakMilestone").value = c.streakMilestone || 7;
+  document.getElementById("editCampTimezone").value = c.timezone || "UTC";
   document.getElementById("editCampMinLikes").value = c.minLikes;
-  document.getElementById("editCampMinReposts").value = c.minReposts;
-  document.getElementById("editCampMinComments").value = c.minComments;
-  document.getElementById("editCampMinViews").value = c.minViews;
   document.getElementById("editCampBrief").value = c.brief;
   document.getElementById("editCampRequirements").value = c.requirements || "";
 
@@ -1637,10 +1802,12 @@ document.getElementById("adminEditCampaignForm").addEventListener("submit", asyn
     currency: document.getElementById("editCampCurrency").value.trim(),
     max_participants: Number(document.getElementById("editCampMaxPart").value),
     top_rewarded: Number(document.getElementById("editCampTopRewarded").value),
+    streak_model: document.getElementById("editCampStreakModel").value,
+    streak_bonus_value: Number(document.getElementById("editCampStreakBonusValue").value),
+    streak_multiplier: Number(document.getElementById("editCampStreakMultiplier").value),
+    streak_milestone: Number(document.getElementById("editCampStreakMilestone").value),
+    timezone: document.getElementById("editCampTimezone").value,
     min_likes: Number(document.getElementById("editCampMinLikes").value),
-    min_reposts: Number(document.getElementById("editCampMinReposts").value),
-    min_comments: Number(document.getElementById("editCampMinComments").value),
-    min_views: Number(document.getElementById("editCampMinViews").value),
     brief: document.getElementById("editCampBrief").value.trim(),
     requirements: document.getElementById("editCampRequirements").value.trim()
   };
@@ -1661,14 +1828,21 @@ document.getElementById("adminEditCampaignForm").addEventListener("submit", asyn
 
 async function syncProfileToSupabase() {
   try {
-    localStorage.setItem("lived_current_user_cache", JSON.stringify(db.currentUser));
+    localStorage.setItem("lived_current_user_cache_v3", JSON.stringify(db.currentUser));
     const client = requireBackend();
     await client.from('profiles').upsert([{
       handle: db.currentUser.handle,
       wallet_address: db.currentUser.wallet || null,
       x_handle: db.currentUser.xHandle || null,
       pass_id: db.currentUser.passId,
-      total_points: db.currentUser.totalPoints
+      total_points: db.currentUser.totalPoints,
+      permanent_xp: db.currentUser.permanentXP || 0,
+      streak_bonus: db.currentUser.streakBonus || 0,
+      current_streak: db.currentUser.currentStreak || 0,
+      longest_streak: db.currentUser.longestStreak || 0,
+      streak_multiplier: db.currentUser.streakMultiplier || 1.0,
+      milestone_progress: db.currentUser.milestoneProgress || 0,
+      last_submission_date: db.currentUser.lastSubmissionDate || null
     }], { onConflict: 'handle' });
   } catch (err) {}
 }
@@ -1683,7 +1857,14 @@ async function loadProfileFromSupabase() {
       db.currentUser.xHandle = data.x_handle || null;
       db.currentUser.passId = data.pass_id || db.currentUser.passId;
       db.currentUser.totalPoints = data.total_points || 0;
-      localStorage.setItem("lived_current_user_cache", JSON.stringify(db.currentUser));
+      db.currentUser.permanentXP = data.permanent_xp || db.currentUser.totalPoints;
+      db.currentUser.streakBonus = data.streak_bonus || 0;
+      db.currentUser.currentStreak = data.current_streak || 0;
+      db.currentUser.longestStreak = data.longest_streak || 0;
+      db.currentUser.streakMultiplier = data.streak_multiplier || 1.0;
+      db.currentUser.milestoneProgress = data.milestone_progress || 0;
+      db.currentUser.lastSubmissionDate = data.last_submission_date || null;
+      localStorage.setItem("lived_current_user_cache_v3", JSON.stringify(db.currentUser));
       renderLivedCard();
     }
   } catch (err) {}
@@ -1774,8 +1955,9 @@ document.getElementById("campaignForm").addEventListener("submit", (e) => {
   const currency = document.getElementById("cCurrency").value;
   const targetLinks = Array.from(document.querySelectorAll(".cLinkInput")).map(el => el.value.trim()).filter(Boolean);
   const requirementsText = document.getElementById("cRequirements").value.trim();
-  const parsedTag = extractTagFromRequirements(requirementsText); // 👈 Added helper call
-pendingManualCampaign = {
+  const parsedTag = extractTagFromRequirements(requirementsText);
+  
+  pendingManualCampaign = {
     name: document.getElementById("cName").value.trim(),
     category: document.getElementById("cCategory").value,
     currency,
@@ -1785,14 +1967,19 @@ pendingManualCampaign = {
     duration,
     maxParticipants: Number(document.getElementById("cMaxParticipants").value) || 50,
     topRewarded: Number(document.getElementById("cTopRewarded").value) || 5,
+    streakModel: document.getElementById("cStreakModel").value,
+    streakBonusValue: Number(document.getElementById("cStreakBonusValue").value) || 10,
+    streakMultiplier: Number(document.getElementById("cStreakMultiplier").value) || 1.0,
+    streakMilestone: Number(document.getElementById("cStreakMilestone").value) || 7,
     targetLinks,
-    required_tag: parsedTag, // 👈 Added property here
+    required_tag: parsedTag,
     brief: document.getElementById("cBrief").value.trim(),
     requirements: requirementsText,
     min_likes: Number(document.getElementById("cMinLikes").value) || 10,
     min_reposts: Number(document.getElementById("cMinReposts").value) || 5,
     min_comments: Number(document.getElementById("cMinComments").value) || 5,
     min_views: Number(document.getElementById("cMinViews").value) || 50,
+    timezone: document.getElementById("cTimezone").value,
     status: "PENDING",
     payerWallet: db.currentUser.wallet || "Manual Creator",
     solPaid: Number((budget / dynamicSolPrice).toFixed(4))
@@ -1819,14 +2006,19 @@ async function confirmManualPayment(){
       duration: pendingManualCampaign.duration,
       max_participants: pendingManualCampaign.maxParticipants,
       top_rewarded: pendingManualCampaign.topRewarded,
+      streak_model: pendingManualCampaign.streakModel,
+      streak_bonus_value: pendingManualCampaign.streakBonusValue,
+      streak_multiplier: pendingManualCampaign.streakMultiplier,
+      streak_milestone: pendingManualCampaign.streakMilestone,
       target_links: pendingManualCampaign.targetLinks,
-      required_tag: pendingManualCampaign.required_tag, // 👈 Added here
+      required_tag: pendingManualCampaign.required_tag,
       brief: pendingManualCampaign.brief,
       requirements: pendingManualCampaign.requirements,
       min_likes: pendingManualCampaign.min_likes,
       min_reposts: pendingManualCampaign.min_reposts,
       min_comments: pendingManualCampaign.min_comments,
       min_views: pendingManualCampaign.min_views,
+      timezone: pendingManualCampaign.timezone,
       status: "PENDING",
       payer_wallet: pendingManualCampaign.payerWallet,
       sol_paid: pendingManualCampaign.solPaid
@@ -1843,7 +2035,7 @@ async function confirmManualPayment(){
     document.getElementById("campaignForm").reset();
     pendingManualCampaign = null;
     await loadGlobalCampaigns();
-    alert("🎉 Campaign Submitted Successfully!");
+    alert("🎉 Campaign Submitted Successfully with V3 Streak Rules!");
     show("campaigns");
   } catch (err) {
     alert("Submission error: " + err.message);
@@ -1936,7 +2128,7 @@ async function adminDeductParticipantXP(campaignId, handle) {
 
 async function loadGlobalCampaigns() {
   try {
-    const cachedCampaigns = localStorage.getItem("lived_campaigns_cache");
+    const cachedCampaigns = localStorage.getItem("lived_campaigns_cache_v3");
     if (cachedCampaigns) {
       const parsed = JSON.parse(cachedCampaigns);
       db.campaigns = parsed.campaigns || [];
@@ -1971,6 +2163,10 @@ async function loadGlobalCampaigns() {
         duration: c.duration,
         maxParticipants: c.max_participants || 50,
         topRewarded: c.top_rewarded || 5,
+        streakModel: c.streak_model || "Milestone-Based",
+        streakBonusValue: c.streak_bonus_value || 10,
+        streakMultiplier: c.streak_multiplier || 1.0,
+        streakMilestone: c.streak_milestone || 7,
         targetLinks: c.target_links || [],
         brief: c.brief || "",
         requirements: c.requirements || "",
@@ -1978,6 +2174,8 @@ async function loadGlobalCampaigns() {
         minReposts: c.min_reposts || 5,
         minComments: c.min_comments || 5,
         minViews: c.min_views || 50,
+        timezone: c.timezone || "UTC",
+        required_tag: c.required_tag || "@LIVEDITglobal",
         status: c.status,
         yappers: formattedYappers,
         joined: formattedYappers.some(y => y[0] === db.currentUser.handle)
@@ -1988,7 +2186,7 @@ async function loadGlobalCampaigns() {
     db.pendingRequests = sourceData.filter(c => c.status === 'PENDING').map(normalize);
     db.allAdminCampaigns = sourceData.map(normalize);
 
-    localStorage.setItem("lived_campaigns_cache", JSON.stringify({
+    localStorage.setItem("lived_campaigns_cache_v3", JSON.stringify({
       campaigns: db.campaigns,
       pendingRequests: db.pendingRequests,
       allAdminCampaigns: db.allAdminCampaigns
@@ -2013,7 +2211,7 @@ async function renderAdminSubmissionsQueue() {
   const container = document.getElementById("adminSubmissionsList");
   if (!container) return;
   if (!subs || !subs.length) {
-    container.innerHTML = `<div class="notice">No participant X post submissions recorded yet.</div>`;
+    container.innerHTML = `<div class="notice">No participant X post or video submissions recorded yet.</div>`;
     return;
   }
   container.innerHTML = subs.map(s => `
@@ -2156,7 +2354,7 @@ function subscribeToNotifications() {
 function showInAppNotification(message) {
   const toast = document.createElement("div");
   toast.style.cssText = "position:fixed;bottom:25px;right:25px;z-index:999999;background:var(--surface2);border:1px solid var(--brand);color:var(--fg);padding:14px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.8);animation:netScaleUp 0.3s ease";
-  toast.innerHTML = `<b style="color:var(--brand2);display:block;margin-bottom:4px">🔔 LIVED Proof Alert</b>${esc(message)}`;
+  toast.innerHTML = `<b style="color:var(--brand2);display:block;margin-bottom:4px">🔔 LIVED Proof V3 Alert</b>${esc(message)}`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 6000);
 }
@@ -2169,7 +2367,7 @@ async function renderAdminQueue(){
     container.innerHTML = db.pendingRequests.map(item => `
       <div class="card" style="margin-bottom:14px;border:1px solid var(--line);display:flex;gap:16px">
         <div style="flex:1">
-          <span class="badge">PENDING · ${esc(item.category)}</span>
+          <span class="badge">PENDING · ${esc(item.category)} · ⚡ ${esc(item.streakModel)}</span>
           <h3 style="margin:6px 0">${esc(item.name)}</h3>
           <p class="small">${esc(item.brief)}</p>
           <div class="actions">
@@ -2213,7 +2411,7 @@ async function renderAdminQueue(){
       <div class="card" style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <span class="badge">${esc(item.status)} · ${esc(item.category)} · ${money(item.budget)}</span>
+            <span class="badge">${esc(item.status)} · ${esc(item.category)} · ⚡ ${esc(item.streakModel)} · ${money(item.budget)}</span>
             <h4 style="margin:4px 0">${esc(item.name)}</h4>
           </div>
           <div class="actions">
