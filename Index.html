@@ -284,7 +284,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <div class="netflix-hero-content">
         <div class="netflix-metadata">
           <span class="net-badge match">Web3 Campaign & Verification Hub</span>
-          <span class="net-badge rating">PROVED V3</span>
+          <span class="net-badge rating">PROVED</span>
         </div>
         
         <h1 class="netflix-title">
@@ -292,7 +292,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </h1>
         
         <p class="netflix-description">
-          <strong>LIVED Proof V3</strong> introduces advanced configurable streak models (Full Reset, Multiplier Reset, and Milestone-Based), server-side timezone cutoffs, and verifiable participation tracking.
+          <strong>LIVED Proof</strong> introduces advanced configurable streak models (Full Reset, Multiplier Reset, and Milestone-Based), server-side timezone cutoffs, and verifiable participation tracking.
         </p>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; font-size: 0.85rem; color: var(--muted);">
@@ -303,7 +303,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </div>
 
         <button class="net-btn net-btn-play" onclick="enterPlatform()">
-          🚀 Enter LIVED Proof V3 Hub
+          🚀 Enter LIVED Proof Hub
         </button>
       </div>
     </div>
@@ -452,9 +452,9 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <section id="home" class="view active">
   <div class="hero">
     <div>
-      <div class="kicker">LIVED ecosystem · native engagement layer v3</div>
+      <div class="kicker">LIVED ecosystem · native engagement layer</div>
       <h1>PROVE.<br>COMPETE.<br>EARN.</h1>
-      <p>LIVED Proof V3 connects Web3 projects with independent content creators using configurable streak bonus models, server-side cutoff timezones, and permanent XP separation.</p>
+      <p>LIVED Proof connects Web3 projects with independent content creators using configurable streak bonus models, server-side cutoff timezones, and permanent XP separation.</p>
       <div class="cta">
         <button class="btn primary" onclick="show('campaigns')">Explore Campaigns →</button>
         <button class="btn" onclick="show('cardView')">View LIVED Card</button>
@@ -581,9 +581,9 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </div>
       </div>
 
-      <!-- V3 Configurable Streak Rules & Metric Thresholds Set by Creator -->
+      <!-- Configurable Streak Rules & Metric Thresholds Set by Creator -->
       <div style="background:rgba(255,106,0,0.03);border:1px solid var(--line);padding:14px;border-radius:10px;margin:10px 0">
-        <label style="color:var(--brand2);display:block;margin-bottom:8px">⚙️ V3 Configurable Streak Model & Verification Thresholds</label>
+        <label style="color:var(--brand2);display:block;margin-bottom:8px">⚙️ Configurable Streak Model & Verification Thresholds</label>
         
         <div class="row" style="margin-bottom:10px">
           <div>
@@ -839,7 +839,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 
 <footer>
   <div class="shell" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-    <span>LIVED Proof V3 · Campaigns. Contributors. Engagement. Powered by LIVED IT</span>
+    <span>LIVED Proof · Campaigns. Contributors. Engagement. Powered by LIVED IT</span>
     <div style="display:flex;gap:15px">
       <a href="https://x.com/LIVEDITglobal" target="_blank" style="color:var(--fg);font-weight:700">Official X ↗</a>
       <a href="https://t.me/yourtelegramgroup" target="_blank" style="color:#229ED9;font-weight:700">Telegram ↗</a>
@@ -981,12 +981,12 @@ function applyCampaignTemplate(templateKey) {
   document.getElementById("cRequirements").value = t.requirements;
 
   syncBudgetRules();
-  alert(`📋 Template "${templateKey}" applied successfully with V3 streak rules!`);
+  alert(`📋 Template "${templateKey}" applied successfully with  streak rules!`);
 }
 
 let savedUser = null;
 try {
-  savedUser = JSON.parse(localStorage.getItem("lived_current_user_cache_v3"));
+  savedUser = JSON.parse(localStorage.getItem("lived_current_user_cache_"));
 } catch (e) {}
 
 let db = {
@@ -1026,7 +1026,7 @@ function getFaviconLogo(url) {
 
 async function fetchLiveSolPrice() {
   try {
-    const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
+    const res = await fetch("https://api.coingecko.com/api//simple/price?ids=solana&vs_currencies=usd");
     const data = await res.json();
     if (data && data.solana && data.solana.usd) {
       dynamicSolPrice = data.solana.usd;
@@ -1353,7 +1353,7 @@ function openSubmitPostModal(campaignId) {
   document.getElementById("targetCampaignId").value = campaignId;
   document.getElementById("postUrlInput").value = "";
   document.getElementById("submitModalTitle").textContent = isTouchGrass ? "Submit Touch Grass Video Experience" : "Submit Campaign Post";
-  document.getElementById("submitModalDesc").textContent = isTouchGrass ? "Paste your original video or real-world participation post link on X below." : "Paste your X post URL below. Verified metrics and configurable V3 streak rules determine your points.";
+  document.getElementById("submitModalDesc").textContent = isTouchGrass ? "Paste your original video or real-world participation post link on X below." : "Paste your X post URL below. Verified metrics and configurable streak rules determine your points.";
   document.getElementById("videoUploadNote").style.display = isTouchGrass ? "block" : "none";
   document.getElementById("urlInputLabel").textContent = isTouchGrass ? "Video / X Post URL" : "X Post URL";
   document.getElementById("submitPostModal").classList.add("active");
@@ -1363,7 +1363,7 @@ function closeSubmitModal() {
   document.getElementById("submitPostModal").classList.remove("active");
 }
 
-// --- V3 Configurable Streak Rules Execution Engine ---
+// --- Configurable Streak Rules Execution Engine ---
 document.getElementById("submitPostForm").addEventListener("submit", async function(e) {
   e.preventDefault();
   const campaignId = Number(document.getElementById("targetCampaignId").value);
@@ -1393,7 +1393,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
   };
   
   const btn = document.getElementById("submitPostBtn");
-  btn.textContent = "Validating Metrics & V3 Streak Model...";
+  btn.textContent = "Validating Metrics & Streak Model...";
   btn.disabled = true;
 
   try {
@@ -1445,7 +1445,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
         currentStreak += 1;
       } else if (diffDays > 1) {
         missedDay = true;
-        // --- Apply V3 Configurable Streak Reset Models ---
+        // --- Apply Configurable Streak Reset Models ---
         if (streakModel === "Full Reset") {
           db.currentUser.streakBonus = 0;
           currentStreak = 1;
@@ -2100,7 +2100,7 @@ async function confirmManualPayment(){
     document.getElementById("campaignForm").reset();
     pendingManualCampaign = null;
     await loadGlobalCampaigns();
-    alert("🎉 Campaign Submitted Successfully with V3 Streak Rules!");
+    alert("🎉 Campaign Submitted Successfully with Streak Rules!");
     show("campaigns");
   } catch (err) {
     alert("Submission error: " + err.message);
@@ -2419,7 +2419,7 @@ function subscribeToNotifications() {
 function showInAppNotification(message) {
   const toast = document.createElement("div");
   toast.style.cssText = "position:fixed;bottom:25px;right:25px;z-index:999999;background:var(--surface2);border:1px solid var(--brand);color:var(--fg);padding:14px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.8);animation:netScaleUp 0.3s ease";
-  toast.innerHTML = `<b style="color:var(--brand2);display:block;margin-bottom:4px">🔔 LIVED Proof V3 Alert</b>${esc(message)}`;
+  toast.innerHTML = `<b style="color:var(--brand2);display:block;margin-bottom:4px">🔔 LIVED Proof Alert</b>${esc(message)}`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 6000);
 }
