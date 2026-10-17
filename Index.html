@@ -2044,6 +2044,8 @@ async function syncProfileToSupabase() {
 async function loadProfileFromSupabase() {
   try {
     const client = requireBackend();
+    if (!db.currentUser || !db.currentUser.handle) return;
+    
     const { data } = await client.from('profiles').select('*').eq('handle', db.currentUser.handle).maybeSingle();
     if (data) {
       db.currentUser.handle = data.handle || db.currentUser.handle;
@@ -2053,15 +2055,20 @@ async function loadProfileFromSupabase() {
       db.currentUser.totalPoints = data.total_points || 0;
       db.currentUser.permanentXP = data.permanent_xp || db.currentUser.totalPoints;
       db.currentUser.streakBonus = data.streak_bonus || 0;
-      db.currentUser.currentStreak = data.current_streak || 0;
+      db.currentUser.currentStreak = data.current_streak || 1; // Defaults to Day 1 minimum
       db.currentUser.longestStreak = data.longest_streak || 0;
       db.currentUser.streakMultiplier = data.streak_multiplier || 1.0;
       db.currentUser.milestoneProgress = data.milestone_progress || 0;
       db.currentUser.lastSubmissionDate = data.last_submission_date || null;
+      db.currentUser.lastDailyClaimDate = data.last_daily_claim_date || null; // 👈 Daily reward claim date synced
+      
       localStorage.setItem("lived_current_user_cache_v3", JSON.stringify(db.currentUser));
       renderLivedCard();
+      if (typeof initDailyRewards === 'function') initDailyRewards();
     }
-  } catch (err) {}
+  } catch (err) {
+    console.warn("Profile load error:", err);
+  }
 }
 
 function handleImageUploadPreview(event) {
