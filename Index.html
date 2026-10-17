@@ -992,9 +992,9 @@ function initDailyRewards() {
   const todayStr = new Date().toISOString().slice(0, 10);
   const lastClaim = db.currentUser.lastDailyClaimDate;
   
-  // Initialize streak at 0 for brand new users
-  if (db.currentUser.currentStreak === undefined || db.currentUser.currentStreak === null) {
-    db.currentUser.currentStreak = 0;
+  // Ensure streak starts at minimum 1 for new users
+  if (!db.currentUser.currentStreak || db.currentUser.currentStreak < 1) {
+    db.currentUser.currentStreak = 1;
   }
   const currentStreak = db.currentUser.currentStreak;
   
@@ -1013,18 +1013,18 @@ function initDailyRewards() {
     btn.disabled = false;
   }
 
-  // Update text headers & progress indicators starting from 0
+  // Update text headers & progress indicators starting from Day 1
   document.getElementById("dailyStreakCount").textContent = currentStreak;
-  document.getElementById("streakProgressText").textContent = `${currentStreak}/365 days (${Math.max(0, Math.round((currentStreak/365)*100))}%)`;
+  document.getElementById("streakProgressText").textContent = `${currentStreak}/365 days (${Math.max(1, Math.round((currentStreak/365)*100))}%)`;
   document.getElementById("streakProgressBar").style.width = `${Math.min(100, (currentStreak/365)*100)}%`;
 
-  // --- Render Horizontal Sequential Track Starting From Day 0 ---
+  // --- Render Horizontal Sequential Track Starting From Day 1 (Minimum) ---
   const gridContainer = document.getElementById("dailyGridContainer");
   if (gridContainer) {
     let daysHtml = "";
     
-    // Always center around current streak, starting minimum at Day 0
-    let startDay = Math.max(0, currentStreak - 2);
+    // Center around current streak, but never go below Day 1
+    let startDay = Math.max(1, currentStreak - 2);
     let endDay = startDay + 4; // Show 5 cards across
 
     for (let dayNum = startDay; dayNum <= endDay; dayNum++) {
@@ -1070,7 +1070,7 @@ async function claimDailyReward() {
   const rewardAmount = 25;
   db.currentUser.permanentXP = Number(db.currentUser.permanentXP || 0) + rewardAmount;
   db.currentUser.totalPoints = db.currentUser.permanentXP + (db.currentUser.streakBonus || 0);
-  db.currentUser.currentStreak = (db.currentUser.currentStreak || 0) + 1;
+  db.currentUser.currentStreak = Math.max(1, (db.currentUser.currentStreak || 1)) + 1;
   db.currentUser.lastDailyClaimDate = todayStr;
 
   localStorage.setItem("lived_current_user_cache_v3", JSON.stringify(db.currentUser));
