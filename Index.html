@@ -284,7 +284,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <div class="netflix-hero-content">
         <div class="netflix-metadata">
           <span class="net-badge match">Web3 Campaign & Verification Hub</span>
-          <span class="net-badge rating">PROVED</span>
+          <span class="net-badge rating">PROVED V3</span>
         </div>
         
         <h1 class="netflix-title">
@@ -292,7 +292,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </h1>
         
         <p class="netflix-description">
-          <strong>LIVED Proof</strong> introduces advanced configurable streak models (Full Reset, Multiplier Reset, and Milestone-Based), server-side timezone cutoffs, and verifiable participation tracking.
+          <strong>LIVED Proof V3</strong> introduces advanced configurable streak models (Full Reset, Multiplier Reset, and Milestone-Based), server-side timezone cutoffs, and verifiable participation tracking.
         </p>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; font-size: 0.85rem; color: var(--muted);">
@@ -303,7 +303,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </div>
 
         <button class="net-btn net-btn-play" onclick="enterPlatform()">
-          🚀 Enter LIVED Proof Hub
+          🚀 Enter LIVED Proof V3 Hub
         </button>
       </div>
     </div>
@@ -452,9 +452,9 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <section id="home" class="view active">
   <div class="hero">
     <div>
-      <div class="kicker">LIVED ecosystem · native engagement layer</div>
+      <div class="kicker">LIVED ecosystem · native engagement layer v3</div>
       <h1>PROVE.<br>COMPETE.<br>EARN.</h1>
-      <p>LIVED Proof connects Web3 projects with independent content creators using configurable streak bonus models, server-side cutoff timezones, and permanent XP separation.</p>
+      <p>LIVED Proof V3 connects Web3 projects with independent content creators using configurable streak bonus models, server-side cutoff timezones, and permanent XP separation.</p>
       <div class="cta">
         <button class="btn primary" onclick="show('campaigns')">Explore Campaigns →</button>
         <button class="btn" onclick="show('cardView')">View LIVED Card</button>
@@ -478,7 +478,36 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
     <div class="stat"><b id="homeYappers">0</b><span class="small">Independent contributors</span></div>
     <div class="stat"><b id="homeVolume">$0</b><span class="small">Illustrative campaign volume</span></div>
     <div class="stat"><b id="homeRevenue">$0</b><span class="small">LIVED Protocol Revenue (10%)</span></div>
+  </div>|
+
+<!-- Daily Rewards Streak Card (Sample Matched) -->
+<div class="card" style="max-width:500px;margin:20px auto;text-align:left;border:1px solid var(--line);background:linear-gradient(145deg, rgba(18,18,20,0.95), rgba(10,10,12,0.98))">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+    <h3 style="margin:0;font-size:18px">Daily Rewards</h3>
+    <div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);padding:4px 10px;border-radius:20px">
+      <span>🔥</span><b id="dailyStreakCount" style="color:var(--brand2)">1</b>
+    </div>
   </div>
+  <div class="small" style="color:var(--muted);margin-bottom:8px">Keep your streak going.</div>
+  
+  <div class="small" style="color:var(--muted);margin-bottom:12px">⏱️ Resets in <span id="streakCountdown">12h 37m</span></div>
+
+  <div style="text-align:center;margin-bottom:12px">
+    <div class="small" style="color:var(--brand2);font-weight:700">Reward available!</div>
+    <div style="font-size:16px;font-weight:700;color:var(--fg)">+25 XP / Coins waiting!</div>
+  </div>
+
+<!-- 👇 THIS CONTAINER IS WHAT THE JAVASCRIPT LOOKS FOR TO DRAW THE CARDS -->
+  <div style="display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;margin-bottom:14px;white-space:nowrap;" id="dailyGridContainer"></div>
+
+  <div class="small" style="text-align:center;margin-bottom:6px">Progress: <span id="streakProgressText">0/365 days (0%)</span></div>
+  <div class="progress" style="margin-bottom:14px"><i id="streakProgressBar" style="width:0%"></i></div>
+
+  <button class="btn primary" id="claimDailyRewardBtn" style="width:100%;border-radius:12px;padding:14px;font-size:15px" onclick="claimDailyReward()">
+    🎁 Tap to Claim Today's Reward
+  </button>
+  <div class="small" style="text-align:center;margin-top:10px;color:var(--muted)">Miss a day and streak resets to 0</div>
+</div>
 </section>
 
 <section id="campaigns" class="view section">
@@ -581,9 +610,9 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </div>
       </div>
 
-      <!-- Configurable Streak Rules & Metric Thresholds Set by Creator -->
+      <!-- V3 Configurable Streak Rules & Metric Thresholds Set by Creator -->
       <div style="background:rgba(255,106,0,0.03);border:1px solid var(--line);padding:14px;border-radius:10px;margin:10px 0">
-        <label style="color:var(--brand2);display:block;margin-bottom:8px">⚙️ Configurable Streak Model & Verification Thresholds</label>
+        <label style="color:var(--brand2);display:block;margin-bottom:8px">⚙️ V3 Configurable Streak Model & Verification Thresholds</label>
         
         <div class="row" style="margin-bottom:10px">
           <div>
@@ -839,7 +868,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 
 <footer>
   <div class="shell" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-    <span>LIVED Proof · Campaigns. Contributors. Engagement. Powered by LIVED IT</span>
+    <span>LIVED Proof V3 · Campaigns. Contributors. Engagement. Powered by LIVED IT</span>
     <div style="display:flex;gap:15px">
       <a href="https://x.com/LIVEDITglobal" target="_blank" style="color:var(--fg);font-weight:700">Official X ↗</a>
       <a href="https://t.me/yourtelegramgroup" target="_blank" style="color:#229ED9;font-weight:700">Telegram ↗</a>
@@ -958,6 +987,105 @@ const CAMPAIGN_TEMPLATES = {
   }
 };
 
+// Check and update Daily Reward state on load
+function initDailyRewards() {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const lastClaim = db.currentUser.lastDailyClaimDate;
+  
+  // Initialize streak at 0 for brand new users
+  if (db.currentUser.currentStreak === undefined || db.currentUser.currentStreak === null) {
+    db.currentUser.currentStreak = 0;
+  }
+  const currentStreak = db.currentUser.currentStreak;
+  
+  const btn = document.getElementById("claimDailyRewardBtn");
+  const hasClaimedToday = (lastClaim === todayStr);
+  
+  if (hasClaimedToday) {
+    btn.textContent = "✓ Claimed For Today";
+    btn.style.background = "var(--surface2)";
+    btn.style.color = "var(--muted)";
+    btn.disabled = true;
+  } else {
+    btn.textContent = "🎁 Tap to Claim Today's Reward (+25 XP)";
+    btn.style.background = "var(--good)";
+    btn.style.color = "#0a0a0a";
+    btn.disabled = false;
+  }
+
+  // Update text headers & progress indicators starting from 0
+  document.getElementById("dailyStreakCount").textContent = currentStreak;
+  document.getElementById("streakProgressText").textContent = `${currentStreak}/365 days (${Math.max(0, Math.round((currentStreak/365)*100))}%)`;
+  document.getElementById("streakProgressBar").style.width = `${Math.min(100, (currentStreak/365)*100)}%`;
+
+  // --- Render Horizontal Sequential Track Starting From Day 0 ---
+  const gridContainer = document.getElementById("dailyGridContainer");
+  if (gridContainer) {
+    let daysHtml = "";
+    
+    // Always center around current streak, starting minimum at Day 0
+    let startDay = Math.max(0, currentStreak - 2);
+    let endDay = startDay + 4; // Show 5 cards across
+
+    for (let dayNum = startDay; dayNum <= endDay; dayNum++) {
+      let isClaimed = dayNum < currentStreak || (dayNum === currentStreak && hasClaimedToday);
+      let isCurrentActive = dayNum === currentStreak && !hasClaimedToday;
+      
+      let cardBg = "background:rgba(25,25,28,0.9);border:1px solid var(--line);flex:0 0 100px;min-width:100px;border-radius:12px;padding:12px;text-align:center;position:relative;";
+      let iconSymbol = "🎁";
+      let statusLabel = `<div class="small" style="color:var(--muted);margin-top:4px">Locked</div>`;
+
+      if (isClaimed) {
+        cardBg = "background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.3);flex:0 0 100px;min-width:100px;border-radius:12px;padding:12px;text-align:center;position:relative;";
+        iconSymbol = "✓";
+        statusLabel = `<div class="small" style="color:var(--good);margin-top:4px;font-weight:700">Claimed</div>`;
+      } else if (isCurrentActive) {
+        cardBg = "background:rgba(74,222,128,0.12);border:2px solid var(--good);flex:0 0 100px;min-width:100px;border-radius:12px;padding:12px;text-align:center;position:relative;box-shadow:0 0 15px rgba(74,222,128,0.2)";
+        iconSymbol = "🎁";
+        statusLabel = `<div class="small" style="color:var(--good);margin-top:4px;font-weight:700">Tap to claim</div>`;
+      } else {
+        iconSymbol = "🔒";
+      }
+
+      daysHtml += `
+        <div style="${cardBg}">
+          <div style="font-size:18px;margin-bottom:4px">${iconSymbol}</div>
+          <div style="font-weight:700;font-size:13px;color:var(--fg)">Day ${dayNum}</div>
+          <div class="small" style="color:var(--brand2);font-size:11px">⚡ 25</div>
+          ${statusLabel}
+        </div>
+      `;
+    }
+    gridContainer.innerHTML = daysHtml;
+  }
+}
+
+async function claimDailyReward() {
+  const todayStr = new Date().toISOString().slice(0, 10);
+  if (db.currentUser.lastDailyClaimDate === todayStr) {
+    alert("You have already claimed your daily reward today!");
+    return;
+  }
+
+  const rewardAmount = 25;
+  db.currentUser.permanentXP = Number(db.currentUser.permanentXP || 0) + rewardAmount;
+  db.currentUser.totalPoints = db.currentUser.permanentXP + (db.currentUser.streakBonus || 0);
+  db.currentUser.currentStreak = (db.currentUser.currentStreak || 0) + 1;
+  db.currentUser.lastDailyClaimDate = todayStr;
+
+  localStorage.setItem("lived_current_user_cache_v3", JSON.stringify(db.currentUser));
+  
+  try {
+    await syncProfileToSupabase();
+  } catch (err) {
+    console.warn("Backend daily claim sync note:", err);
+  }
+
+  initDailyRewards();
+  renderLivedCard();
+  alert(`🎉 Success! Claimed +${rewardAmount} XP. Streak is now Day ${db.currentUser.currentStreak}!`);
+}
+
 function applyCampaignTemplate(templateKey) {
   const t = CAMPAIGN_TEMPLATES[templateKey];
   if (!t) return;
@@ -981,17 +1109,18 @@ function applyCampaignTemplate(templateKey) {
   document.getElementById("cRequirements").value = t.requirements;
 
   syncBudgetRules();
-  alert(`📋 Template "${templateKey}" applied successfully with  streak rules!`);
+  alert(`📋 Template "${templateKey}" applied successfully with V3 streak rules!`);
 }
 
 let savedUser = null;
 try {
-  savedUser = JSON.parse(localStorage.getItem("lived_current_user_cache_"));
+  savedUser = JSON.parse(localStorage.getItem("lived_current_user_cache_v3"));
 } catch (e) {}
 
 let db = {
   currentUser: savedUser || {
-    handle: "@userProof",
+    // Generate a unique random handle for brand new visitors so they don't share a global profile
+    handle: "@user_" + Math.random().toString(36).substring(2, 8),
     passId: Math.floor(1000 + Math.random() * 9000),
     joinedCount: 0,
     totalPoints: 0,
@@ -1026,7 +1155,7 @@ function getFaviconLogo(url) {
 
 async function fetchLiveSolPrice() {
   try {
-    const res = await fetch("https://api.coingecko.com/api//simple/price?ids=solana&vs_currencies=usd");
+    const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
     const data = await res.json();
     if (data && data.solana && data.solana.usd) {
       dynamicSolPrice = data.solana.usd;
@@ -1353,7 +1482,7 @@ function openSubmitPostModal(campaignId) {
   document.getElementById("targetCampaignId").value = campaignId;
   document.getElementById("postUrlInput").value = "";
   document.getElementById("submitModalTitle").textContent = isTouchGrass ? "Submit Touch Grass Video Experience" : "Submit Campaign Post";
-  document.getElementById("submitModalDesc").textContent = isTouchGrass ? "Paste your original video or real-world participation post link on X below." : "Paste your X post URL below. Verified metrics and configurable streak rules determine your points.";
+  document.getElementById("submitModalDesc").textContent = isTouchGrass ? "Paste your original video or real-world participation post link on X below." : "Paste your X post URL below. Verified metrics and configurable V3 streak rules determine your points.";
   document.getElementById("videoUploadNote").style.display = isTouchGrass ? "block" : "none";
   document.getElementById("urlInputLabel").textContent = isTouchGrass ? "Video / X Post URL" : "X Post URL";
   document.getElementById("submitPostModal").classList.add("active");
@@ -1363,7 +1492,7 @@ function closeSubmitModal() {
   document.getElementById("submitPostModal").classList.remove("active");
 }
 
-// --- Configurable Streak Rules Execution Engine ---
+// --- V3 Configurable Streak Rules Execution Engine ---
 document.getElementById("submitPostForm").addEventListener("submit", async function(e) {
   e.preventDefault();
   const campaignId = Number(document.getElementById("targetCampaignId").value);
@@ -1393,7 +1522,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
   };
   
   const btn = document.getElementById("submitPostBtn");
-  btn.textContent = "Validating Metrics & Streak Model...";
+  btn.textContent = "Validating Metrics & V3 Streak Model...";
   btn.disabled = true;
 
   try {
@@ -1445,7 +1574,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
         currentStreak += 1;
       } else if (diffDays > 1) {
         missedDay = true;
-        // --- Apply Configurable Streak Reset Models ---
+        // --- Apply V3 Configurable Streak Reset Models ---
         if (streakModel === "Full Reset") {
           db.currentUser.streakBonus = 0;
           currentStreak = 1;
@@ -2100,7 +2229,7 @@ async function confirmManualPayment(){
     document.getElementById("campaignForm").reset();
     pendingManualCampaign = null;
     await loadGlobalCampaigns();
-    alert("🎉 Campaign Submitted Successfully with Streak Rules!");
+    alert("🎉 Campaign Submitted Successfully with V3 Streak Rules!");
     show("campaigns");
   } catch (err) {
     alert("Submission error: " + err.message);
@@ -2419,7 +2548,7 @@ function subscribeToNotifications() {
 function showInAppNotification(message) {
   const toast = document.createElement("div");
   toast.style.cssText = "position:fixed;bottom:25px;right:25px;z-index:999999;background:var(--surface2);border:1px solid var(--brand);color:var(--fg);padding:14px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.8);animation:netScaleUp 0.3s ease";
-  toast.innerHTML = `<b style="color:var(--brand2);display:block;margin-bottom:4px">🔔 LIVED Proof Alert</b>${esc(message)}`;
+  toast.innerHTML = `<b style="color:var(--brand2);display:block;margin-bottom:4px">🔔 LIVED Proof V3 Alert</b>${esc(message)}`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 6000);
 }
@@ -2509,6 +2638,7 @@ async function initApp() {
   }
   renderHome();
   renderLivedCard();
+  initDailyRewards();
   if (BACKEND_CONFIGURED) fetchLiveSolPrice();
 }
 
