@@ -324,6 +324,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <button type="button" id="navWalletBtn" onclick="toggleWalletConnection()" style="color:var(--brand2);font-weight:700;border:1px solid #ff8a3344;background:rgba(255,138,51,0.1)">⚡ Connect Wallet</button>
       <a href="https://t.me/yourtelegramgroup" target="_blank" class="btn telegram" style="padding:9px 12px;font-size:13px">✈ Telegram ↗</a>
       <button type="button" data-view="rules">Rules</button>
+      <button type="button" data-view="guide">📖 Guide</button>
     </div>
   </div>
 </nav>
@@ -840,6 +841,63 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <div class="metric"><span>08 · Respect others</span><span class="small">No harassment, threats, impersonation, hate speech or abusive behaviour.</span></div>
       <div class="metric"><span>09 · Leaderboard review</span><span class="small">Rankings may be reviewed before final rewards are confirmed.</span></div>
       <div class="metric"><span>10 · Reward eligibility</span><span class="small">Only contributors who meet the published campaign requirements are eligible.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Guide Section View -->
+<section id="guide" class="app-view" style="display:none; padding:20px; max-width:750px; margin:0 auto;">
+  <div class="card" style="background:linear-gradient(145deg, rgba(18,18,20,0.95), rgba(10,10,12,0.98)); border:1px solid var(--line); border-radius:16px; padding:28px;">
+    <h2 style="margin-top:0; color:var(--fg); font-size:24px;">LIVED Proof V3 — Platform Guide</h2>
+    <p class="small" style="color:var(--muted); margin-bottom:24px;">Master the platform, track your daily rewards, and maximize your campaign earnings with this complete user guide.</p>
+
+    <div style="display:flex; flex-direction:column; gap:20px;">
+      
+      <!-- 1. Daily Rewards & Streaks -->
+      <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid var(--line);">
+        <h4 style="margin:0 0 8px 0; color:var(--brand2); font-size:16px;">🔥 Daily Rewards & Sequential Streaks</h4>
+        <p class="small" style="margin:0 0 8px 0; color:var(--muted);">Check in every single day to keep your streak alive and claim your <strong>+25 XP</strong> reward.</p>
+        <ul class="small" style="margin:0; padding-left:18px; color:var(--muted);">
+          <li>The horizontal scroll track displays your active check-in journey starting from Day 1.</li>
+          <li>Each day checks off sequentially one-by-one as you claim.</li>
+          <li>Missing a day resets your streak back to the beginning.</li>
+        </ul>
+      </div>
+
+      <!-- 2. Unique Profiles & X Handles -->
+      <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid var(--line);">
+        <h4 style="margin:0 0 8px 0; color:var(--brand2); font-size:16px;">👤 Profiles & Handle Isolation</h4>
+        <p class="small" style="margin:0 0 8px 0; color:var(--muted);">Your progression is entirely personalized and secure:</p>
+        <ul class="small" style="margin:0; padding-left:18px; color:var(--muted);">
+          <li>Streaks, XP, and rewards are bound strictly to your unique X handle or connected profile.</li>
+          <li>Data syncs directly and globally via Supabase upserts (`onConflict: 'handle'`), ensuring separate accounts never overwrite each other.</li>
+        </ul>
+      </div>
+
+      <!-- 3. Campaigns & Contributions -->
+      <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid var(--line);">
+        <h4 style="margin:0 0 8px 0; color:var(--brand2); font-size:16px;">⚡ Campaigns & Independent Contributions</h4>
+        <p class="small" style="margin:0 0 8px 0; color:var(--muted);">Engage with the ecosystem to earn protocol volume:</p>
+        <ul class="small" style="margin:0; padding-left:18px; color:var(--muted);">
+          <li>Browse active campaigns from the main dashboard.</li>
+          <li>Submit your proof links (posts, videos, and engagements) to verify contributions.</li>
+          <li>Track protocol revenue shares (10%) and independent contributor metrics in real-time.</li>
+        </ul>
+      </div>
+
+      <!-- 4. Navigation Overview -->
+      <div style="background:rgba(255,255,255,0.03); padding:16px; border-radius:12px; border:1px solid var(--line);">
+        <h4 style="margin:0 0 8px 0; color:var(--brand2); font-size:16px;">🧭 Quick Navigation Header</h4>
+        <ul class="small" style="margin:0; padding-left:18px; color:var(--muted);">
+          <li><strong>Home:</strong> View your primary dashboard, stats, and Daily Rewards track.</li>
+          <li><strong>Campaigns:</strong> Explore and participate in active community campaigns.</li>
+          <li><strong>Create Campaign:</strong> Launch new community initiatives.</li>
+          <li><strong>LIVED Card:</strong> Inspect your comprehensive user pass, XP balance, and tier status.</li>
+          <li><strong>Project Dashboard:</strong> Monitor global protocol metrics and campaign volumes.</li>
+          <li><strong>Rules & Guide:</strong> Review guidelines and platform instructions.</li>
+        </ul>
+      </div>
+
     </div>
   </div>
 </section>
