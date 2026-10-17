@@ -284,7 +284,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <div class="netflix-hero-content">
         <div class="netflix-metadata">
           <span class="net-badge match">Web3 Campaign & Verification Hub</span>
-          <span class="net-badge rating">PROVED V3</span>
+          <span class="net-badge rating">PROVED</span>
         </div>
         
         <h1 class="netflix-title">
@@ -292,7 +292,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </h1>
         
         <p class="netflix-description">
-          <strong>LIVED Proof V3</strong> introduces advanced configurable streak models (Full Reset, Multiplier Reset, and Milestone-Based), server-side timezone cutoffs, and verifiable participation tracking.
+          <strong>LIVED Proof</strong> introduces advanced configurable streak models (Full Reset, Multiplier Reset, and Milestone-Based), server-side timezone cutoffs, and verifiable participation tracking.
         </p>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; font-size: 0.85rem; color: var(--muted);">
@@ -303,7 +303,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </div>
 
         <button class="net-btn net-btn-play" onclick="enterPlatform()">
-          🚀 Enter LIVED Proof V3 Hub
+          🚀 Enter LIVED Proof Hub
         </button>
       </div>
     </div>
@@ -453,9 +453,9 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <section id="home" class="view active">
   <div class="hero">
     <div>
-      <div class="kicker">LIVED ecosystem · native engagement layer v3</div>
+      <div class="kicker">LIVED ecosystem · native engagement layer</div>
       <h1>PROVE.<br>COMPETE.<br>EARN.</h1>
-      <p>LIVED Proof V3 connects Web3 projects with independent content creators using configurable streak bonus models, server-side cutoff timezones, and permanent XP separation.</p>
+      <p>LIVED Proof connects Web3 projects with independent content creators using configurable streak bonus models, server-side cutoff timezones, and permanent XP separation.</p>
       <div class="cta">
         <button class="btn primary" onclick="show('campaigns')">Explore Campaigns →</button>
         <button class="btn" onclick="show('cardView')">View LIVED Card</button>
@@ -613,7 +613,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 
       <!-- V3 Configurable Streak Rules & Metric Thresholds Set by Creator -->
       <div style="background:rgba(255,106,0,0.03);border:1px solid var(--line);padding:14px;border-radius:10px;margin:10px 0">
-        <label style="color:var(--brand2);display:block;margin-bottom:8px">⚙️ V3 Configurable Streak Model & Verification Thresholds</label>
+        <label style="color:var(--brand2);display:block;margin-bottom:8px">⚙️ Configurable Streak Model & Verification Thresholds</label>
         
         <div class="row" style="margin-bottom:10px">
           <div>
@@ -848,7 +848,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <!-- Guide Section View -->
 <section id="guide" class="app-view" style="display:none; padding:20px; max-width:750px; margin:0 auto;">
   <div class="card" style="background:linear-gradient(145deg, rgba(18,18,20,0.95), rgba(10,10,12,0.98)); border:1px solid var(--line); border-radius:16px; padding:28px;">
-    <h2 style="margin-top:0; color:var(--fg); font-size:24px;">LIVED Proof V3 — Platform Guide</h2>
+    <h2 style="margin-top:0; color:var(--fg); font-size:24px;">LIVED Proof — Platform Guide</h2>
     <p class="small" style="color:var(--muted); margin-bottom:24px;">Master the platform, track your daily rewards, and maximize your campaign earnings with this complete user guide.</p>
 
     <div style="display:flex; flex-direction:column; gap:20px;">
@@ -926,7 +926,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 
 <footer>
   <div class="shell" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-    <span>LIVED Proof V3 · Campaigns. Contributors. Engagement. Powered by LIVED IT</span>
+    <span>LIVED Proof · Campaigns. Contributors. Engagement. Powered by LIVED IT</span>
     <div style="display:flex;gap:15px">
       <a href="https://x.com/LIVEDITglobal" target="_blank" style="color:var(--fg);font-weight:700">Official X ↗</a>
       <a href="https://t.me/yourtelegramgroup" target="_blank" style="color:#229ED9;font-weight:700">Telegram ↗</a>
@@ -1054,17 +1054,12 @@ function initDailyRewards() {
     db.currentUser.currentStreak = 1;
   }
   
-  // Ensure we track claimed day numbers safely
-  if (!Array.isArray(db.currentUser.claimedDays)) {
-    db.currentUser.claimedDays = db.currentUser.claimedDays || [];
-  }
-  
   const currentStreak = db.currentUser.currentStreak;
   const hasClaimedToday = (lastClaim === todayStr);
   
   const btn = document.getElementById("claimDailyRewardBtn");
   if (hasClaimedToday) {
-    btn.textContent = "✓ Claimed For Today";
+    btn.textContent = "✓ Claimed For Today (Come back tomorrow)";
     btn.style.background = "var(--surface2)";
     btn.style.color = "var(--muted)";
     btn.disabled = true;
@@ -1076,10 +1071,9 @@ function initDailyRewards() {
   }
 
   document.getElementById("dailyStreakCount").textContent = currentStreak;
-  document.getElementById("streakProgressText").textContent = `${currentStreak}/365 days (${Math.max(1, Math.round((currentStreak/365)*100))}%)`;
-  document.getElementById("streakProgressBar").style.width = `${Math.min(100, (currentStreak/365)*100)}%`;
+  document.getElementById("streakProgressText").textContent = `${currentStreak}/365 days`;
 
-  // --- Render Sequential Track (Strictly One-by-One) ---
+  // --- Strict Sequential Rendering & Lockout Logic ---
   const gridContainer = document.getElementById("dailyGridContainer");
   if (gridContainer) {
     let daysHtml = "";
@@ -1087,12 +1081,11 @@ function initDailyRewards() {
     let endDay = startDay + 4; // Show 5 cards across
 
     for (let dayNum = startDay; dayNum <= endDay; dayNum++) {
-      // A day is only claimed if explicitly marked in claimedDays or completed in past cycles
-      let isClaimed = db.currentUser.claimedDays.includes(dayNum) || (dayNum < currentStreak && hasClaimedToday);
+      let isClaimed = dayNum < currentStreak || (dayNum === currentStreak && hasClaimedToday);
       let isCurrentActive = dayNum === currentStreak && !hasClaimedToday;
       
-      let cardBg = "background:rgba(25,25,28,0.9);border:1px solid var(--line);flex:0 0 100px;min-width:100px;border-radius:12px;padding:12px;text-align:center;position:relative;";
-      let iconSymbol = "🎁";
+      let cardBg = "background:rgba(25,25,28,0.9);border:1px solid var(--line);flex:0 0 100px;min-width:100px;border-radius:12px;padding:12px;text-align:center;position:relative;opacity:0.6;";
+      let iconSymbol = "🔒";
       let statusLabel = `<div class="small" style="color:var(--muted);margin-top:4px">Locked</div>`;
 
       if (isClaimed) {
@@ -1100,11 +1093,9 @@ function initDailyRewards() {
         iconSymbol = "✓";
         statusLabel = `<div class="small" style="color:var(--good);margin-top:4px;font-weight:700">Claimed</div>`;
       } else if (isCurrentActive) {
-        cardBg = "background:rgba(74,222,128,0.12);border:2px solid var(--good);flex:0 0 100px;min-width:100px;border-radius:12px;padding:12px;text-align:center;position:relative;box-shadow:0 0 15px rgba(74,222,128,0.2)";
+        cardBg = "background:rgba(74,222,128,0.12);border:2px solid var(--good);flex:0 0 100px;min-width:100px;border-radius:12px;padding:12px;text-align:center;position:relative;box-shadow:0 0 15px rgba(74,222,128,0.2);opacity:1;";
         iconSymbol = "🎁";
-        statusLabel = `<div class="small" style="color:var(--good);margin-top:4px;font-weight:700">Tap to claim</div>`;
-      } else {
-        iconSymbol = "🔒";
+        statusLabel = `<div class="small" style="color:var(--good);margin-top:4px;font-weight:700">Available</div>`;
       }
 
       daysHtml += `
@@ -1123,7 +1114,7 @@ function initDailyRewards() {
 async function claimDailyReward() {
   const todayStr = new Date().toISOString().slice(0, 10);
   if (db.currentUser.lastDailyClaimDate === todayStr) {
-    alert("You have already claimed your daily reward today!");
+    alert("You have already claimed your daily reward today! Come back tomorrow.");
     return;
   }
 
@@ -1132,17 +1123,6 @@ async function claimDailyReward() {
 
   db.currentUser.permanentXP = Number(db.currentUser.permanentXP || 0) + rewardAmount;
   db.currentUser.totalPoints = db.currentUser.permanentXP + (db.currentUser.streakBonus || 0);
-  
-  if (!Array.isArray(db.currentUser.claimedDays)) {
-    db.currentUser.claimedDays = [];
-  }
-  
-  // Mark specifically this active day as claimed
-  if (!db.currentUser.claimedDays.includes(currentDay)) {
-    db.currentUser.claimedDays.push(currentDay);
-  }
-
-  // Increment streak for the next day check-in
   db.currentUser.currentStreak = currentDay + 1;
   db.currentUser.lastDailyClaimDate = todayStr;
 
@@ -1151,14 +1131,13 @@ async function claimDailyReward() {
   try {
     await syncProfileToSupabase();
   } catch (err) {
-    console.warn("Backend daily claim sync note:", err);
+    console.warn("Backend sync note:", err);
   }
 
   initDailyRewards();
   renderLivedCard();
-  alert(`🎉 Success! Claimed Day ${currentDay} reward (+${rewardAmount} XP).`);
+  alert(`🎉 Success! Claimed Day ${currentDay} reward (+${rewardAmount} XP). Next streak unlocks tomorrow.`);
 }
-
 function applyCampaignTemplate(templateKey) {
   const t = CAMPAIGN_TEMPLATES[templateKey];
   if (!t) return;
@@ -1182,7 +1161,7 @@ function applyCampaignTemplate(templateKey) {
   document.getElementById("cRequirements").value = t.requirements;
 
   syncBudgetRules();
-  alert(`📋 Template "${templateKey}" applied successfully with V3 streak rules!`);
+  alert(`📋 Template "${templateKey}" applied successfully with streak rules!`);
 }
 
 let savedUser = null;
@@ -1223,6 +1202,20 @@ function getFaviconLogo(url) {
     return `https://www.google.com/s2/favicons?domain=${parsed.hostname}&sz=32`;
   } catch (e) {
     return "";
+  }
+}
+
+function openGuideTab() {
+  // Hide all main section views
+  const sections = document.querySelectorAll('section[id], .app-view');
+  sections.forEach(sec => {
+    sec.style.display = 'none';
+  });
+  
+  // Show only the guide section
+  const guideSec = document.getElementById('guide');
+  if (guideSec) {
+    guideSec.style.display = 'block';
   }
 }
 
@@ -1272,6 +1265,58 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const navButtons = document.querySelectorAll('[data-view]');
+  
+  navButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const viewName = btn.getAttribute('data-view');
+      if (!viewName) return;
+      
+      // 1. Hide all main app views/sections
+      document.querySelectorAll('.app-view, section[id]').forEach(sec => {
+        sec.style.display = 'none';
+      });
+      
+      // 2. Show the targeted view
+      const targetView = document.getElementById(viewName);
+      if (targetView) {
+        targetView.style.display = 'block';
+      }
+      
+      // 3. Update active classes on buttons
+      navButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+});
+
+function switchTab(viewId) {
+  // List of all valid section views in your app
+  const views = ['home', 'campaigns', 'create', 'cardView', 'projectDashboard', 'rules', 'guide'];
+  
+  // Hide all sections
+  views.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  
+  // Show the selected target view
+  const target = document.getElementById(viewId);
+  if (target) {
+    target.style.display = 'block';
+  }
+  
+  // Update active styling on navigation buttons
+  document.querySelectorAll('[data-view]').forEach(btn => {
+    if (btn.getAttribute('data-view') === viewId) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+}
 
 function renderHome(){
   const activeCampaigns = db.campaigns.filter(c=>c.status==="ACTIVE");
@@ -1555,7 +1600,7 @@ function openSubmitPostModal(campaignId) {
   document.getElementById("targetCampaignId").value = campaignId;
   document.getElementById("postUrlInput").value = "";
   document.getElementById("submitModalTitle").textContent = isTouchGrass ? "Submit Touch Grass Video Experience" : "Submit Campaign Post";
-  document.getElementById("submitModalDesc").textContent = isTouchGrass ? "Paste your original video or real-world participation post link on X below." : "Paste your X post URL below. Verified metrics and configurable V3 streak rules determine your points.";
+  document.getElementById("submitModalDesc").textContent = isTouchGrass ? "Paste your original video or real-world participation post link on X below." : "Paste your X post URL below. Verified metrics and configurable streak rules determine your points.";
   document.getElementById("videoUploadNote").style.display = isTouchGrass ? "block" : "none";
   document.getElementById("urlInputLabel").textContent = isTouchGrass ? "Video / X Post URL" : "X Post URL";
   document.getElementById("submitPostModal").classList.add("active");
@@ -1595,7 +1640,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
   };
   
   const btn = document.getElementById("submitPostBtn");
-  btn.textContent = "Validating Metrics & V3 Streak Model...";
+  btn.textContent = "Validating Metrics & Streak Model...";
   btn.disabled = true;
 
   try {
@@ -2309,7 +2354,7 @@ async function confirmManualPayment(){
     document.getElementById("campaignForm").reset();
     pendingManualCampaign = null;
     await loadGlobalCampaigns();
-    alert("🎉 Campaign Submitted Successfully with V3 Streak Rules!");
+    alert("🎉 Campaign Submitted Successfully with Streak Rules!");
     show("campaigns");
   } catch (err) {
     alert("Submission error: " + err.message);
@@ -2628,7 +2673,7 @@ function subscribeToNotifications() {
 function showInAppNotification(message) {
   const toast = document.createElement("div");
   toast.style.cssText = "position:fixed;bottom:25px;right:25px;z-index:999999;background:var(--surface2);border:1px solid var(--brand);color:var(--fg);padding:14px 20px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.8);animation:netScaleUp 0.3s ease";
-  toast.innerHTML = `<b style="color:var(--brand2);display:block;margin-bottom:4px">🔔 LIVED Proof V3 Alert</b>${esc(message)}`;
+  toast.innerHTML = `<b style="color:var(--brand2);display:block;margin-bottom:4px">🔔 LIVED Proof Alert</b>${esc(message)}`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 6000);
 }
