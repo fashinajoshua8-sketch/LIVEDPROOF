@@ -481,7 +481,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
     <div class="stat"><b id="homeRevenue">$0</b><span class="small">LIVED Protocol Revenue (10%)</span></div>
   </div>
 
-<!-- Daily Rewards Streak Card (Sample Matched) -->
+<!-- Daily Rewards Streak Card -->
 <div class="card" style="max-width:500px;margin:20px auto;text-align:left;border:1px solid var(--line);background:linear-gradient(145deg, rgba(18,18,20,0.95), rgba(10,10,12,0.98))">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
     <h3 style="margin:0;font-size:18px">Daily Rewards</h3>
@@ -1615,6 +1615,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
       throw new Error("DAILY-CUTOFF-LOCK: You have already submitted a verified post today under this timezone cutoff.");
     }
 
+    // Retrieve Campaign-Specific Streak Rules
     const streakModel = activeCampaign?.streakModel || "Milestone-Based";
     const streakBonusPerDay = activeCampaign?.streakBonusValue || 10;
     const streakMultiplierBase = activeCampaign?.streakMultiplier || 1.0;
@@ -1638,9 +1639,11 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
         currentStreak += 1;
       } else if (diffDays > 1) {
         missedDay = true;
+        
+        // --- STRICT STREAK MODEL RESET LOGIC ---
         if (streakModel === "Full Reset") {
-          db.currentUser.streakBonus = 0;
-          currentStreak = 1;
+          db.currentUser.streakBonus = 0; // Wipe streak bonus points to 0
+          currentStreak = 1;              // Reset active streak count
           streakMultiplier = streakMultiplierBase;
           milestoneProgress = 0;
         } else if (streakModel === "Multiplier Reset") {
@@ -1654,7 +1657,10 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     }
     if (currentStreak > longestStreak) longestStreak = currentStreak;
 
-    streakMultiplier = Number((streakMultiplierBase + (currentStreak * 0.05)).toFixed(2));
+    if (streakModel !== "Multiplier Reset") {
+      streakMultiplier = Number((streakMultiplierBase + (currentStreak * 0.05)).toFixed(2));
+    }
+    
     let calculatedStreakBonus = Math.round(streakBonusPerDay * currentStreak * streakMultiplier);
 
     let milestoneBonusAwarded = 0;
@@ -1669,8 +1675,9 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     const baseXP = data.earnedXP || 10;
     const totalAwardXP = baseXP + calculatedStreakBonus;
     
+    // Permanent XP is cleanly separated and preserved
     db.currentUser.permanentXP = Number(db.currentUser.permanentXP || 0) + Number(baseXP);
-    db.currentUser.streakBonus = Number(db.currentUser.streakBonus || 0) + Number(calculatedStreakBonus);
+    db.currentUser.streakBonus = streakModel === "Full Reset" && missedDay ? calculatedStreakBonus : Number(db.currentUser.streakBonus || 0) + Number(calculatedStreakBonus);
     db.currentUser.totalPoints = db.currentUser.permanentXP + db.currentUser.streakBonus;
     db.currentUser.currentStreak = currentStreak;
     db.currentUser.longestStreak = longestStreak;
@@ -1729,8 +1736,8 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     await loadGlobalCampaigns();
     openCampaign(campaignId);
 
-    const resetNotice = missedDay ? `\n⚠️ Missed Day Triggered (${streakModel}): Streak adjusted accordingly, permanent XP preserved.` : '';
-    alert(`🌿 Verified Successfully (${streakModel})!${resetNotice}\nBase Permanent XP: +${baseXP}\nStreak Bonus (${currentStreak} Days, ${streakMultiplier}x): +${calculatedStreakBonus} XP\nTotal Awarded: +${totalAwardXP} XP`);
+    const resetMsg = missedDay && streakModel === "Full Reset" ? "\n⚠️ Full Reset Triggered: Missed day wiped accumulated streak bonus points, but permanent XP was preserved!" : "";
+    alert(`🌿 Verified Successfully (${streakModel})!${resetMsg}\nBase Permanent XP: +${baseXP}\nStreak Bonus: +${calculatedStreakBonus}\nTotal Awarded: +${totalAwardXP} XP`);
   } catch (err) {
     alert("❌ Submission Blocked\n\n" + err.message);
   } finally {
