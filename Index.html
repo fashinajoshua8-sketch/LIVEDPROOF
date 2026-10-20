@@ -1581,23 +1581,30 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
   };
   
   const btn = document.getElementById("submitPostBtn");
-  btn.textContent = "Validating Metrics & Streak Model...";
+  btn.textContent = "Validating Metrics & Storing Score...";
   btn.disabled = true;
 
   try {
     const client = requireBackend();
+    
+    // Prevent duplicate URL submission locally/remotely before processing
+    const { data: existingSub } = await client
+      .from("campaign_submissions")
+      .select("id")
+      .eq("campaign_id", campaignId)
+      .eq("post_url", postUrl)
+      .maybeSingle();
+
+    if (existingSub) {
+      throw new Error("DUPLICATE-SUBMISSION: This exact post URL has already been submitted and rewarded for this campaign.");
+    }
+
     const { data, error: funcError } = await client.functions.invoke('verify-tweet-metrics', {
       body: { campaignId: campaignId, handle: db.currentUser.handle, postUrl: postUrl, thresholds: thresholds }
     });
 
     if (funcError) {
-      let errorMsg = funcError.message || "Edge function invocation failed";
-      try {
-        if (funcError.context && typeof funcError.context.json === 'function') {
-          const errJson = await funcError.context.json();
-          if (errJson && errJson.error) errorMsg = errJson.error;
-        }
-      } catch (e) {}
+      let errorMsg = funcError.message || "Edge function verification failed";
       throw new Error(errorMsg);
     }
 
@@ -1659,7 +1666,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
       }
     }
 
-    const baseXP = data.earnedXP || 50;
+    const baseXP = data.earnedXP || 10;
     const totalAwardXP = baseXP + calculatedStreakBonus;
     
     db.currentUser.permanentXP = Number(db.currentUser.permanentXP || 0) + Number(baseXP);
@@ -1685,7 +1692,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     }]);
 
     if (subError) {
-      if (subError.code === "23505") throw new Error("X-TWEET-LOCK: This exact X post URL has already been successfully submitted and rewarded.");
+      if (subError.code === "23505") throw new Error("DUPLICATE-SUBMISSION: This URL is already registered in the ledger.");
       throw subError;
     }
 
@@ -1725,7 +1732,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     const resetNotice = missedDay ? `\n⚠️ Missed Day Triggered (${streakModel}): Streak adjusted accordingly, permanent XP preserved.` : '';
     alert(`🌿 Verified Successfully (${streakModel})!${resetNotice}\nBase Permanent XP: +${baseXP}\nStreak Bonus (${currentStreak} Days, ${streakMultiplier}x): +${calculatedStreakBonus} XP\nTotal Awarded: +${totalAwardXP} XP`);
   } catch (err) {
-    alert("❌ Submission Unsuccessful\n\n" + err.message);
+    alert("❌ Submission Blocked\n\n" + err.message);
   } finally {
     btn.textContent = "Verify & Submit Entry →";
     btn.disabled = false;
