@@ -6,6 +6,7 @@
 <title>LIVED PROOF — Web3 Engagement, Identity & Marketing Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="https://unpkg.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- Solana Web3 Browser Bundle -->
@@ -49,11 +50,11 @@ h1,h2,h3,h4,h5,h6{font-family:var(--display);font-weight:700}
 .shell{max-width:1180px;margin:auto;padding:0 22px}
 
 nav{position:sticky;top:0;z-index:20;background:#050505ee;border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
-.navin{min-height:72px;display:flex;align-items:center;justify-content:space-between;padding:10px 0;gap:12px;flex-wrap:wrap}
-.logo{font-family:var(--display);font-weight:700;letter-spacing:3px;font-size:26px;text-transform:uppercase;text-shadow:0 0 15px rgba(255,106,0,0.4)}
+.navin{min-height:72px;display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:15px}
+.logo{font-family:var(--display);font-weight:700;letter-spacing:2px;font-size:22px;text-transform:uppercase;text-shadow:0 0 15px rgba(255,106,0,0.4);white-space:nowrap}
 .logo span{color:var(--brand);font-weight:700}
-.navlinks{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.navlinks button, .navlinks a.nav-btn{border:1px solid transparent;background:transparent;color:var(--muted);padding:9px 12px;border-radius:8px;display:inline-flex;align-items:center;font-family:var(--display);font-weight:700;font-size:13px;white-space:nowrap}
+.navlinks{display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.navlinks button, .navlinks a.nav-btn{border:1px solid transparent;background:transparent;color:var(--muted);padding:7px 10px;border-radius:8px;display:inline-flex;align-items:center;font-family:var(--display);font-weight:700;font-size:12px;white-space:nowrap}
 .navlinks button:hover,.navlinks button.active,.navlinks a.nav-btn:hover{color:var(--fg);border-color:var(--line);background:#ffffff08}
 
 .hero{padding:76px 0 45px;display:grid;grid-template-columns:1.25fr .75fr;gap:30px;align-items:center}
@@ -260,12 +261,9 @@ input:focus,textarea:focus,select:focus{border-color:#ff6a0066}
 
 footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-size:12px;background:rgba(5,5,5,0.85)}
 
-@media(max-width:900px){
-  .hero{grid-template-columns:1fr}
-  .grid{grid-template-columns:1fr 1fr}
-  .stats{grid-template-columns:1fr 1fr}
-  .navin{padding:8px 0;justify-content:center}
-  .navlinks{overflow-x:auto;flex-wrap:nowrap;width:100%;padding-bottom:6px;justify-content:flex-start;-webkit-overflow-scrolling:touch}
+@media(max-width:1100px){
+  .navin{flex-direction:column;align-items:stretch;padding:10px 0}
+  .navlinks{justify-content:center;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch}
 }
 @media(max-width:600px){
   .shell{padding:0 14px}
@@ -276,6 +274,11 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 </style>
 </head>
 <body>
+
+<div id="appLoadingOverlay" style="position:fixed;inset:0;background:var(--void);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.3s ease;">
+  <div class="logo">LIVED <span>PROOF</span></div>
+  <div class="small" style="color:var(--brand2);font-weight:700">Loading secure database records & assets...</div>
+</div>
 
 <div id="welcomeGateModal" class="netflix-modal-overlay">
   <div class="netflix-modal-container">
@@ -1244,7 +1247,10 @@ function switchTab(viewId) {
   });
 
   if(viewId==="campaigns") renderCampaigns();
-  if(viewId==="home") renderHome();
+  if(viewId==="home") {
+    renderHome();
+    initDailyRewards();
+  }
   if(viewId==="dashboard") renderDashboard();
   if(viewId==="cardView") renderLivedCard();
   if(viewId==="admin") renderAdminPanel();
@@ -1283,6 +1289,8 @@ function filterCampaigns(cat){
 function renderCampaigns(){
   const grid = document.getElementById("campaignGrid");
   const activeOnly = db.campaigns.filter(c=>c.status==="ACTIVE");
+  // Force normalization of currentCategory to "All" if undefined/empty
+  if (!currentCategory) currentCategory = "All";
   const filtered = currentCategory==="All" ? activeOnly : activeOnly.filter(c=>c.category===currentCategory);
   
   if(!filtered.length){
@@ -1483,11 +1491,18 @@ function leaderboardHTML(c, pool, currencyLabel="SOL"){
 }
 
 async function joinCampaign(id){
-  if (!db.currentUser.handle) {
-    alert("Please connect your X account first to participate in campaigns!");
+  // 👈 Require both X handle/connection and wallet connection before joining campaigns
+  if (!db.currentUser.handle || db.currentUser.handle.startsWith("@user_")) {
+    alert("Please connect your X account before joining campaigns!");
     connectXLive();
     return;
   }
+  if (!db.currentUser.wallet) {
+    alert("Please connect your Solana wallet before joining campaigns!");
+    openWalletModal();
+    return;
+  }
+
   const numericId = Number(id);
   const c = db.campaigns.find(x => Number(x.id) === numericId); 
   if(!c) return;
@@ -1559,7 +1574,7 @@ function closeSubmitModal() {
 
 document.getElementById("submitPostForm").addEventListener("submit", async function(e) {
   e.preventDefault();
-  if (!db.currentUser.handle) {
+  if (!db.currentUser.handle || db.currentUser.handle.startsWith("@user_")) {
     alert("Please connect your X account first before submitting posts.");
     connectXLive();
     return;
@@ -2439,9 +2454,12 @@ async function loadGlobalCampaigns() {
       client.from('campaign_participants').select('*')
     ]);
 
-    if (campRes.error) return;
-    const sourceData = campRes.data || [];
-    const allParticipants = partRes.data || [];
+    //if (campRes.error) return;
+    //const sourceData = campRes.data || [];
+    //const allParticipants = partRes.data || [];
+
+    const sourceData = (campRes && !campRes.error) ? (campRes.data || []) : [];
+    const allParticipants = (partRes && !partRes.error) ? (partRes.data || []) : [];
 
     const normalize = (c) => {
       const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
@@ -2479,7 +2497,7 @@ async function loadGlobalCampaigns() {
     db.campaigns = sourceData.filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED').map(normalize);
     db.pendingRequests = sourceData.filter(c => c.status === 'PENDING').map(normalize);
     db.allAdminCampaigns = sourceData.map(normalize);
-
+    renderCampaigns();
     localStorage.setItem("lived_campaigns_cache_v3", JSON.stringify({
       campaigns: db.campaigns,
       pendingRequests: db.pendingRequests,
@@ -2724,23 +2742,30 @@ async function renderAdminQueue(){
 }
 
 async function initApp() {
-  await handleXOAuthCallback();
-  await restoreAdminSession();
-  await loadProfileFromSupabase();
-  
-  if (BACKEND_CONFIGURED) {
-    loadGlobalCampaigns().catch(e => console.error("Global campaigns load failed:", e));
-    subscribeToNotifications();
-    supabaseClient.channel('public-db-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns' }, () => { loadGlobalCampaigns(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_participants' }, () => { loadGlobalCampaigns(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_submissions' }, () => { loadGlobalCampaigns(); })
-      .subscribe();
+  try {
+    await handleXOAuthCallback();
+    await restoreAdminSession();
+    await loadProfileFromSupabase();
+
+    if (BACKEND_CONFIGURED) {
+      await loadGlobalCampaigns(); // 👈 Wait for full network fetch before proceeding
+      subscribeToNotifications();
+    }
+
+    renderHome();
+    renderLivedCard();
+    initDailyRewards();
+    if (BACKEND_CONFIGURED) fetchLiveSolPrice();
+  } catch (err) {
+    console.error("Initialization error:", err);
+  } finally {
+    // 👈 Fade out and remove loading overlay once everything is fully ready
+    const loader = document.getElementById("appLoadingOverlay");
+    if (loader) {
+      loader.style.opacity = "0";
+      setTimeout(() => loader.remove(), 300);
+    }
   }
-  renderHome();
-  renderLivedCard();
-  initDailyRewards();
-  if (BACKEND_CONFIGURED) fetchLiveSolPrice();
 }
 
 function extractTagFromRequirements(requirementsText) {
@@ -2748,6 +2773,13 @@ function extractTagFromRequirements(requirementsText) {
   const match = requirementsText.match(/@[A-Za-z0-9_]+/);
   return match ? match[0] : "@LIVEDITglobal";
 }
+
+initApp();
+// 👈 Force an immediate blank/initial render pass on DOM ready so elements are primed
+document.addEventListener("DOMContentLoaded", () => {
+  renderHome();
+  renderCampaigns();
+});
 
 initApp();
 </script>
