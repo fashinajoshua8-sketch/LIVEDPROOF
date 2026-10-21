@@ -707,13 +707,13 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           <span style="font-weight:900;letter-spacing:1.5px;color:var(--brand2);font-size:12px;display:block">LIVED PROOF PASS</span>
           <span class="small" style="font-family:monospace;color:#777">ID: #<span id="cardPassId">8921</span></span>
         </div>
-        <span class="small" id="cardHandle" style="font-weight:700;color:var(--fg)">@userProof</span>
+        <span class="small" id="cardHandle" style="font-weight:700;color:var(--fg)">Not Connected</span>
       </div>
 
       <div class="card-chip"></div>
 
       <div class="card-body-content">
-        <h3 style="margin:4px 0 2px;letter-spacing:-0.5px;font-size:22px" id="cardRole">Registered Contributor</h3>
+        <h3 style="margin:4px 0 2px;letter-spacing:-0.5px;font-size:22px" id="cardRole">Unlinked Guest</h3>
         <div class="small" id="cardStats">0 Permanent XP · 0 Streak Bonus · 0 Active Campaigns</div>
         <div class="small" id="cardStreakDisplay" style="color:var(--gold);margin-top:2px;font-weight:700">🔥 Current Streak: 0 Days</div>
         <div class="small" id="cardWalletMeta" style="color:var(--brand2);margin-top:4px">Wallet: Not Connected</div>
@@ -1168,7 +1168,7 @@ try {
 
 let db = {
   currentUser: savedUser || {
-    handle: "@user_" + Math.random().toString(36).substring(2, 8),
+    handle: null,
     passId: Math.floor(1000 + Math.random() * 9000),
     joinedCount: 0,
     totalPoints: 0,
@@ -1483,6 +1483,11 @@ function leaderboardHTML(c, pool, currencyLabel="SOL"){
 }
 
 async function joinCampaign(id){
+  if (!db.currentUser.handle) {
+    alert("Please connect your X account first to participate in campaigns!");
+    connectXLive();
+    return;
+  }
   const numericId = Number(id);
   const c = db.campaigns.find(x => Number(x.id) === numericId); 
   if(!c) return;
@@ -1554,6 +1559,12 @@ function closeSubmitModal() {
 
 document.getElementById("submitPostForm").addEventListener("submit", async function(e) {
   e.preventDefault();
+  if (!db.currentUser.handle) {
+    alert("Please connect your X account first before submitting posts.");
+    connectXLive();
+    return;
+  }
+
   const campaignId = Number(document.getElementById("targetCampaignId").value);
   const postUrl = document.getElementById("postUrlInput").value.trim();
   const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value;
@@ -1779,11 +1790,16 @@ function renderDashboard(targetId){
 function getCardProfile(){
   const pts = db.currentUser.totalPoints;
   const joined = db.currentUser.joinedCount;
-  let role = "Registered Contributor";
+  let role = "Unlinked Guest";
   let progressPct = Math.min(100, Math.round((pts / 70) * 100));
   let progressText = `${pts} / 70 PTS to Verified`;
-  const badges = [{ label: "✍ REGISTERED CONTRIBUTOR", cls: "badge-creator" }];
+  const badges = [];
 
+  if(!db.currentUser.handle) {
+    return { role: "Unlinked Guest", badges: [{ label: "⚠️ NOT CONNECTED", cls: "badge-lead" }], progressPct: 0, progressText: "Connect X to start ranking" };
+  }
+
+  badges.push({ label: "✍ REGISTERED CONTRIBUTOR", cls: "badge-creator" });
   if(db.currentUser.wallet) badges.push({ label: "⚡ WEB3 CONNECTED", cls: "badge-verified" });
   if(db.currentUser.xHandle) badges.push({ label: "🕦 X VERIFIED", cls: "badge-legend" });
   if(db.currentUser.currentStreak >= 3) badges.push({ label: `🔥 ${db.currentUser.currentStreak}-DAY STREAK`, cls: "badge-lead" });
@@ -1800,12 +1816,12 @@ function getCardProfile(){
 function renderLivedCard(){
   const profile = getCardProfile();
   
-  const displayHandle = db.currentUser.xHandle || db.currentUser.handle;
+  const displayHandle = db.currentUser.xHandle || db.currentUser.handle || "Not Connected";
   document.getElementById("cardHandle").textContent = displayHandle;
   
   const handleInput = document.getElementById("editHandleInput");
   if (handleInput && document.activeElement !== handleInput) {
-    handleInput.value = displayHandle;
+    handleInput.value = db.currentUser.xHandle || db.currentUser.handle || "";
   }
 
   document.getElementById("cardPassId").textContent = db.currentUser.passId;
@@ -1897,6 +1913,11 @@ async function exportCardImage() {
 }
 
 function shareOnX() {
+  if (!db.currentUser.handle) {
+    alert("Please connect your X account before sharing your pass!");
+    connectXLive();
+    return;
+  }
   const handle = db.currentUser.xHandle || db.currentUser.handle;
   const xp = db.currentUser.totalPoints || 0;
   const streak = db.currentUser.currentStreak || 0;
@@ -1995,6 +2016,7 @@ async function handleXOAuthCallback() {
 async function disconnectXAccount() {
   if (!confirm("Are you sure you want to disconnect your X account?")) return;
   db.currentUser.xHandle = null;
+  db.currentUser.handle = null;
   await syncProfileToSupabase();
   renderLivedCard();
   alert("🔗 X account successfully disconnected.");
@@ -2090,6 +2112,7 @@ document.getElementById("adminEditCampaignForm").addEventListener("submit", asyn
 });
 
 async function syncProfileToSupabase() {
+  if (!db.currentUser.handle) return;
   try {
     localStorage.setItem("lived_current_user_cache_v3", JSON.stringify(db.currentUser));
     const client = requireBackend();
@@ -2711,6 +2734,7 @@ async function initApp() {
     supabaseClient.channel('public-db-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns' }, () => { loadGlobalCampaigns(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_participants' }, () => { loadGlobalCampaigns(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_submissions' }, () => { loadGlobalCampaigns(); })
       .subscribe();
   }
   renderHome();
