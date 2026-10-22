@@ -284,11 +284,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 </head>
 <body>
 
-<div id="appLoadingOverlay" style="position:fixed;inset:0;background:var(--void);z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity 0.3s ease;">
-  <div class="logo">LIVED <span>PROOF</span></div>
-  <div class="small" style="color:var(--brand2);font-weight:700">Loading secure database records & assets...</div>
-</div>
-
 <div id="welcomeGateModal" class="netflix-modal-overlay">
   <div class="netflix-modal-container">
     <div class="netflix-hero-banner">
@@ -2782,30 +2777,31 @@ async function renderAdminQueue(){
 }
 
 async function initApp() {
-  try {
-    await handleXOAuthCallback();
-    await restoreAdminSession();
-    await loadProfileFromSupabase();
-
-    if (BACKEND_CONFIGURED) {
-      await loadGlobalCampaigns(); // 👈 Wait for full network fetch before proceeding
-      subscribeToNotifications();
-    }
-
-    renderHome();
-    renderLivedCard();
-    initDailyRewards();
-    if (BACKEND_CONFIGURED) fetchLiveSolPrice();
-  } catch (err) {
-    console.error("Initialization error:", err);
-  } finally {
-    // 👈 Fade out and remove loading overlay once everything is fully ready
-    const loader = document.getElementById("appLoadingOverlay");
-    if (loader) {
-      loader.style.opacity = "0";
-      setTimeout(() => loader.remove(), 300);
-    }
+  // 1. Instantly paint whatever we have in cache so the UI isn't blank
+  const cachedCampaigns = localStorage.getItem("lived_campaigns_cache_v3");
+  if (cachedCampaigns) {
+    try {
+      const parsed = JSON.parse(cachedCampaigns);
+      db.campaigns = parsed.campaigns || [];
+      renderHome();
+      renderCampaigns();
+    } catch (e) {}
   }
+
+  // 2. Run session restore and background fetches without blocking page visibility
+  await handleXOAuthCallback();
+  await restoreAdminSession();
+  await loadProfileFromSupabase();
+  
+  if (BACKEND_CONFIGURED) {
+    // Fetch live data in the background silently
+    loadGlobalCampaigns().catch(e => console.error("Background sync error:", e));
+    subscribeToNotifications();
+    fetchLiveSolPrice();
+  }
+  
+  renderLivedCard();
+  initDailyRewards();
 }
 
 function extractTagFromRequirements(requirementsText) {
