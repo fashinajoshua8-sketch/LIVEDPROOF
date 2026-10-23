@@ -1219,8 +1219,15 @@ let savedUser = null;
 let savedCampaignsCache = null;
 try {
   savedUser = JSON.parse(localStorage.getItem("lived_current_user_cache_v3"));
-  savedCampaignsCache = JSON.parse(localStorage.getItem("lived_campaigns_cache_v3"));
-} catch (e) {}
+  const rawCache = localStorage.getItem("lived_campaigns_cache_v3");
+  if (rawCache) {
+    savedCampaignsCache = JSON.parse(rawCache);
+    console.log("Successfully loaded cache on boot:", savedCampaignsCache.campaigns?.length || 0, "campaigns");
+  }
+} catch (e) {
+  console.warn("Cache read error, resetting storage:", e);
+  localStorage.removeItem("lived_campaigns_cache_v3");
+}
 
 let db = {
   currentUser: savedUser || {
@@ -2502,7 +2509,19 @@ async function loadGlobalCampaigns(isSilent = false) {
       client.from('campaign_participants').select('*')
     ]);
 
-    const sourceData = (campRes && !campRes.error) ? (campRes.data || []) : [];
+    if (campRes.error) {
+      console.error("Supabase sync error:", campRes.error.message);
+      return;
+    }
+
+    const sourceData = campRes.data || [];
+    
+    // SAFETY PROTECTION: If network returns 0 records due to timing or auth, 
+    // do not destroy existing cached campaigns in local storage!
+    if (sourceData.length === 0 && db.campaigns.length > 0) {
+      return;
+    }
+
     const allParticipants = (partRes && !partRes.error) ? (partRes.data || []) : [];
 
     const normalize = (c) => {
@@ -2542,16 +2561,21 @@ async function loadGlobalCampaigns(isSilent = false) {
     db.pendingRequests = db.allAdminCampaigns.filter(c => c.status === 'PENDING');
     db.campaigns = db.allAdminCampaigns.filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED');
 
-    const lightCampaigns = db.campaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
-    const lightAdminCampaigns = db.allAdminCampaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
+    // Only update local storage if valid records exist, stripping heavy base64 images
+    if (db.allAdminCampaigns.length > 0) {
+      const lightCampaigns = db.campaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
+      const lightAdminCampaigns = db.allAdminCampaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
 
-    try {
-      localStorage.setItem("lived_campaigns_cache_v3", JSON.stringify({
-        campaigns: lightCampaigns,
-        pendingRequests: db.pendingRequests,
-        allAdminCampaigns: lightAdminCampaigns
-      }));
-    } catch (storageErr) {}
+      try {
+        localStorage.setItem("lived_campaigns_cache_v3", JSON.stringify({
+          campaigns: lightCampaigns,
+          pendingRequests: db.pendingRequests,
+          allAdminCampaigns: lightAdminCampaigns
+        }));
+      } catch (storageErr) {
+        console.warn("Storage quota bypassed/skipped:", storageErr);
+      }
+    }
 
     renderCampaigns();
     renderHome();
