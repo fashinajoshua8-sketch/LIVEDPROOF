@@ -2810,6 +2810,13 @@ function showInAppNotification(message) {
 }
 
 async function initApp() {
+  // Clear any dangling websocket channels to prevent memory leaks
+  if (BACKEND_CONFIGURED && supabaseClient) {
+    try {
+      supabaseClient.removeAllChannels();
+    } catch (e) {}
+  }
+
   renderHome();
   renderCampaigns();
   if (isAdminLoggedIn) renderAdminQueue();
@@ -2827,7 +2834,9 @@ async function initApp() {
     subscribeToNotifications();
     fetchLiveSolPrice();
 
-    setInterval(() => {
+    // Clean interval setup (ensuring it doesn't stack if initApp runs twice)
+    if (window._globalPollInterval) clearInterval(window._globalPollInterval);
+    window._globalPollInterval = setInterval(() => {
       loadGlobalCampaigns(true);
     }, 30000);
 
