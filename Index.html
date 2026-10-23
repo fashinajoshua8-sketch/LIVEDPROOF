@@ -25,7 +25,6 @@
     globalThis.Buffer = globalThis.Buffer || window.Buffer;
   }
 </script>
-</script>
 
 <style>
 :root{
@@ -42,11 +41,10 @@ body{
   margin:0;
   background-color:var(--void);
   background-image:
-    radial-gradient(circle at 50% 30%, rgba(5, 5, 5, 0.88), rgba(5, 5, 5, 0.98) 75%),
-    url("lived-seal.jpeg");
+    radial-gradient(circle at 50% 30%, rgba(5, 5, 5, 0.88), rgba(5, 5, 5, 0.98) 75%);
   background-repeat:repeat;
   background-position:center top;
-  background-size:cover, 480px auto;
+  background-size:cover;
   background-attachment:fixed;
   color:var(--fg);
   font-family:var(--sans);
@@ -132,11 +130,7 @@ input:focus,textarea:focus,select:focus{border-color:#ff6a0066}
 
 .lived-card-container{
   background:
-    radial-gradient(circle at 50% 50%, rgba(20,16,12,0.86), rgba(8,8,9,0.95)),
-    url("lived-seal.jpeg");
-  background-repeat:no-repeat;
-  background-position:center center;
-  background-size:cover, 310px 310px;
+    radial-gradient(circle at 50% 50%, rgba(20,16,12,0.86), rgba(8,8,9,0.95));
   border:2px solid var(--brand);
   border-radius:20px;
   padding:28px;
@@ -1293,7 +1287,6 @@ function filterCampaigns(cat){
 function renderCampaigns(){
   const grid = document.getElementById("campaignGrid");
   const activeOnly = db.campaigns.filter(c=>c.status==="ACTIVE");
-  // Force normalization of currentCategory to "All" if undefined/empty
   if (!currentCategory) currentCategory = "All";
   const filtered = currentCategory==="All" ? activeOnly : activeOnly.filter(c=>c.category===currentCategory);
   
@@ -1495,7 +1488,6 @@ function leaderboardHTML(c, pool, currencyLabel="SOL"){
 }
 
 async function joinCampaign(id){
-  // 👈 Require both X handle/connection and wallet connection before joining campaigns
   if (!db.currentUser.handle || db.currentUser.handle.startsWith("@user_")) {
     alert("Please connect your X account before joining campaigns!");
     connectXLive();
@@ -1617,7 +1609,6 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
   try {
     const client = requireBackend();
     
-    // Prevent duplicate URL submission locally/remotely before processing
     const { data: existingSub } = await client
       .from("campaign_submissions")
       .select("id")
@@ -1645,7 +1636,6 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
       throw new Error("DAILY-CUTOFF-LOCK: You have already submitted a verified post today under this timezone cutoff.");
     }
 
-    // Retrieve Campaign-Specific Streak Rules
     const streakModel = activeCampaign?.streakModel || "Milestone-Based";
     const streakBonusPerDay = activeCampaign?.streakBonusValue || 10;
     const streakMultiplierBase = activeCampaign?.streakMultiplier || 1.0;
@@ -1670,10 +1660,9 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
       } else if (diffDays > 1) {
         missedDay = true;
         
-        // --- STRICT STREAK MODEL RESET LOGIC ---
         if (streakModel === "Full Reset") {
-          db.currentUser.streakBonus = 0; // Wipe streak bonus points to 0
-          currentStreak = 1;              // Reset active streak count
+          db.currentUser.streakBonus = 0;
+          currentStreak = 1;
           streakMultiplier = streakMultiplierBase;
           milestoneProgress = 0;
         } else if (streakModel === "Multiplier Reset") {
@@ -1702,10 +1691,10 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
       }
     }
 
-    const baseXP = data.earnedXP || 10;
+    // Flat 10 XP per qualified post rule applied here
+    const baseXP = 10;
     const totalAwardXP = baseXP + calculatedStreakBonus;
     
-    // Permanent XP is cleanly separated and preserved
     db.currentUser.permanentXP = Number(db.currentUser.permanentXP || 0) + Number(baseXP);
     db.currentUser.streakBonus = streakModel === "Full Reset" && missedDay ? calculatedStreakBonus : Number(db.currentUser.streakBonus || 0) + Number(calculatedStreakBonus);
     db.currentUser.totalPoints = db.currentUser.permanentXP + db.currentUser.streakBonus;
@@ -1715,7 +1704,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     db.currentUser.milestoneProgress = milestoneProgress;
     db.currentUser.lastSubmissionDate = todayStr;
 
-    const networkingXPVal = data.networkingXP || Math.floor(baseXP * 0.5);
+    const networkingXPVal = Math.floor(baseXP * 0.5);
     const reachVal = data.impressions || 100;
     const interactionsVal = (data.likes || 0) + (data.reposts || 0) + (data.comments || 0);
 
@@ -2458,10 +2447,6 @@ async function loadGlobalCampaigns() {
       client.from('campaign_participants').select('*')
     ]);
 
-    //if (campRes.error) return;
-    //const sourceData = campRes.data || [];
-    //const allParticipants = partRes.data || [];
-
     const sourceData = (campRes && !campRes.error) ? (campRes.data || []) : [];
     const allParticipants = (partRes && !partRes.error) ? (partRes.data || []) : [];
 
@@ -2610,7 +2595,6 @@ async function adminProcessPayout(campaignId, handle, recipientWallet, amount, c
     return;
   }
 
-  // Explicit Supabase client initialization using the global window.supabase library object
   let dbClient = window.supabaseClient;
   if (!dbClient && window.supabase && typeof window.supabase.createClient === 'function') {
     dbClient = window.supabase.createClient(
@@ -2663,7 +2647,6 @@ async function adminProcessPayout(campaignId, handle, recipientWallet, amount, c
     const signed = await provider.signAndSendTransaction(transaction);
     const txHash = signed.signature || signed;
 
-    // Record Payout in Supabase
     await dbClient.from('campaign_payouts').insert([{
       campaign_id: Number(campaignId),
       handle: handle,
@@ -2777,7 +2760,6 @@ async function renderAdminQueue(){
 }
 
 async function initApp() {
-  // 1. Instantly paint whatever we have in cache so the UI isn't blank
   const cachedCampaigns = localStorage.getItem("lived_campaigns_cache_v3");
   if (cachedCampaigns) {
     try {
@@ -2788,13 +2770,11 @@ async function initApp() {
     } catch (e) {}
   }
 
-  // 2. Run session restore and background fetches without blocking page visibility
   await handleXOAuthCallback();
   await restoreAdminSession();
   await loadProfileFromSupabase();
   
   if (BACKEND_CONFIGURED) {
-    // Fetch live data in the background silently
     loadGlobalCampaigns().catch(e => console.error("Background sync error:", e));
     subscribeToNotifications();
     fetchLiveSolPrice();
@@ -2811,7 +2791,6 @@ function extractTagFromRequirements(requirementsText) {
 }
 
 initApp();
-// 👈 Force an immediate blank/initial render pass on DOM ready so elements are primed
 document.addEventListener("DOMContentLoaded", () => {
   renderHome();
   renderCampaigns();
