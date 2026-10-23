@@ -1222,10 +1222,8 @@ try {
   const rawCache = localStorage.getItem("lived_campaigns_cache_v3");
   if (rawCache) {
     savedCampaignsCache = JSON.parse(rawCache);
-    console.log("Successfully loaded cache on boot:", savedCampaignsCache.campaigns?.length || 0, "campaigns");
   }
 } catch (e) {
-  console.warn("Cache read error, resetting storage:", e);
   localStorage.removeItem("lived_campaigns_cache_v3");
 }
 
@@ -1237,11 +1235,12 @@ let db = {
     totalPoints: 0,
     permanentXP: 0,
     streakBonus: 0,
-    currentStreak: 0,
+    currentStreak: 1,
     longestStreak: 0,
     streakMultiplier: 1.0,
     milestoneProgress: 0,
     lastSubmissionDate: null,
+    lastDailyClaimDate: null,
     xHandle: null,
     wallet: null
   },
@@ -2138,14 +2137,46 @@ async function syncProfileToSupabase() {
       total_points: db.currentUser.totalPoints,
       permanent_xp: db.currentUser.permanentXP || 0,
       streak_bonus: db.currentUser.streakBonus || 0,
-      current_streak: db.currentUser.currentStreak || 0,
+      current_streak: db.currentUser.currentStreak || 1,
       longest_streak: db.currentUser.longestStreak || 0,
       streak_multiplier: db.currentUser.streakMultiplier || 1.0,
       milestone_progress: db.currentUser.milestoneProgress || 0,
       last_submission_date: db.currentUser.lastSubmissionDate || null,
       last_daily_claim_date: db.currentUser.lastDailyClaimDate || null
     }], { onConflict: 'handle' });
-  } catch (err) {}
+  } catch (err) {
+    console.warn("Profile sync note:", err);
+  }
+}
+
+async function loadProfileFromSupabase() {
+  try {
+    const client = requireBackend();
+    if (!db.currentUser || !db.currentUser.handle) return;
+    
+    const { data } = await client.from('profiles').select('*').eq('handle', db.currentUser.handle).maybeSingle();
+    if (data) {
+      db.currentUser.handle = data.handle || db.currentUser.handle;
+      db.currentUser.wallet = data.wallet_address || null;
+      db.currentUser.xHandle = data.x_handle || null;
+      db.currentUser.passId = data.pass_id || db.currentUser.passId;
+      db.currentUser.totalPoints = data.total_points || 0;
+      db.currentUser.permanentXP = data.permanent_xp || db.currentUser.totalPoints;
+      db.currentUser.streakBonus = data.streak_bonus || 0;
+      db.currentUser.currentStreak = data.current_streak || 1;
+      db.currentUser.longestStreak = data.longest_streak || 0;
+      db.currentUser.streakMultiplier = data.streak_multiplier || 1.0;
+      db.currentUser.milestoneProgress = data.milestone_progress || 0;
+      db.currentUser.lastSubmissionDate = data.last_submission_date || null;
+      db.currentUser.lastDailyClaimDate = data.last_daily_claim_date || null;
+      
+      localStorage.setItem("lived_current_user_cache_v3", JSON.stringify(db.currentUser));
+      renderLivedCard();
+      if (typeof initDailyRewards === 'function') initDailyRewards();
+    }
+  } catch (err) {
+    console.warn("Profile load error:", err);
+  }
 }
 
 async function loadProfileFromSupabase() {
