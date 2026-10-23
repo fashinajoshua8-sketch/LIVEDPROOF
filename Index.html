@@ -2663,14 +2663,23 @@ async function renderAdminQueue(){
   }
 
   // Render Submissions Queue
+// Render Submissions Queue with "Clear All Submissions" button
   const subContainer = document.getElementById("adminSubmissionsList");
   if(subContainer) {
     const client = requireBackend();
     const { data: subs } = await client.from('campaign_submissions').select('*').order('created_at', { ascending: false });
+    
+    const headerHtml = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+        <p class="small" style="margin:0;">Monitor, review, and audit all X post links and video submissions by contributors.</p>
+        <button class="btn sm danger" onclick="clearAllSubmissions()">🗑️ Clear All Submissions</button>
+      </div>
+    `;
+
     if (!subs || !subs.length) {
-      subContainer.innerHTML = `<div class="notice">No participant X post or video submissions recorded yet.</div>`;
+      subContainer.innerHTML = headerHtml + `<div class="notice">No participant X post or video submissions recorded yet.</div>`;
     } else {
-      subContainer.innerHTML = subs.map(s => `
+      const itemsHtml = subs.map(s => `
         <div class="card" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
           <div>
             <span class="badge">Campaign ID: #${s.campaign_id} · +${s.score} XP</span>
@@ -2682,6 +2691,8 @@ async function renderAdminQueue(){
           </div>
         </div>
       `).join("");
+      
+      subContainer.innerHTML = headerHtml + itemsHtml;
     }
   }
 
@@ -2843,6 +2854,23 @@ function extractTagFromRequirements(requirementsText) {
   if (!requirementsText) return "@LIVEDITglobal";
   const match = requirementsText.match(/@[A-Za-z0-9_]+/);
   return match ? match[0] : "@LIVEDITglobal";
+}
+
+async function clearAllSubmissions() {
+  if (!confirm("Are you sure you want to permanently delete ALL participant submissions? This action cannot be undone.")) return;
+  
+  try {
+    const client = requireBackend();
+    const { error } = await client.from('campaign_submissions').delete().neq('id', 0);
+
+    if (error) throw error;
+
+    alert("🗑️ All participant submissions have been cleared successfully!");
+    await loadGlobalCampaigns();
+    renderAdminQueue();
+  } catch (err) {
+    alert("❌ Error clearing submissions: " + err.message);
+  }
 }
 
 initApp();
