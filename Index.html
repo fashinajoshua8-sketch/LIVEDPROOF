@@ -2540,18 +2540,10 @@ async function loadGlobalCampaigns(isSilent = false) {
       client.from('campaign_participants').select('*')
     ]);
 
-    if (campRes.error) {
-      console.error("Supabase sync error:", campRes.error.message);
-      return;
-    }
+    if (campRes.error) return;
 
     const sourceData = campRes.data || [];
-    
-    // SAFETY PROTECTION: If network returns 0 records due to timing or auth, 
-    // do not destroy existing cached campaigns in local storage!
-    if (sourceData.length === 0 && db.campaigns.length > 0) {
-      return;
-    }
+    if (sourceData.length === 0 && db.campaigns.length > 0) return; // Protect cache from empty states
 
     const allParticipants = (partRes && !partRes.error) ? (partRes.data || []) : [];
 
@@ -2592,27 +2584,14 @@ async function loadGlobalCampaigns(isSilent = false) {
     db.pendingRequests = db.allAdminCampaigns.filter(c => c.status === 'PENDING');
     db.campaigns = db.allAdminCampaigns.filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED');
 
-    // Only update local storage if valid records exist, stripping heavy base64 images
-    if (db.allAdminCampaigns.length > 0) {
-      const lightCampaigns = db.campaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
-      const lightAdminCampaigns = db.allAdminCampaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
-
-      try {
-        localStorage.setItem("lived_campaigns_cache_v3", JSON.stringify({
-          campaigns: lightCampaigns,
-          pendingRequests: db.pendingRequests,
-          allAdminCampaigns: lightAdminCampaigns
-        }));
-      } catch (storageErr) {
-        console.warn("Storage quota bypassed/skipped:", storageErr);
-      }
-    }
+    // Save updated data via SWR manager
+    AppStore.persist();
 
     renderCampaigns();
     renderHome();
     if (isAdminLoggedIn) renderAdminQueue();
   } catch (err) {
-    if (!isSilent) console.error("Global cache sync error:", err);
+    if (!isSilent) console.error("SWR Background revalidation error:", err);
   }
 }
 
@@ -2808,6 +2787,42 @@ function showInAppNotification(message) {
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 6000);
 }
+
+// --- SWR & DUAL-LAYER CACHE STORE ---
+const AppStore = {
+  // 1. Instant hydration on load (Stale)
+  init() {
+    try {
+      const rawCamp = localStorage.getItem("lived_campaigns_cache_v3");
+      if (rawCamp) {
+        const parsed = JSON.parse(rawCamp);
+        db.campaigns = parsed.campaigns || [];
+        db.pendingRequests = parsed.pendingRequests || [];
+        db.allAdminCampaigns = parsed.allAdminCampaigns || [];
+      }
+    } catch (e) {
+      console.warn("SWR Cache read error:", e);
+    }
+  },
+
+  // 2. Background update save (Revalidate)
+  persist() {
+    try {
+      if (db.allAdminCampaigns && db.allAdminCampaigns.length > 0) {
+        const lightCampaigns = db.campaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
+        const lightAdmin = db.allAdminCampaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
+        
+        localStorage.setItem("lived_campaigns_cache_v3", JSON.stringify({
+          campaigns: lightCampaigns,
+          pendingRequests: db.pendingRequests,
+          allAdminCampaigns: lightAdmin
+        }));
+      }
+    } catch (err) {
+      console.warn("SWR storage write skipped:", err);
+    }
+  }
+};
 
 async function initApp() {
   // Clear any dangling websocket channels to prevent memory leaks
