@@ -1700,9 +1700,20 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
 
     if (data && data.error) throw new Error(data.error);
 
-    const todayStr = new Date().toISOString().slice(0, 10);
-    if (db.currentUser.lastSubmissionDate === todayStr) {
-      throw new Error("DAILY-CUTOFF-LOCK: You have already submitted a verified post today under this timezone cutoff.");
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const { count: dailySubCount, error: countError } = await client
+      .from("campaign_submissions")
+      .select("*", { count: 'exact', head: true })
+      .eq("campaign_id", campaignId)
+      .eq("handle", db.currentUser.handle)
+      .gte("created_at", todayStart.toISOString());
+
+    if (countError) throw countError;
+
+    if (dailySubCount >= 15) {
+      throw new Error("DAILY-CUTOFF-LOCK: You have reached the maximum limit of 15 verified posts for today under this timezone cutoff.");
     }
 
     const streakModel = activeCampaign?.streakModel || "Milestone-Based";
@@ -1721,7 +1732,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
       currentStreak = 1;
     } else {
       const lastMS = new Date(lastDate).getTime();
-      const currMS = new Date(todayStr).getTime();
+      const currMS = new Date().getTime();
       const diffDays = Math.round((currMS - lastMS) / (1000 * 60 * 60 * 24));
       
       if (diffDays === 1) {
@@ -1770,7 +1781,7 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     db.currentUser.longestStreak = longestStreak;
     db.currentUser.streakMultiplier = streakMultiplier;
     db.currentUser.milestoneProgress = milestoneProgress;
-    db.currentUser.lastSubmissionDate = todayStr;
+    db.currentUser.lastSubmissionDate = new Date().toISOString().slice(0, 10);
 
     const networkingXPVal = Math.floor(baseXP * 0.5);
     const reachVal = data.impressions || 100;
@@ -2146,36 +2157,6 @@ async function syncProfileToSupabase() {
     }], { onConflict: 'handle' });
   } catch (err) {
     console.warn("Profile sync note:", err);
-  }
-}
-
-async function loadProfileFromSupabase() {
-  try {
-    const client = requireBackend();
-    if (!db.currentUser || !db.currentUser.handle) return;
-    
-    const { data } = await client.from('profiles').select('*').eq('handle', db.currentUser.handle).maybeSingle();
-    if (data) {
-      db.currentUser.handle = data.handle || db.currentUser.handle;
-      db.currentUser.wallet = data.wallet_address || null;
-      db.currentUser.xHandle = data.x_handle || null;
-      db.currentUser.passId = data.pass_id || db.currentUser.passId;
-      db.currentUser.totalPoints = data.total_points || 0;
-      db.currentUser.permanentXP = data.permanent_xp || db.currentUser.totalPoints;
-      db.currentUser.streakBonus = data.streak_bonus || 0;
-      db.currentUser.currentStreak = data.current_streak || 1;
-      db.currentUser.longestStreak = data.longest_streak || 0;
-      db.currentUser.streakMultiplier = data.streak_multiplier || 1.0;
-      db.currentUser.milestoneProgress = data.milestone_progress || 0;
-      db.currentUser.lastSubmissionDate = data.last_submission_date || null;
-      db.currentUser.lastDailyClaimDate = data.last_daily_claim_date || null;
-      
-      localStorage.setItem("lived_current_user_cache_v3", JSON.stringify(db.currentUser));
-      renderLivedCard();
-      if (typeof initDailyRewards === 'function') initDailyRewards();
-    }
-  } catch (err) {
-    console.warn("Profile load error:", err);
   }
 }
 
