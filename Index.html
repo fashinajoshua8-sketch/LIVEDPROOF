@@ -601,6 +601,19 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <button class="btn primary" type="submit" id="proceedPaymentBtn">Proceed to Manual Treasury Payment →</button>
     </form>
   </div>
+
+  <!-- Insert this inside your #create form right before the objective brief textarea -->
+<div style="background:rgba(255,106,0,0.04); border:1px solid var(--line); padding:14px; border-radius:10px; margin:12px 0;">
+  <label style="color:var(--brand2); display:block; margin-bottom:8px">🎯 Engagement Submission Mode</label>
+  <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+    <input type="checkbox" id="cIsLiveditOnly" style="width:20px; height:20px; accent-color:var(--brand);">
+    <div>
+      <span class="small" style="font-weight:700; color:var(--fg); display:block;">Enable LIVED IT Posts Engagement Submission</span>
+      <span class="small" style="color:var(--muted);">Restricts submissions to official LIVEDIT-only posts and unlocks an extra +5 XP engagement bonus.</span>
+    </div>
+  </label>
+</div>
+
 </section>
 
 <section id="treasuryPayment" class="view section">
@@ -761,43 +774,116 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
             <input type="hidden" id="tabEditCampId">
             
             <div class="row">
-              <div><label>Campaign Name *</label><input id="tabName" required placeholder="e.g. LIVED Guard Launch"></div>
-              <div><label>Project / Category *</label><select id="tabCategory"><option>DeFi</option><option>Memecoin</option><option>AI</option><option>Infrastructure</option><option>NFT</option><option>Touch Grass</option></select></div>
+                <div><label>Campaign Name *</label><input id="tabName" required placeholder="e.g. LIVED Guard Launch"></div>
+                <div><label>Project / Category *</label><select id="tabCategory"><option>DeFi</option><option>Memecoin</option><option>AI</option><option>Infrastructure</option><option>NFT</option><option>Touch Grass</option></select></div>
             </div>
 
             <div class="row">
-              <div><label>Reward Currency *</label><select id="tabCurrency"><option value="SOL">SOL</option><option value="USDC">USDC</option><option value="USDT">USDT</option><option value="Native Token">Native Token ($LIVED)</option></select></div>
-              <div><label>Total Reward Pool (USD) *</label><input id="tabBudget" type="number" step="1" value="100" required></div>
+                <div>
+                <label>Reward Currency *</label>
+                <select id="tabCurrency" onchange="toggleAdminNativeTokenInput()">
+                    <option value="SOL">SOL</option>
+                    <option value="USDC">USDC</option>
+                    <option value="USDT">USDT</option>
+                    <option value="Native Token">Native Token ($LIVED)</option>
+                </select>
+                </div>
+                <div id="tabNativeTokenBox" style="display:none;">
+                <label>Native Token Name</label>
+                <input id="tabNativeTokenName" placeholder="e.g. LIVED">
+                </div>
             </div>
 
             <div class="row">
-              <div><label>Max Participants Cap *</label><input id="tabMaxPart" type="number" value="50" required></div>
-              <div><label>Streak Model</label><select id="tabStreakModel"><option value="Milestone-Based">Milestone-Based</option><option value="Full Reset">Full Reset</option><option value="Multiplier Reset">Multiplier Reset</option></select></div>
+                <div>
+                <label>Duration *</label>
+                <select id="tabDuration">
+                    <option value="1 day">1 day</option>
+                    <option value="2 days">2 days</option>
+                    <option value="3 days">3 days</option>
+                    <option value="7 days" selected>7 days</option>
+                    <option value="14 days">14 days</option>
+                    <option value="30 days">30 days</option>
+                </select>
+                </div>
+                <div><label>Total Reward Pool (USD) *</label><input id="tabBudget" type="number" step="1" value="100" required></div>
+            </div>
+
+            <div class="row">
+                <div><label>Max Participants Cap *</label><input id="tabMaxPart" type="number" value="50" required></div>
+                <div><label>Top Participants Splitting Reward Pool *</label><input id="tabTopRewarded" type="number" min="1" value="5" required></div>
+            </div>
+
+            <div style="background:rgba(255,106,0,0.03);border:1px solid var(--line);padding:14px;border-radius:10px;margin:10px 0">
+                <label style="color:var(--brand2);display:block;margin-bottom:8px">⚙️ Streak Model & Verification Thresholds</label>
+                
+                <div class="row" style="margin-bottom:10px">
+                <div>
+                    <label>Streak Model</label>
+                    <select id="tabStreakModel">
+                    <option value="Milestone-Based">Milestone-Based (Recommended)</option>
+                    <option value="Full Reset">Full Reset</option>
+                    <option value="Multiplier Reset">Multiplier Reset</option>
+                    </select>
+                </div>
+                <div><label>Streak Bonus Value per Day (XP)</label><input id="tabXP" type="number" min="1" value="10" required></div>
+                </div>
+
+                <div class="row" style="margin-bottom:10px">
+                <div><label>Streak Multiplier Base</label><input id="tabStreakMultiplier" type="number" step="0.1" min="1.0" value="1.0" required></div>
+                <div><label>Streak Milestone Threshold (Days)</label><input id="tabStreakMilestone" type="number" min="1" value="7" required></div>
+                </div>
+
+                <div class="row">
+                <div><label>Min Likes</label><input id="tabMinLikes" type="number" min="0" value="10" required></div>
+                <div><label>Min Reposts</label><input id="tabMinReposts" type="number" min="0" value="5" required></div>
+                </div>
+                <div class="row" style="margin-top:10px">
+                <div><label>Min Comments</label><input id="tabMinComments" type="number" min="0" value="5" required></div>
+                <div><label>Min Views / Impressions</label><input id="tabMinViews" type="number" min="0" value="50" required></div>
+                </div>
+                <div class="row" style="margin-top:10px">
+                <div>
+                    <label>Campaign Timezone Cutoff</label>
+                    <select id="tabTimezone">
+                    <option value="UTC">UTC (Midnight Cutoff)</option>
+                    <option value="EST">EST (New York)</option>
+                    <option value="PST">PST (Los Angeles)</option>
+                    <option value="CET">CET (Central Europe)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Status</label>
+                    <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                    <input type="checkbox" id="tabIsActive" checked style="width:20px; height:20px; accent-color:var(--brand);">
+                    <span class="small" style="font-weight:700; color:var(--good);">Active</span>
+                    </div>
+                </div>
+                </div>
             </div>
 
             <div>
-              <label>Post Requirements & Tag *</label>
-              <input id="tabRequirements" placeholder="e.g. Include #LIVEDGuard, tag @LIVED_IT" required>
+                <label>Post Requirements & Tag *</label>
+                <input id="tabRequirements" placeholder="e.g. Include #LIVEDGuard, tag @LIVED_IT" required>
             </div>
 
-            <div class="row">
-              <div><label>XP per Post *</label><input id="tabXP" type="number" value="10" required></div>
-              <div>
-                <label>Status</label>
-                <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
-                  <input type="checkbox" id="tabIsActive" checked style="width:20px; height:20px; accent-color:var(--brand);">
-                  <span class="small" style="font-weight:700; color:var(--good);">Active</span>
+            <div style="margin: 12px 0;">
+                <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                <input type="checkbox" id="tabIsLiveditOnly" style="width:20px; height:20px; accent-color:var(--brand);">
+                <div>
+                    <span class="small" style="font-weight:700; color:var(--fg);">Enable LIVED IT Posts Engagement Submission</span>
+                    <span class="small" style="color:var(--muted); display:block;">Enforces @LIVEDITglobal and awards an extra +5 XP engagement bonus.</span>
                 </div>
-              </div>
+                </label>
             </div>
 
             <div><label>Campaign Objective & Brief *</label><textarea id="tabBrief" required placeholder="Enter campaign description, rules, and details..."></textarea></div>
 
             <div class="actions" style="margin-top:20px; justify-content:flex-end;">
-              <button type="button" class="btn" onclick="document.getElementById('adminTabularForm').reset()">Cancel</button>
-              <button type="submit" class="btn primary">💾 Save Campaign</button>
+                <button type="button" class="btn" onclick="document.getElementById('adminTabularForm').reset()">Cancel</button>
+                <button type="submit" class="btn primary">💾 Save Campaign</button>
             </div>
-          </form>
+            </form>
         </div>
 
         <!-- CAMPAIGNS LIST TABLE -->
@@ -868,6 +954,40 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           <h3 style="margin:0 0 10px; font-size:18px;">Campaign Winner Payouts & On-Chain Escrow Settlement</h3>
           <p class="small" style="margin:4px 0 12px">Execute automated Solana escrow transfers directly to top campaign leaders.</p>
           <div id="adminPayoutsList"></div>
+        </div>
+
+        <!-- ADMIN CAMPAIGN PARTICIPANTS & CONTRIBUTOR DETAILS -->
+        <div style="margin-top:35px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h3 style="margin:0; font-size:18px;">Campaign Participants & Contributor Details</h3>
+              <p class="small" style="margin:4px 0 0">Inspect participant records, connected X handles, and verified wallet addresses per campaign.</p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <button class="btn sm primary" onclick="copyAllWallets()">📋 Copy All Wallets</button>
+              <select id="adminParticipantCampaignFilter" onchange="renderAdminParticipantsTable()" style="background:#141417; border-radius:8px; padding:8px 12px; font-size:13px; border:1px solid var(--line); color:var(--fg);">
+                <option value="all">📁 View All Campaigns</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card" style="padding:0; overflow-x:auto; background:#111114; border:1px solid var(--line); border-radius:12px; margin-bottom:35px;">
+            <table class="leaderboard" style="width:100%; border-collapse:collapse; min-width:850px;" id="adminParticipantsTable">
+              <thead>
+                <tr style="border-bottom:1px solid var(--line); color:var(--muted); font-size:11px;">
+                  <th style="padding:14px 16px;">Campaign Name</th>
+                  <th style="padding:14px 16px;">Participant X Handle</th>
+                  <th style="padding:14px 16px;">Connected Wallet Address</th>
+                  <th style="padding:14px 16px;">Total XP</th>
+                  <th style="padding:14px 16px;">Reach</th>
+                  <th style="padding:14px 16px; text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminParticipantsRows">
+                <tr><td colspan="6" style="text-align:center; padding:20px;" class="small">Loading participant details...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
@@ -1366,12 +1486,16 @@ function renderCampaigns(){
     const isTouchGrass = c.category === "Touch Grass";
     const streakModel = c.streakModel || "Milestone-Based";
 
+    // AUTOMATED TIMEFRAME CHECK
+    const timeInfo = getCampaignTimeLeft(c.expiresAt, c.created_at, c.duration);
+    const badgeStyle = timeInfo.isExpired ? 'background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.3)' : (isTouchGrass ? 'background:#10b98125;color:#34d399;border:1px solid #10b98155' : '');
+
     return `<article class="card campaign">
       ${bannerImg}
       <div class="campaign-inner">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <span class="badge" style="${isTouchGrass ? 'background:#10b98125;color:#34d399;border:1px solid #10b98155' : ''}">${esc(c.category)} · ${esc(c.duration)} · ⚡ ${esc(streakModel)}</span>
-          <span class="small" style="font-weight:700;color:var(--brand2)">ACTIVE</span>
+          <span class="badge" style="${badgeStyle}">⏱️ ${timeInfo.text} · ⚡ ${esc(streakModel)}</span>
+          <span class="small" style="font-weight:700;color:${timeInfo.isExpired ? 'var(--warn)' : 'var(--brand2)'}">${timeInfo.isExpired ? 'EXPIRED' : 'ACTIVE'}</span>
         </div>
         <h2>${esc(c.name)}</h2>
         <p>${esc(c.brief)}</p>
@@ -1386,7 +1510,7 @@ function renderCampaigns(){
           </div>
           <div class="actions">
             <button class="btn" onclick="openCampaign(${c.id})">Inspect</button>
-            <button class="btn primary" onclick="joinCampaign(${c.id})">${c.joined?"Joined":"Join"}</button>
+            <button class="btn ${timeInfo.isExpired ? '' : 'primary'}" ${timeInfo.isExpired ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''} onclick="joinCampaign(${c.id})">${c.joined ? "Joined" : (timeInfo.isExpired ? "Expired" : "Join")}</button>
           </div>
         </div>
       </div>
@@ -1408,6 +1532,10 @@ function openCampaign(id){
   const currencyLabel = c.currency === "Native Token" ? (c.nativeTokenName || "Token") : (c.currency || "SOL");
   const isTouchGrass = c.category === "Touch Grass";
   const streakModel = c.streakModel || "Milestone-Based";
+
+  // AUTOMATED TIMEFRAME CHECK FOR DETAIL VIEW
+  const timeInfo = getCampaignTimeLeft(c.expiresAt, c.created_at, c.duration);
+  const isLocked = c.status === "COMPLETED" || c.status === "ARCHIVED" || c.status === "REJECTED" || timeInfo.isExpired;
 
   let linksHtml = '';
   if (c.targetLinks && Array.isArray(c.targetLinks) && c.targetLinks.length > 0) {
@@ -1435,14 +1563,13 @@ function openCampaign(id){
     </div>
   ` : '';
 
-  const isLocked = c.status === "COMPLETED" || c.status === "ARCHIVED" || c.status === "REJECTED";
   let submitButtonHtml = isLocked ? 
-    `<div class="notice" style="color:var(--warn)">🔒 Campaign Completed or Inactive. Submissions closed.</div>` :
+    `<div class="notice" style="color:var(--warn)">🔒 Campaign Timeframe Ended or Inactive. Submissions closed.</div>` :
     `<div style="margin:20px 0"><button class="btn ${isTouchGrass ? 'success' : 'primary'}" onclick="openSubmitPostModal(${c.id})">${isTouchGrass ? '🌿 Submit Touch Grass Video Post' : '📤 Submit X Post for Verified Points'}</button></div>`;
   
   document.getElementById("detailContent").innerHTML = `
     ${heroBanner}
-    <div class="kicker">${esc(c.category)} · ${esc(c.duration)} · Paid in ${esc(currencyLabel)} · ${esc(c.status||'ACTIVE')}</div>
+    <div class="kicker">${esc(c.category)} · ${esc(c.duration)} · Paid in ${esc(currencyLabel)} · ${esc(timeInfo.isExpired ? 'EXPIRED' : (c.status||'ACTIVE'))}</div>
     <h2>${esc(c.name)}</h2>
     <p>${esc(c.brief)}</p>
     
@@ -1452,6 +1579,7 @@ function openCampaign(id){
       <div class="stat"><b>${money(pool)} (${currencyLabel})</b><span class="small">Contributor Pool (90%)</span></div>
     </div>
 
+    <div class="metric"><span>Timeframe & Time Left</span><b style="color:${timeInfo.isExpired ? 'var(--warn)' : 'var(--brand2)'}">⏱️ ${timeInfo.text} (${esc(c.duration)})</b></div>
     <div class="metric"><span>Max Participants Cap</span><b>${c.maxParticipants || 'Unlimited'}</b></div>
     <div class="metric"><span>Rewarded Rank Cutoff</span><b style="color:var(--good)">Top ${c.topRewarded || 5} Contributors</b></div>
     <div class="metric"><span>Streak Model Rule</span><b style="color:var(--brand2)">⚡ ${esc(streakModel)}</b></div>
@@ -1571,7 +1699,8 @@ async function joinCampaign(id){
   }
   
   const client = requireBackend();
-  const { error } = await client.from('campaign_participants').insert([{
+  // Changed from .insert() to .upsert() to handle existing participant keys gracefully
+  const { error } = await client.from('campaign_participants').upsert([{
     campaign_id: numericId,
     handle: db.currentUser.handle,
     score: 0,
@@ -1579,7 +1708,7 @@ async function joinCampaign(id){
     reach: 0,
     interactions: 0,
     wallet_address: db.currentUser.wallet || null
-  }]);
+  }], { onConflict: 'campaign_id,handle' });
 
   if(error){ alert("Could not join campaign: " + error.message); return; }
 
@@ -1615,13 +1744,25 @@ function openSubmitPostModal(campaignId) {
   }
   const c = db.campaigns.find(x => Number(x.id) === Number(campaignId)) || db.allAdminCampaigns?.find(x => Number(x.id) === Number(campaignId));
   const isTouchGrass = c && c.category === "Touch Grass";
+  const isLiveditOnly = c && c.is_livedit_only;
 
   document.getElementById("targetCampaignId").value = campaignId;
   document.getElementById("postUrlInput").value = "";
-  document.getElementById("submitModalTitle").textContent = isTouchGrass ? "Submit Touch Grass Video Experience" : "Submit Campaign Post";
-  document.getElementById("submitModalDesc").textContent = isTouchGrass ? "Paste your original video or real-world participation post link on X below." : "Paste your X post URL below. Verified metrics and configurable streak rules determine your points.";
+  
+  // Dynamic Header Tag logic
+  if (isLiveditOnly) {
+    document.getElementById("submitModalTitle").textContent = "LIVED IT Posts Engagement Submission";
+    document.getElementById("submitModalDesc").textContent = "Submit your engagement link for official LIVEDIT-only posts. Includes +5 XP bonus. Duplicate claims are strictly restricted.";
+  } else if (isTouchGrass) {
+    document.getElementById("submitModalTitle").textContent = "Submit Touch Grass Video Experience";
+    document.getElementById("submitModalDesc").textContent = "Paste your original video or real-world participation post link on X below.";
+  } else {
+    document.getElementById("submitModalTitle").textContent = "Submit Campaign Post";
+    document.getElementById("submitModalDesc").textContent = "Paste your X post URL below. Verified metrics and configurable streak rules determine your points.";
+  }
+
   document.getElementById("videoUploadNote").style.display = isTouchGrass ? "block" : "none";
-  document.getElementById("urlInputLabel").textContent = isTouchGrass ? "Video / X Post URL" : "X Post URL";
+  document.getElementById("urlInputLabel").textContent = "X Post / Video URL";
   document.getElementById("submitPostModal").classList.add("active");
 }
 
@@ -1772,8 +1913,9 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     }
 
     const baseXP = 10;
-    const totalAwardXP = baseXP + calculatedStreakBonus;
-    
+    const engagementBonus = activeCampaign?.is_livedit_only ? 5 : 0;
+    const totalAwardXP = baseXP + calculatedStreakBonus + engagementBonus;
+
     db.currentUser.permanentXP = Number(db.currentUser.permanentXP || 0) + Number(baseXP);
     db.currentUser.streakBonus = streakModel === "Full Reset" && missedDay ? calculatedStreakBonus : Number(db.currentUser.streakBonus || 0) + Number(calculatedStreakBonus);
     db.currentUser.totalPoints = db.currentUser.permanentXP + db.currentUser.streakBonus;
@@ -2216,10 +2358,96 @@ function addEngagementLinkRow() {
   container.appendChild(row);
 }
 
-function toggleNativeTokenInput() {
-  const currencyVal = document.getElementById("cCurrency")?.value;
-  const box = document.getElementById("nativeTokenBox");
+function toggleAdminNativeTokenInput() {
+  const currencyVal = document.getElementById("tabCurrency")?.value;
+  const box = document.getElementById("tabNativeTokenBox");
   if(box) box.style.display = (currencyVal === "Native Token") ? "block" : "none";
+}
+
+document.getElementById("adminTabularForm")?.addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const id = document.getElementById("tabEditCampId").value;
+  const client = requireBackend();
+  
+  const isLiveditOnly = document.getElementById("tabIsLiveditOnly")?.checked || false;
+  const requirementsText = document.getElementById("tabRequirements").value.trim();
+  const enforcedTag = isLiveditOnly ? "@LIVEDITglobal" : (extractTagFromRequirements(requirementsText) || "@LIVEDITglobal");
+  const currency = document.getElementById("tabCurrency").value;
+
+  const payload = {
+    name: document.getElementById("tabName").value.trim(),
+    category: document.getElementById("tabCategory").value,
+    currency: currency,
+    native_token_name: currency === "Native Token" ? document.getElementById("tabNativeTokenName").value.trim() : null,
+    duration: document.getElementById("tabDuration").value,
+    budget: Number(document.getElementById("tabBudget").value),
+    max_participants: Number(document.getElementById("tabMaxPart").value) || 50,
+    top_rewarded: Number(document.getElementById("tabTopRewarded").value) || 5,
+    streak_model: document.getElementById("tabStreakModel").value,
+    streak_bonus_value: Number(document.getElementById("tabXP").value) || 10,
+    streak_multiplier: Number(document.getElementById("tabStreakMultiplier").value) || 1.0,
+    streak_milestone: Number(document.getElementById("tabStreakMilestone").value) || 7,
+    min_likes: Number(document.getElementById("tabMinLikes").value) || 10,
+    min_reposts: Number(document.getElementById("tabMinReposts").value) || 5,
+    min_comments: Number(document.getElementById("tabMinComments").value) || 5,
+    min_views: Number(document.getElementById("tabMinViews").value) || 50,
+    timezone: document.getElementById("tabTimezone").value,
+    brief: document.getElementById("tabBrief").value.trim(),
+    requirements: requirementsText,
+    is_livedit_only: isLiveditOnly,
+    required_tag: enforcedTag,
+    status: document.getElementById("tabIsActive").checked ? "ACTIVE" : "PENDING"
+  };
+
+  if (id) {
+    const { error } = await client.from('campaigns').update(payload).eq('id', Number(id));
+    if (error) { alert("Error updating campaign: " + error.message); return; }
+    alert("✨ Campaign updated successfully!");
+  } else {
+    const { error } = await client.from('campaigns').insert([payload]);
+    if (error) { alert("Error creating campaign: " + error.message); return; }
+    alert("🎉 Campaign created successfully!");
+  }
+
+  this.reset();
+  document.getElementById("tabEditCampId").value = "";
+  document.getElementById("tabNativeTokenBox").style.display = "none";
+  await loadGlobalCampaigns();
+  renderAdminQueue();
+});
+
+function openAdminEditCampaign(id) {
+  const numericId = Number(id);
+  const c = db.allAdminCampaigns?.find(x => Number(x.id) === numericId);
+  if (!c) { alert("Campaign not found"); return; }
+
+  document.getElementById("tabEditCampId").value = c.id;
+  document.getElementById("tabName").value = c.name;
+  document.getElementById("tabCategory").value = c.category;
+  document.getElementById("tabCurrency").value = c.currency || "SOL";
+  toggleAdminNativeTokenInput();
+  if (c.currency === "Native Token") {
+    document.getElementById("tabNativeTokenName").value = c.nativeTokenName || "";
+  }
+  document.getElementById("tabDuration").value = c.duration || "7 days";
+  document.getElementById("tabBudget").value = c.budget;
+  document.getElementById("tabMaxPart").value = c.maxParticipants || 50;
+  document.getElementById("tabTopRewarded").value = c.topRewarded || 5;
+  document.getElementById("tabStreakModel").value = c.streakModel || "Milestone-Based";
+  document.getElementById("tabXP").value = c.streakBonusValue || 10;
+  document.getElementById("tabStreakMultiplier").value = c.streakMultiplier || 1.0;
+  document.getElementById("tabStreakMilestone").value = c.streakMilestone || 7;
+  document.getElementById("tabMinLikes").value = c.minLikes || 10;
+  document.getElementById("tabMinReposts").value = c.minReposts || 5;
+  document.getElementById("tabMinComments").value = c.minComments || 5;
+  document.getElementById("tabMinViews").value = c.minViews || 50;
+  document.getElementById("tabTimezone").value = c.timezone || "UTC";
+  document.getElementById("tabRequirements").value = c.requirements || "";
+  document.getElementById("tabBrief").value = c.brief || "";
+  document.getElementById("tabIsActive").checked = c.status === "ACTIVE";
+  document.getElementById("tabIsLiveditOnly").checked = c.is_livedit_only || false;
+  
+  window.scrollTo({top: 100, behavior: 'smooth'});
 }
 
 function enterPlatform() {
@@ -2310,7 +2538,17 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
   const targetLinks = Array.from(document.querySelectorAll(".cLinkInput")).map(el => el.value.trim()).filter(Boolean);
   const requirementsText = document.getElementById("cRequirements").value.trim();
   const parsedTag = extractTagFromRequirements(requirementsText);
+  const isLiveEditOnly = document.getElementById("cIsLiveditOnly").checked || false;
   
+  // Inside document.getElementById("campaignForm").addEventListener("submit", ...)
+  const selectedDuration = document.getElementById("cDuration")?.value || "7 days";
+  const durationDaysMap = { "1 day": 1, "2 days": 2, "3 days": 3, "7 days": 7, "14 days": 14, "30 days": 30 };
+  const daysCount = durationDaysMap[selectedDuration] || 7;
+  const expiresAt = new Date(Date.now() + (daysCount * 24 * 60 * 60 * 1000)).toISOString();
+
+  // Automatically force @LIVEDITglobal if LIVEDIT-only is enabled, preventing any mistakes
+  const enforcedTag = isLiveditOnly ? "@LIVEDITglobal" : (extractTagFromRequirements(requirementsText) || "@LIVEDITglobal");
+
   pendingManualCampaign = {
     name: document.getElementById("cName").value.trim(),
     category: document.getElementById("cCategory").value,
@@ -2326,7 +2564,7 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
     streakMultiplier: Number(document.getElementById("cStreakMultiplier").value) || 1.0,
     streakMilestone: Number(document.getElementById("cStreakMilestone").value) || 7,
     targetLinks,
-    required_tag: parsedTag,
+    required_tag: enforcedTag, // Uses the automatically enforced tag
     brief: document.getElementById("cBrief").value.trim(),
     requirements: requirementsText,
     min_likes: Number(document.getElementById("cMinLikes").value) || 10,
@@ -2336,7 +2574,11 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
     timezone: document.getElementById("cTimezone").value,
     status: "PENDING",
     payerWallet: db.currentUser.wallet || "Manual Creator",
-    solPaid: Number((budget / dynamicSolPrice).toFixed(4))
+    solPaid: Number((budget / dynamicSolPrice).toFixed(4)),
+    is_livedit_only:isLiveditOnly,
+    duration: selectedDuration,
+    expires_at: expiresAt,
+
   };
 
   document.getElementById("confName").textContent = pendingManualCampaign.name;
@@ -2375,7 +2617,9 @@ async function confirmManualPayment(){
       timezone: pendingManualCampaign.timezone,
       status: "PENDING",
       payer_wallet: pendingManualCampaign.payerWallet,
-      sol_paid: pendingManualCampaign.solPaid
+      sol_paid: pendingManualCampaign.solPaid,
+      duration: pendingManualCampaign.duration,
+      expires_at: pendingManualCampaign.expires_at,
     }]);
 
     await client.from('payments_ledger').insert([{
@@ -2464,10 +2708,21 @@ document.getElementById("adminTabularForm")?.addEventListener("submit", async fu
   const id = document.getElementById("tabEditCampId").value;
   const client = requireBackend();
   
+  const isLiveditOnly = document.getElementById("tabIsLiveditOnly")?.checked || false;
+  const requirementsText = document.getElementById("tabRequirements").value.trim();
+  
+  const selectedDuration = document.getElementById("tabDuration")?.value || "7 days";
+  const durationDaysMap = { "1 day": 1, "2 days": 2, "3 days": 3, "7 days": 7, "14 days": 14, "30 days": 30 };
+  const daysCount = durationDaysMap[selectedDuration] || 7;
+  const expiresAt = new Date(Date.now() + (daysCount * 24 * 60 * 60 * 1000)).toISOString();
+
+  // Automatically force @LIVEDITglobal for LIVEDIT-only campaigns
+  const enforcedTag = isLiveditOnly ? "@LIVEDITglobal" : (extractTagFromRequirements(requirementsText) || "@LIVEDITglobal");
+
   const payload = {
     name: document.getElementById("tabName").value.trim(),
     category: document.getElementById("tabCategory").value,
-    duration: "7 days",
+    duration: selectedDuration,
     currency: document.getElementById("tabCurrency").value,
     budget: Number(document.getElementById("tabBudget").value),
     max_participants: Number(document.getElementById("tabMaxPart").value) || 50,
@@ -2475,8 +2730,11 @@ document.getElementById("adminTabularForm")?.addEventListener("submit", async fu
     streak_model: document.getElementById("tabStreakModel").value,
     streak_bonus_value: Number(document.getElementById("tabXP").value),
     brief: document.getElementById("tabBrief").value.trim(),
-    requirements: document.getElementById("tabRequirements").value.trim(),
-    status: document.getElementById("tabIsActive").checked ? "ACTIVE" : "PENDING"
+    requirements: requirementsText,
+    is_livedit_only: isLiveditOnly,
+    required_tag: enforcedTag,
+    status: document.getElementById("tabIsActive").checked ? "ACTIVE" : "PENDING",
+    expires_at: expiresAt,
   };
 
   if (id) {
@@ -2509,7 +2767,7 @@ function openAdminEditCampaign(id) {
   document.getElementById("tabStreakModel").value = c.streakModel || "Milestone-Based";
   document.getElementById("tabBrief").value = c.brief;
   document.getElementById("tabIsActive").checked = c.status === "ACTIVE";
-
+  document.getElementById("tabIsLiveditOnly").checked = c.is_livedit_only;
   window.scrollTo({top: 100, behavior: 'smooth'});
 }
 
@@ -2540,6 +2798,8 @@ async function loadGlobalCampaigns(isSilent = false) {
         image: c.image,
         budget: Number(c.budget),
         duration: c.duration || "7 days",
+        expires_at: c.expires_at,
+        isExpired: timeInfo.text,
         maxParticipants: c.max_participants || 50,
         topRewarded: c.top_rewarded || 5,
         streakModel: c.streak_model || "Milestone-Based",
@@ -2554,8 +2814,9 @@ async function loadGlobalCampaigns(isSilent = false) {
         minComments: c.min_comments || 5,
         minViews: c.min_views || 50,
         timezone: c.timezone || "UTC",
+        is_livedit_only: c.is_livedit_only || false, // Load flag
         required_tag: c.required_tag || "@LIVEDITglobal",
-        status: (c.status || "ACTIVE").toUpperCase(),
+        status: currentStatus,
         yappers: formattedYappers,
         joined: formattedYappers.some(y => y[0] === db.currentUser.handle)
       };
@@ -2596,6 +2857,7 @@ async function renderAdminQueue(){
         </div>
       `).join("");
     }
+    await renderAdminParticipantsTable();
   }
 
   const rowsContainer = document.getElementById("adminCampaignsRows");
@@ -2751,6 +3013,68 @@ async function adminProcessPayout(campaignId, handle, recipientWallet, amount, c
   } catch (err) { alert("Payout Escrow Error: " + err.message); }
 }
 
+// Populate campaign selector and render participants table in admin panel
+async function renderAdminParticipantsTable() {
+  const filterSelect = document.getElementById("adminParticipantCampaignFilter");
+  const rowsBody = document.getElementById("adminParticipantsRows");
+  if (!rowsBody || !filterSelect) return;
+
+  const selectedCampaignId = filterSelect.value;
+
+  // Preserve selected filter option when repopulating
+  filterSelect.innerHTML = `<option value="all">📁 View All Campaigns</option>` + 
+    (db.allAdminCampaigns || []).map(c => `<option value="${c.id}" ${selectedCampaignId == c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join("");
+
+  try {
+    const client = requireBackend();
+    let query = client.from('campaign_participants').select('*, campaigns(name)');
+    
+    if (selectedCampaignId && selectedCampaignId !== "all") {
+      query = query.eq('campaign_id', Number(selectedCampaignId));
+    }
+
+    const { data: participants, error } = await query.order('score', { ascending: false });
+
+    if (error) throw error;
+
+    if (!participants || participants.length === 0) {
+      rowsBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;" class="small">No participants found for this campaign selection.</td></tr>`;
+      return;
+    }
+
+    rowsBody.innerHTML = participants.map(p => {
+      const campName = p.campaigns?.name || `Campaign #${p.campaign_id}`;
+      const walletAddress = p.wallet_address || "";
+      const walletDisplay = walletAddress ? 
+        `<span style="font-family:monospace; color:var(--brand2);" title="${esc(walletAddress)}">${esc(walletAddress.slice(0, 6))}...${esc(walletAddress.slice(-4))}</span>` : 
+        `<span style="color:var(--muted); font-style:italic;">Not Connected</span>`;
+
+      // Safe escaped string for click handler
+      const safeWallet = esc(walletAddress);
+
+      return `
+        <tr style="border-bottom:1px solid var(--line); font-size:13px;">
+          <td style="padding:14px 16px; font-weight:700;">${esc(campName)}</td>
+          <td style="padding:14px 16px;"><span class="avatar">${esc(p.handle.replace("@","").slice(0,2).toUpperCase())}</span>${esc(p.handle)}</td>
+          <td style="padding:14px 16px;">${walletDisplay}</td>
+          <td style="padding:14px 16px; color:var(--brand2); font-weight:700;">${p.score || 0} XP</td>
+          <td style="padding:14px 16px;">${Number(p.reach || 0).toLocaleString()}</td>
+          <td style="padding:14px 16px; text-align:right;">
+            ${walletAddress ? `<button class="btn sm primary" onclick="copyWalletAddress('${safeWallet}', this)" title="Copy Wallet Address">📋 Copy Wallet</button>` : `<span class="small" style="color:var(--muted)">No Wallet</span>`}
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+  } catch (err) {
+    rowsBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--seal);" class="small">Error loading participant data: ${esc(err.message)}</td></tr>`;
+  }
+}
+
+function inspectParticipantDetail(handle, wallet, score) {
+  alert(`👤 Participant Profile Inspection\n\nHandle: ${handle}\nWallet Address: ${wallet}\nTotal Score: ${score} XP`);
+}
+
 function subscribeToNotifications() {
   if (!BACKEND_CONFIGURED || !supabaseClient) return;
   supabaseClient
@@ -2806,13 +3130,11 @@ const AppStore = {
 };
 
 async function initApp() {
-  // 1. SWR: Instant paint from local cache (Stale)
   AppStore.init();
   renderHome();
   renderCampaigns();
   if (isAdminLoggedIn) renderAdminQueue();
 
-  // Clear any dangling websocket channels to prevent memory leaks
   if (BACKEND_CONFIGURED && supabaseClient) {
     try {
       supabaseClient.removeAllChannels();
@@ -2826,7 +3148,6 @@ async function initApp() {
   initDailyRewards();
 
   if (BACKEND_CONFIGURED) {
-    // 2. SWR: Background network check for updates (Revalidate)
     loadGlobalCampaigns(true).catch(e => console.error("Background sync error:", e));
     
     subscribeToNotifications();
@@ -2836,6 +3157,14 @@ async function initApp() {
     window._globalPollInterval = setInterval(() => {
       loadGlobalCampaigns(true);
     }, 30000);
+
+    // === REAL-TIME COUNTDOWN TICKER INTERVAL ===
+    if (window._campaignCountdownInterval) clearInterval(window._campaignCountdownInterval);
+    window._campaignCountdownInterval = setInterval(() => {
+      if (document.getElementById("campaigns")?.style.display === "block" || document.getElementById("home")?.style.display === "block") {
+        renderCampaigns();
+      }
+    }, 60000);
 
     supabaseClient
       .channel('public:global_campaigns')
@@ -2877,6 +3206,91 @@ async function clearAllSubmissions() {
   } catch (err) {
     alert("❌ Error clearing submissions: " + err.message);
   }
+}
+
+async function copyAllWallets() {
+  try {
+    const selectedCampaignId = document.getElementById("adminParticipantCampaignFilter").value;
+    const client = requireBackend();
+    let query = client.from('campaign_participants').select('wallet_address');
+    
+    // Respect the currently selected campaign filter
+    if (selectedCampaignId && selectedCampaignId !== "all") {
+      query = query.eq('campaign_id', Number(selectedCampaignId));
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    // Filter out nulls, empty strings, or "None" values
+    const wallets = (data || [])
+      .map(p => p.wallet_address)
+      .filter(w => w && w !== "None" && w.trim() !== "");
+
+    if (wallets.length === 0) {
+      alert("No valid wallet addresses found to copy for this selection.");
+      return;
+    }
+
+    // Join wallets with newlines
+    const walletsText = wallets.join("\n");
+    
+    await navigator.clipboard.writeText(walletsText);
+    alert(`🎉 Successfully copied ${wallets.length} wallet address(es) to clipboard!`);
+  } catch (err) {
+    alert("Error copying wallets: " + err.message);
+  }
+}
+
+// Hidden mobile touch trigger (e.g., tap the logo 5 times rapidly to open admin panel)
+let logoTapCount = 0;
+let logoTapTimer = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+  const logoElement = document.querySelector(".logo");
+  if (logoElement) {
+    logoElement.addEventListener("click", (e) => {
+      // Check if it's a mobile device or explicit multi-tap
+      logoTapCount++;
+      if (logoTapCount === 5) {
+        e.preventDefault();
+        switchTab("admin");
+        logoTapCount = 0;
+        alert("🔓 Admin Panel Unlocked via Mobile Gesture");
+      }
+      
+      clearTimeout(logoTapTimer);
+      logoTapTimer = setTimeout(() => {
+        logoTapCount = 0;
+      }, 400); // Reset tap count if taps are spaced out
+    });
+  }
+});
+
+function getCampaignTimeLeft(expiresAtStr, createdAtStr, durationStr) {
+  const now = new Date().getTime();
+  let expiryTime = 0;
+
+  if (expiresAtStr) {
+    expiryTime = new Date(expiresAtStr).getTime();
+  } else if (createdAtStr) {
+    const createdTime = new Date(createdAtStr).getTime();
+    const daysMatch = String(durationStr || "7 days").match(/(\d+)/);
+    const durationDays = daysMatch ? parseInt(daysMatch[1], 10) : 7;
+    expiryTime = createdTime + (durationDays * 24 * 60 * 60 * 1000);
+  } else {
+    return { text: "Active", isExpired: false };
+  }
+
+  const timeLeft = expiryTime - now;
+  if (timeLeft <= 0) return { text: "Expired / Completed", isExpired: true };
+
+  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (days > 0) return { text: `${days}d ${hours}h left`, isExpired: false };
+  return { text: `${hours}h ${minutes}m left`, isExpired: false };
 }
 
 initApp();
