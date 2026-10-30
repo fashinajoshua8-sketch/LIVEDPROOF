@@ -2537,17 +2537,12 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
   const currency = document.getElementById("cCurrency").value;
   const targetLinks = Array.from(document.querySelectorAll(".cLinkInput")).map(el => el.value.trim()).filter(Boolean);
   const requirementsText = document.getElementById("cRequirements").value.trim();
-  const parsedTag = extractTagFromRequirements(requirementsText);
-  const isLiveEditOnly = document.getElementById("cIsLiveditOnly").checked || false;
+  const isLiveEditOnly = document.getElementById("cIsLiveditOnly")?.checked || false;
   
-  // Inside document.getElementById("campaignForm").addEventListener("submit", ...)
-  const selectedDuration = document.getElementById("cDuration")?.value || "7 days";
   const durationDaysMap = { "1 day": 1, "2 days": 2, "3 days": 3, "7 days": 7, "14 days": 14, "30 days": 30 };
-  const daysCount = durationDaysMap[selectedDuration] || 7;
+  const daysCount = durationDaysMap[duration] || 7;
   const expiresAt = new Date(Date.now() + (daysCount * 24 * 60 * 60 * 1000)).toISOString();
-
-  // Automatically force @LIVEDITglobal if LIVEDIT-only is enabled, preventing any mistakes
-  const enforcedTag = isLiveditOnly ? "@LIVEDITglobal" : (extractTagFromRequirements(requirementsText) || "@LIVEDITglobal");
+  const enforcedTag = isLiveEditOnly ? "@LIVEDITglobal" : (extractTagFromRequirements(requirementsText) || "@LIVEDITglobal");
 
   pendingManualCampaign = {
     name: document.getElementById("cName").value.trim(),
@@ -2557,6 +2552,7 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
     image: uploadedCampaignImageBase64 || null,
     budget,
     duration,
+    expires_at: expiresAt,
     maxParticipants: Number(document.getElementById("cMaxParticipants").value) || 50,
     topRewarded: Number(document.getElementById("cTopRewarded").value) || 5,
     streakModel: document.getElementById("cStreakModel").value,
@@ -2564,7 +2560,7 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
     streakMultiplier: Number(document.getElementById("cStreakMultiplier").value) || 1.0,
     streakMilestone: Number(document.getElementById("cStreakMilestone").value) || 7,
     targetLinks,
-    required_tag: enforcedTag, // Uses the automatically enforced tag
+    required_tag: enforcedTag,
     brief: document.getElementById("cBrief").value.trim(),
     requirements: requirementsText,
     min_likes: Number(document.getElementById("cMinLikes").value) || 10,
@@ -2575,10 +2571,7 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
     status: "PENDING",
     payerWallet: db.currentUser.wallet || "Manual Creator",
     solPaid: Number((budget / dynamicSolPrice).toFixed(4)),
-    is_livedit_only:isLiveditOnly,
-    duration: selectedDuration,
-    expires_at: expiresAt,
-
+    is_livedit_only: isLiveEditOnly
   };
 
   document.getElementById("confName").textContent = pendingManualCampaign.name;
@@ -2782,13 +2775,24 @@ async function loadGlobalCampaigns(isSilent = false) {
     if (campRes.error) return;
 
     const sourceData = campRes.data || [];
-    if (sourceData.length === 0 && db.campaigns.length > 0) return; // Protect cache from empty states
+    if (sourceData.length === 0 && db.campaigns.length > 0) return;
 
     const allParticipants = (partRes && !partRes.error) ? (partRes.data || []) : [];
 
     const normalize = (c) => {
       const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
       const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, p.wallet_address || null, p.networking_xp || 0, p.joined_at || p.created_at]);
+      
+      // CALCULATE TIMEFRAME PROPERLY BEFORE RETURNING
+      const expiresAt = c.expires_at || null;
+      const timeInfo = getCampaignTimeLeft(expiresAt, c.created_at, c.duration);
+      let currentStatus = (c.status || "ACTIVE").toUpperCase();
+
+      if (timeInfo.isExpired && currentStatus === "ACTIVE") {
+        currentStatus = "COMPLETED";
+        client.from('campaigns').update({ status: 'COMPLETED' }).eq('id', c.id).then(() => {});
+      }
+
       return {
         id: Number(c.id),
         name: c.name,
@@ -2798,8 +2802,9 @@ async function loadGlobalCampaigns(isSilent = false) {
         image: c.image,
         budget: Number(c.budget),
         duration: c.duration || "7 days",
-        expires_at: c.expires_at,
-        isExpired: timeInfo.text,
+        expires_at: expiresAt,
+        isExpired: timeInfo.isExpired,
+        timeLeftText: timeInfo.text,
         maxParticipants: c.max_participants || 50,
         topRewarded: c.top_rewarded || 5,
         streakModel: c.streak_model || "Milestone-Based",
@@ -2814,7 +2819,7 @@ async function loadGlobalCampaigns(isSilent = false) {
         minComments: c.min_comments || 5,
         minViews: c.min_views || 50,
         timezone: c.timezone || "UTC",
-        is_livedit_only: c.is_livedit_only || false, // Load flag
+        is_livedit_only: c.is_livedit_only || false,
         required_tag: c.required_tag || "@LIVEDITglobal",
         status: currentStatus,
         yappers: formattedYappers,
@@ -2826,7 +2831,6 @@ async function loadGlobalCampaigns(isSilent = false) {
     db.pendingRequests = db.allAdminCampaigns.filter(c => c.status === 'PENDING');
     db.campaigns = db.allAdminCampaigns.filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED');
 
-    // Save updated data via SWR manager
     AppStore.persist();
 
     renderCampaigns();
