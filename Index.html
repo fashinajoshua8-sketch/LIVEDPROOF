@@ -1219,11 +1219,17 @@ const CAMPAIGN_TEMPLATES = {
 
 function initDailyRewards() {
   const todayStr = new Date().toISOString().slice(0, 10);
-  const lastClaim = db.currentUser.lastDailyClaimDate;
+const lastClaim = db.currentUser.lastDailyClaimDate;
+if (lastClaim) {
+  const lastDate = new Date(lastClaim).getTime();
+  const now = new Date().getTime();
+  const diffHours = (now - lastDate) / (1000 * 60 * 60);
   
-  if (!db.currentUser.currentStreak || db.currentUser.currentStreak < 1) {
+  // If more than 48 hours passed (missed a full day + grace period), reset streak
+  if (diffHours > 48) {
     db.currentUser.currentStreak = 1;
   }
+}
   
   const currentStreak = db.currentUser.currentStreak;
   const hasClaimedToday = (lastClaim === todayStr);
@@ -2582,10 +2588,14 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
 });
 
 async function confirmManualPayment(){
-  if (!pendingManualCampaign) return;
+  if (!pendingManualCampaign) {
+    alert("No pending campaign data found. Please fill out the form again.");
+    switchTab("create");
+    return;
+  }
   try {
     const client = requireBackend();
-    await client.from('campaigns').insert([{
+    const { error: campError } = await client.from('campaigns').insert([{
       name: pendingManualCampaign.name,
       category: pendingManualCampaign.category,
       currency: pendingManualCampaign.currency,
@@ -2593,6 +2603,7 @@ async function confirmManualPayment(){
       image: pendingManualCampaign.image,
       budget: pendingManualCampaign.budget,
       duration: pendingManualCampaign.duration,
+      expires_at: pendingManualCampaign.expires_at,
       max_participants: pendingManualCampaign.maxParticipants,
       top_rewarded: pendingManualCampaign.topRewarded,
       streak_model: pendingManualCampaign.streakModel,
@@ -2611,17 +2622,20 @@ async function confirmManualPayment(){
       status: "PENDING",
       payer_wallet: pendingManualCampaign.payerWallet,
       sol_paid: pendingManualCampaign.solPaid,
-      duration: pendingManualCampaign.duration,
-      expires_at: pendingManualCampaign.expires_at,
+      is_livedit_only: pendingManualCampaign.is_livedit_only
     }]);
 
-    await client.from('payments_ledger').insert([{
+    if (campError) throw campError;
+
+    const { error: payError } = await client.from('payments_ledger').insert([{
       campaign_name: pendingManualCampaign.name,
       budget: pendingManualCampaign.budget,
       sol_amount: pendingManualCampaign.solPaid,
       tx_signature: "MANUAL_TX_" + Math.random().toString(36).substring(2, 10).toUpperCase(),
       payer: pendingManualCampaign.payerWallet
     }]);
+
+    if (payError) throw payError;
 
     document.getElementById("campaignForm").reset();
     pendingManualCampaign = null;
@@ -2783,7 +2797,6 @@ async function loadGlobalCampaigns(isSilent = false) {
       const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
       const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, p.wallet_address || null, p.networking_xp || 0, p.joined_at || p.created_at]);
       
-      // CALCULATE TIMEFRAME PROPERLY BEFORE RETURNING
       const expiresAt = c.expires_at || null;
       const timeInfo = getCampaignTimeLeft(expiresAt, c.created_at, c.duration);
       let currentStatus = (c.status || "ACTIVE").toUpperCase();
@@ -3243,6 +3256,27 @@ async function copyAllWallets() {
     alert(`🎉 Successfully copied ${wallets.length} wallet address(es) to clipboard!`);
   } catch (err) {
     alert("Error copying wallets: " + err.message);
+  }
+}
+
+async function copyWalletAddress(wallet, btnEl) {
+  if (!wallet || wallet === "None") {
+    alert("No valid wallet address available.");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(wallet);
+    const originalText = btnEl.textContent;
+    btnEl.textContent = "✓ Copied!";
+    btnEl.style.background = "var(--good)";
+    btnEl.style.color = "#0a0a0a";
+    setTimeout(() => {
+      btnEl.textContent = originalText;
+      btnEl.style.background = "";
+      btnEl.style.color = "";
+    }, 2000);
+  } catch (err) {
+    alert("Failed to copy wallet address: " + err.message);
   }
 }
 
