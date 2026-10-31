@@ -990,6 +990,63 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           </div>
         </div>
 
+        <!-- ADVANCED ADMIN SUITE -->
+        <div style="margin-top:45px; border-top:2px solid var(--line); padding-top:25px;">
+            <h3 style="margin:0 0 10px; font-size:20px; color:var(--brand2);">🛠️ Advanced Admin Suite</h3>
+            <p class="small" style="margin-bottom:20px;">Analytics, User XP breakdowns, Manual Adjustments, Moderation, and Broadcasts.</p>
+
+        <!-- Feature A: Campaign Analytics & CSV Export -->
+        <div class="card" style="margin-bottom:20px; background:#111114;">
+            <h4 style="margin:0 0 8px">📊 Protocol Analytics & Data Export</h4>
+            <p class="small" style="margin-bottom:14px;">Download audit trails and participant records for off-chain accounting.</p>
+            <div class="actions">
+            <button class="btn sm primary" onclick="exportParticipantsCSV()">📥 Export Participants CSV</button>
+            <button class="btn sm" onclick="exportPaymentsCSV()">📥 Export Payments CSV</button>
+            </div>
+        </div>
+
+        <!-- Feature B: User XP Breakdown by Campaign Dropdown -->
+        <div class="card" style="margin-bottom:20px; background:#111114;">
+            <h4 style="margin:0 0 8px">🔍 User XP Breakdown Selector</h4>
+            <p class="small" style="margin-bottom:14px;">Select a campaign to inspect individual user scores, net XP, and interaction metrics.</p>
+            <div style="margin-bottom:12px;">
+            <select id="breakdownCampaignSelect" onchange="renderAdminUserXpBreakdown()" style="background:#141417; border-radius:8px; padding:10px; border:1px solid var(--line); color:var(--fg); width:100%; max-width:350px;">
+                <option value="">-- Choose Campaign for Breakdown --</option>
+            </select>
+            </div>
+            <div id="userXpBreakdownContainer" class="small" style="color:var(--muted);">Select a campaign above to load user points breakdown.</div>
+        </div>
+
+        <!-- Feature C: Manual XP Adjustment Tool -->
+        <div class="card" style="margin-bottom:20px; background:#111114;">
+            <h4 style="margin:0 0 8px">⚡ Manual XP Adjustment</h4>
+            <p class="small" style="margin-bottom:14px;">Manually reward or deduct XP for a specific contributor handle.</p>
+            <div class="row" style="margin-bottom:10px;">
+            <input type="text" id="manualXpHandle" placeholder="@handle">
+            <input type="number" id="manualXpAmount" placeholder="XP Amount (+/- e.g. 50 or -20)">
+            </div>
+            <button class="btn sm success" onclick="adminExecuteManualXpAdjustment()">Apply XP Adjustment</button>
+        </div>
+
+        <!-- Feature D: User Moderation & Ban List -->
+        <div class="card" style="margin-bottom:20px; background:#111114;">
+            <h4 style="margin:0 0 8px">🛡️ User Moderation & Bans</h4>
+            <p class="small" style="margin-bottom:14px;">Block abusive handles or bot accounts from participating in future campaigns.</p>
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+            <input type="text" id="banHandleInput" placeholder="@handleToBan" style="flex:1;">
+            <button class="btn sm danger" onclick="adminBanUserHandle()">Ban Handle</button>
+            </div>
+        </div>
+
+        <!-- Feature E: Broadcast Protocol-Wide Notification -->
+        <div class="card" style="background:#111114;">
+            <h4 style="margin:0 0 8px">📢 Broadcast Notification</h4>
+            <p class="small" style="margin-bottom:14px;">Send a live toast alert to all connected protocol participants.</p>
+            <textarea id="broadcastMsgInput" placeholder="Enter broadcast announcement message..." style="margin-bottom:10px;"></textarea>
+            <button class="btn sm primary" onclick="adminSendBroadcastNotification()">Send Global Alert</button>
+        </div>
+        </div>
+
       </div>
 
     </div>
@@ -2679,6 +2736,9 @@ function renderAdminPanel(){
     document.getElementById("adminDashboard").style.display = "block";
     loadGlobalCampaigns();
     renderAdminQueue();
+
+    populateBreakdownDropdown();
+
   } else {
     document.getElementById("adminAuthBox").style.display = "block";
     document.getElementById("adminDashboard").style.display = "none";
@@ -3329,6 +3389,142 @@ function getCampaignTimeLeft(expiresAtStr, createdAtStr, durationStr) {
 
   if (days > 0) return { text: `${days}d ${hours}h left`, isExpired: false };
   return { text: `${hours}h ${minutes}m left`, isExpired: false };
+}
+
+// --- ADVANCED ADMIN FEATURE FUNCTIONS ---
+
+// 1. CSV Exports
+async function exportParticipantsCSV() {
+  const client = requireBackend();
+  const { data } = await client.from('campaign_participants').select('*');
+  if (!data || !data.length) { alert("No participant data to export."); return; }
+  
+  let csv = "ID,Campaign ID,Handle,Score,Networking XP,Reach,Interactions,Wallet Address\n";
+  data.forEach(p => {
+    csv += `${p.id},${p.campaign_id},"${p.handle}",${p.score},${p.networking_xp},${p.reach},${p.interactions},"${p.wallet_address || ''}"\n`;
+  });
+  downloadCSV(csv, "campaign_participants_audit.csv");
+}
+
+async function exportPaymentsCSV() {
+  const client = requireBackend();
+  const { data } = await client.from('payments_ledger').select('*');
+  if (!data || !data.length) { alert("No payment data to export."); return; }
+  
+  let csv = "ID,Campaign Name,Budget,SOL Amount,Payer,Created At\n";
+  data.forEach(p => {
+    csv += `${p.id},"${p.campaign_name}",${p.budget},${p.sol_amount},"${p.payer}","${p.created_at}"\n`;
+  });
+  downloadCSV(csv, "payments_ledger_audit.csv");
+}
+
+function downloadCSV(csvContent, filename) {
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// 2. User XP Breakdown with Campaign Dropdown
+async function populateBreakdownDropdown() {
+  const select = document.getElementById("breakdownCampaignSelect");
+  if (!select) return;
+  select.innerHTML = `<option value="">-- Choose Campaign for Breakdown --</option>` + 
+    (db.allAdminCampaigns || []).map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+}
+
+async function renderAdminUserXpBreakdown() {
+  const campaignId = document.getElementById("breakdownCampaignSelect").value;
+  const container = document.getElementById("userXpBreakdownContainer");
+  if (!campaignId || !container) return;
+
+  const client = requireBackend();
+  const { data, error } = await client.from('campaign_participants').select('*').eq('campaign_id', Number(campaignId)).order('score', { ascending: false });
+
+  if (error || !data || !data.length) {
+    container.innerHTML = `<div class="small" style="color:var(--warn)">No user records found for this campaign.</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <table class="leaderboard" style="width:100%; margin-top:10px;">
+      <thead>
+        <tr><th>Handle</th><th>Total XP</th><th>Networking XP</th><th>Reach</th><th>Wallet</th></tr>
+      </thead>
+      <tbody>
+        ${data.map(p => `
+          <tr>
+            <td><b>${esc(p.handle)}</b></td>
+            <td style="color:var(--brand2);">${p.score || 0} XP</td>
+            <td>${p.networking_xp || 0} XP</td>
+            <td>${Number(p.reach || 0).toLocaleString()}</td>
+            <td style="font-family:monospace; font-size:11px;">${esc(p.wallet_address || 'Unlinked')}</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+// 3. Manual XP Adjustment
+async function adminExecuteManualXpAdjustment() {
+  const handle = document.getElementById("manualXpHandle").value.trim();
+  const amount = Number(document.getElementById("manualXpAmount").value);
+  if (!handle || isNaN(amount)) { alert("Please provide a valid handle and numeric XP amount."); return; }
+
+  const formattedHandle = handle.startsWith("@") ? handle : "@" + handle;
+  const client = requireBackend();
+
+  const { data: profile } = await client.from('profiles').select('*').eq('handle', formattedHandle).maybeSingle();
+  if (!profile) { alert("User profile not found in database."); return; }
+
+  const newPermanentXP = Math.max(0, (profile.permanent_xp || 0) + amount);
+  const newTotalPoints = newPermanentXP + (profile.streak_bonus || 0);
+
+  const { error } = await client.from('profiles').update({ permanent_xp: newPermanentXP, total_points: newTotalPoints }).eq('handle', formattedHandle);
+  if (error) { alert("Error updating XP: " + error.message); return; }
+
+  alert(`✨ Successfully adjusted ${formattedHandle}'s score by ${amount > 0 ? '+' + amount : amount} XP!`);
+  document.getElementById("manualXpHandle").value = "";
+  document.getElementById("manualXpAmount").value = "";
+}
+
+// 4. User Moderation & Bans
+async function adminBanUserHandle() {
+  const handle = document.getElementById("banHandleInput").value.trim();
+  if (!handle) return;
+  const formattedHandle = handle.startsWith("@") ? handle : "@" + handle;
+
+  if (!confirm(`Are you sure you want to ban ${formattedHandle} from participation?`)) return;
+
+  const client = requireBackend();
+  // Delete their participant records and submissions to enforce ban
+  await client.from('campaign_participants').delete().eq('handle', formattedHandle);
+  await client.from('campaign_submissions').delete().eq('handle', formattedHandle);
+
+  alert(`🛡️ Handle ${formattedHandle} has been banned and scrubbed from active campaign tables.`);
+  document.getElementById("banHandleInput").value = "";
+}
+
+// 5. Broadcast Notifications
+async function adminSendBroadcastNotification() {
+  const msg = document.getElementById("broadcastMsgInput").value.trim();
+  if (!msg) { alert("Please type a broadcast message."); return; }
+
+  const client = requireBackend();
+  const { data: profiles } = await client.from('profiles').select('handle');
+  if (!profiles || !profiles.length) { alert("No users to broadcast to."); return; }
+
+  const batchInserts = profiles.map(p => ({ handle: p.handle, message: msg }));
+  const { error } = await client.from('notifications').insert(batchInserts);
+
+  if (error) { alert("Error sending broadcast: " + error.message); return; }
+
+  alert(`📢 Broadcast notification successfully sent to ${profiles.length} user(s)!`);
+  document.getElementById("broadcastMsgInput").value = "";
 }
 
 initApp();
