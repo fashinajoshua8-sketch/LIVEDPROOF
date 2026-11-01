@@ -1960,17 +1960,19 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     }
     if (currentStreak > longestStreak) longestStreak = currentStreak;
 
-    if (streakModel !== "Multiplier Reset") {
-      streakMultiplier = Number((streakMultiplierBase + (currentStreak * 0.05)).toFixed(2));
-    }
-    
-    let calculatedStreakBonus = Math.round(streakBonusPerDay * currentStreak * streakMultiplier);
+// --- LINEAR STREAK REWARD FORMULA ---
+    const maxStreakCap = 30; // Optional cap to protect campaign budgets from runaway inflation
+    const effectiveStreak = Math.min(currentStreak, maxStreakCap);
+
+    // Linear Formula: Base bonus per day multiplied directly by day count (no compounding multiplication)
+    let calculatedStreakBonus = streakBonusPerDay * effectiveStreak;
 
     let milestoneBonusAwarded = 0;
     if (streakModel === "Milestone-Based") {
       milestoneProgress += 1;
       if (milestoneProgress >= streakMilestoneDays) {
-        milestoneBonusAwarded = 100 * Math.floor(currentStreak / streakMilestoneDays);
+        // Flat milestone bonus every 7 days (e.g., +50 XP milestone reward)
+        milestoneBonusAwarded = 50 * Math.floor(currentStreak / streakMilestoneDays);
         calculatedStreakBonus += milestoneBonusAwarded;
       }
     }
@@ -1993,12 +1995,17 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     const interactionsVal = (data.likes || 0) + (data.reposts || 0) + (data.comments || 0);
 
     const { error: subError } = await client.from("campaign_submissions").insert([{
-      campaign_id: campaignId,
-      handle: db.currentUser.handle,
-      post_url: postUrl,
-      metrics: { impressions: reachVal, likes: data.likes, reposts: data.reposts, comments: data.comments },
-      score: totalAwardXP,
-      networking_xp: networkingXPVal
+        campaign_id: campaignId,
+        handle: db.currentUser.handle,
+        post_url: postUrl,
+        metrics: { impressions: reachVal, likes: data.likes, reposts: data.reposts, comments: data.comments },
+        score: totalAwardXP,
+        networking_xp: networkingXPVal,
+        score_breakdown: {
+            base: baseXP,
+            streak: calculatedStreakBonus,
+            engagement: engagementBonus
+        }
     }]);
 
     if (subError) {
@@ -3442,30 +3449,49 @@ async function renderAdminUserXpBreakdown() {
   if (!campaignId || !container) return;
 
   const client = requireBackend();
-  const { data, error } = await client.from('campaign_participants').select('*').eq('campaign_id', Number(campaignId)).order('score', { ascending: false });
+  const { data, error } = await client
+    .from('campaign_submissions')
+    .select('*')
+    .eq('campaign_id', Number(campaignId))
+    .order('created_at', { ascending: false });
 
   if (error || !data || !data.length) {
-    container.innerHTML = `<div class="small" style="color:var(--warn)">No user records found for this campaign.</div>`;
+    container.innerHTML = `<div class="small" style="color:var(--warn)">No XP breakdown logs found for this campaign yet.</div>`;
     return;
   }
 
   container.innerHTML = `
-    <table class="leaderboard" style="width:100%; margin-top:10px;">
-      <thead>
-        <tr><th>Handle</th><th>Total XP</th><th>Networking XP</th><th>Reach</th><th>Wallet</th></tr>
-      </thead>
-      <tbody>
-        ${data.map(p => `
+    <div style="max-height: 350px; overflow-y: auto; margin-top: 10px;">
+      <table class="leaderboard" style="width:100%;">
+        <thead>
           <tr>
-            <td><b>${esc(p.handle)}</b></td>
-            <td style="color:var(--brand2);">${p.score || 0} XP</td>
-            <td>${p.networking_xp || 0} XP</td>
-            <td>${Number(p.reach || 0).toLocaleString()}</td>
-            <td style="font-family:monospace; font-size:11px;">${esc(p.wallet_address || 'Unlinked')}</td>
+            <th>Timestamp</th>
+            <th>Handle</th>
+            <th>Base XP</th>
+            <th>Streak Bonus</th>
+            <th>Engagement Bonus</th>
+            <th>Total Post XP</th>
+            <th>Proof Link</th>
           </tr>
-        `).join("")}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          ${data.map(sub => {
+            const breakdown = sub.score_breakdown || { base: 10, streak: 0, engagement: 0 };
+            return `
+              <tr style="border-bottom:1px solid var(--line); font-size:12px;">
+                <td style="color:var(--muted);">${esc(sub.created_at?.replace('T',' ').substring(0,19))}</td>
+                <td><b>${esc(sub.handle)}</b></td>
+                <td style="color:var(--fg);">+${breakdown.base || 0} XP</td>
+                <td style="color:var(--brand2);">+${breakdown.streak || 0} XP</td>
+                <td style="color:var(--gold);">+${breakdown.engagement || 0} XP</td>
+                <td style="color:var(--good); font-weight:700;">+${sub.score || 0} XP</td>
+                <td><a href="${esc(safeUrl(sub.post_url))}" target="_blank" style="color:#38bdf8;">View ↗</a></td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
   `;
 }
 
