@@ -3232,7 +3232,7 @@ async function initApp() {
   initDailyRewards();
 
   if (BACKEND_CONFIGURED) {
-    loadGlobalCampaigns(true).catch(e => console.error("Background sync error:", e));
+    loadGlobalCampaigns(false); /*.catch(e => console.error("Background sync error:", e));*/
     
     subscribeToNotifications();
     fetchLiveSolPrice();
