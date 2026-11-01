@@ -2854,10 +2854,7 @@ async function loadGlobalCampaigns(isSilent = false) {
     ]);
 
     if (campRes.error) return;
-
-    const sourceData = campRes.data || [];
-    if (sourceData.length === 0 && db.campaigns.length > 0) return;
-
+const sourceData = campRes.data || [];
     const allParticipants = (partRes && !partRes.error) ? (partRes.data || []) : [];
 
     const normalize = (c) => {
@@ -3188,6 +3185,11 @@ const AppStore = {
         db.campaigns = parsed.campaigns || [];
         db.pendingRequests = parsed.pendingRequests || [];
         db.allAdminCampaigns = parsed.allAdminCampaigns || [];
+        
+        // ➔ Force immediate render on startup using cached data
+        renderCampaigns();
+        renderHome();
+        if (isAdminLoggedIn) renderAdminQueue();
       }
     } catch (e) {
       console.warn("SWR Cache read error:", e);
@@ -3197,7 +3199,7 @@ const AppStore = {
   // 2. Background update save (Revalidate)
   persist() {
     try {
-      if (db.allAdminCampaigns && db.allAdminCampaigns.length > 0) {
+      if (db.allAdminCampaigns) {
         const lightCampaigns = db.campaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
         const lightAdmin = db.allAdminCampaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
         
