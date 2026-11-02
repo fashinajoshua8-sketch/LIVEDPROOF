@@ -2929,7 +2929,7 @@ async function loadGlobalCampaigns(isSilent = false) {
     } catch (err) {
         if (!isSilent) console.error("SWR Background revalidation error:", err);
     }
-}s
+}
 
 async function renderAdminQueue(){
   const pendingContainer = document.getElementById("pendingList");
@@ -3237,6 +3237,8 @@ async function initApp() {
       supabaseClient.removeAllChannels();
     } catch (e) {}
   }
+
+  handleXOAuthCallback().catch(err => console.error("X OAuth note:", err));
 
   await handleXOAuthCallback();
   await restoreAdminSession();
