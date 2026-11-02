@@ -2846,77 +2846,90 @@ function openAdminEditCampaign(id) {
 }
 
 async function loadGlobalCampaigns(isSilent = false) {
-  try {
-    const client = requireBackend();
-    const [campRes, partRes] = await Promise.all([
-      client.from('campaigns').select('*').order('created_at', { ascending: false }),
-      client.from('campaign_participants').select('*')
-    ]);
+    try {
+        const client = requireBackend();
+        const [campRes, partRes] = await Promise.all([
+            client.from('campaigns').select('*').order('created_at', { ascending: false }),
+            client.from('campaign_participants').select('*')
+        ]);
 
-    if (campRes.error) return;
-const sourceData = campRes.data || [];
-    const allParticipants = (partRes && !partRes.error) ? (partRes.data || []) : [];
+        if (campRes.error) {
+            if (!isSilent) console.warn("Supabase fetch error, retaining cache:", campRes.error.message);
+            return;
+        }
 
-    const normalize = (c) => {
-      const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
-      const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, p.wallet_address || null, p.networking_xp || 0, p.joined_at || p.created_at]);
-      
-      const expiresAt = c.expires_at || null;
-      const timeInfo = getCampaignTimeLeft(expiresAt, c.created_at, c.duration);
-      let currentStatus = (c.status || "ACTIVE").toUpperCase();
+        const sourceData = campRes.data || [];
 
-      if (timeInfo.isExpired && currentStatus === "ACTIVE") {
-        currentStatus = "COMPLETED";
-        client.from('campaigns').update({ status: 'COMPLETED' }).eq('id', c.id).then(() => {});
-      }
+        // ➔ SAFETY GUARD: If Supabase returns 0 records due to an RLS block or network blip, 
+        // do NOT wipe local storage cache. Preserve existing data.
+        if (sourceData.length === 0 && db.allAdminCampaigns && db.allAdminCampaigns.length > 0) {
+            if (!isSilent) console.warn("Server returned 0 campaigns (possible RLS block); retaining existing local cache.");
+            return;
+        }
 
-      return {
-        id: Number(c.id),
-        name: c.name,
-        category: c.category,
-        currency: c.currency || "SOL",
-        nativeTokenName: c.native_token_name || null,
-        image: c.image,
-        budget: Number(c.budget),
-        duration: c.duration || "7 days",
-        expires_at: expiresAt,
-        isExpired: timeInfo.isExpired,
-        timeLeftText: timeInfo.text,
-        maxParticipants: c.max_participants || 50,
-        topRewarded: c.top_rewarded || 5,
-        streakModel: c.streak_model || "Milestone-Based",
-        streakBonusValue: c.streak_bonus_value || 10,
-        streakMultiplier: c.streak_multiplier || 1.0,
-        streakMilestone: c.streak_milestone || 7,
-        targetLinks: c.target_links || [],
-        brief: c.brief || "",
-        requirements: c.requirements || "",
-        minLikes: c.min_likes || 10,
-        minReposts: c.min_reposts || 5,
-        minComments: c.min_comments || 5,
-        minViews: c.min_views || 50,
-        timezone: c.timezone || "UTC",
-        is_livedit_only: c.is_livedit_only || false,
-        required_tag: c.required_tag || "@LIVEDITglobal",
-        status: currentStatus,
-        yappers: formattedYappers,
-        joined: formattedYappers.some(y => y[0] === db.currentUser.handle)
-      };
-    };
+        const allParticipants = (partRes && !partRes.error) ? (partRes.data || []) : [];
 
-    db.allAdminCampaigns = sourceData.map(normalize);
-    db.pendingRequests = db.allAdminCampaigns.filter(c => c.status === 'PENDING');
-    db.campaigns = db.allAdminCampaigns.filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED');
+        const normalize = (c) => {
+            const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
+            const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, p.wallet_address || null, p.networking_xp || 0, p.joined_at || p.created_at]);
+            
+            const expiresAt = c.expires_at || null;
+            const timeInfo = getCampaignTimeLeft(expiresAt, c.created_at, c.duration);
+            let currentStatus = (c.status || "ACTIVE").toUpperCase();
 
-    AppStore.persist();
+            if (timeInfo.isExpired && currentStatus === "ACTIVE") {
+                currentStatus = "COMPLETED";
+                client.from('campaigns').update({ status: 'COMPLETED' }).eq('id', c.id).then(() => {});
+            }
 
-    renderCampaigns();
-    renderHome();
-    if (isAdminLoggedIn) renderAdminQueue();
-  } catch (err) {
-    if (!isSilent) console.error("SWR Background revalidation error:", err);
-  }
-}
+            return {
+                id: Number(c.id),
+                name: c.name,
+                category: c.category,
+                currency: c.currency || "SOL",
+                nativeTokenName: c.native_token_name || null,
+                image: c.image,
+                budget: Number(c.budget),
+                duration: c.duration || "7 days",
+                expires_at: expiresAt,
+                isExpired: timeInfo.isExpired,
+                timeLeftText: timeInfo.text,
+                maxParticipants: c.max_participants || 50,
+                topRewarded: c.top_reward_percentage || c.top_rewarded || 5,
+                streakModel: c.streak_model || "Milestone-Based",
+                streakBonusValue: c.streak_bonus_value || 10,
+                streakMultiplier: c.streak_multiplier || 1.0,
+                streakMilestone: c.streak_milestone || 7,
+                targetLinks: c.target_links || [],
+                brief: c.brief || "",
+                requirements: c.requirements || "",
+                minLikes: c.min_likes || 10,
+                minReposts: c.min_reposts || 5,
+                minComments: c.min_comments || 5,
+                minViews: c.min_views || 50,
+                timezone: c.timezone || "UTC",
+                is_livedit_only: c.is_livedit_only || false,
+                required_tag: c.required_tag || "@LIVEDITglobal",
+                status: currentStatus,
+                yappers: formattedYappers,
+                joined: formattedYappers.some(y => y[0] === db.currentUser.handle)
+            };
+        };
+
+        db.allAdminCampaigns = sourceData.map(normalize);
+        db.pendingRequests = db.allAdminCampaigns.filter(c => c.status === 'PENDING');
+        db.campaigns = db.allAdminCampaigns.filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED');
+
+        // Persist valid state to localStorage immediately
+        AppStore.persist();
+
+        renderCampaigns();
+        renderHome();
+        if (isAdminLoggedIn) renderAdminQueue();
+    } catch (err) {
+        if (!isSilent) console.error("SWR Background revalidation error:", err);
+    }
+}s
 
 async function renderAdminQueue(){
   const pendingContainer = document.getElementById("pendingList");
@@ -3197,20 +3210,18 @@ const AppStore = {
   },
 
   // 2. Background update save (Revalidate)
-  persist() {
+    persist() {
     try {
-      if (db.allAdminCampaigns) {
-        const lightCampaigns = db.campaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
-        const lightAdmin = db.allAdminCampaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
-        
+        const lightCampaigns = (db.campaigns || []).map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
+        const lightAdmin = (db.allAdminCampaigns || []).map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
+
         localStorage.setItem("lived_campaigns_cache_v3", JSON.stringify({
-          campaigns: lightCampaigns,
-          pendingRequests: db.pendingRequests,
-          allAdminCampaigns: lightAdmin
+            campaigns: lightCampaigns,
+            pendingRequests: db.pendingRequests || [],
+            allAdminCampaigns: lightAdmin
         }));
-      }
-    } catch (err) {
-      console.warn("SWR storage write skipped:", err);
+    }   catch (err) {
+        console.warn("SWR storage write failed:", err);
     }
   }
 };
