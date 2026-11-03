@@ -2854,19 +2854,11 @@ async function loadGlobalCampaigns(isSilent = false) {
         ]);
 
         if (campRes.error) {
-            if (!isSilent) console.warn("Supabase fetch error, retaining cache:", campRes.error.message);
+            console.error("❌ Supabase Campaign Fetch Error:", campRes.error.message, campRes.error.details);
             return;
         }
 
         const sourceData = campRes.data || [];
-
-        // ➔ SAFETY GUARD: If Supabase returns 0 records due to an RLS block or network blip, 
-        // do NOT wipe local storage cache. Preserve existing data.
-        if (sourceData.length === 0 && db.allAdminCampaigns && db.allAdminCampaigns.length > 0) {
-            if (!isSilent) console.warn("Server returned 0 campaigns (possible RLS block); retaining existing local cache.");
-            return;
-        }
-
         const allParticipants = (partRes && !partRes.error) ? (partRes.data || []) : [];
 
         const normalize = (c) => {
@@ -2920,14 +2912,14 @@ async function loadGlobalCampaigns(isSilent = false) {
         db.pendingRequests = db.allAdminCampaigns.filter(c => c.status === 'PENDING');
         db.campaigns = db.allAdminCampaigns.filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED');
 
-        // Persist valid state to localStorage immediately
+        // ➔ Guaranteed write to localStorage
         AppStore.persist();
 
         renderCampaigns();
         renderHome();
         if (isAdminLoggedIn) renderAdminQueue();
     } catch (err) {
-        if (!isSilent) console.error("SWR Background revalidation error:", err);
+        console.error("❌ SWR Background revalidation critical error:", err);
     }
 }
 
