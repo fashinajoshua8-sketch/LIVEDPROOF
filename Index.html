@@ -2557,7 +2557,7 @@ async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Check for injected provider (Works instantly on PC extensions & Mobile Wallet In-App Browsers)
+    // 1. Check for standard injected extension or mobile in-app browser providers (PC / In-App Webviews)
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
@@ -2570,15 +2570,40 @@ async function requestLiveWallet(providerName) {
       provider = window.solana;
     }
 
-    // 2. If provider is not found in this browsing context, do NOT redirect or pop up alerts.
-    // Simply try to request connection via standard window provider or fail gracefully.
+    // 2. If no direct provider exists (standard mobile browser like Chrome/Safari), 
+    // safely trigger Phantom/Solflare's official mobile universal deep link handshake.
     if (!provider) {
-      alert(`${providerName} provider not detected. If you are using mobile Chrome/Safari, please open this app directly inside your ${providerName} wallet's built-in browser to connect seamlessly.`);
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        closeWalletModal();
+        const currentUrl = window.location.href;
+        const encodedUrl = encodeURIComponent(currentUrl);
+        const refUrl = encodeURIComponent(window.location.origin);
+        
+        let universalLink = "";
+        // Using official Phantom & Solflare universal link specs
+        if (providerName === 'phantom') {
+          universalLink = `https://phantom.com/ul/browse/${encodedUrl}?ref=${refUrl}`;
+        } else if (providerName === 'solflare') {
+          universalLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${refUrl}`;
+        } else if (providerName === 'glow') {
+          universalLink = `https://glow.app/ul/browse/${encodedUrl}`;
+        }
+
+        if (universalLink) {
+          // Clean handoff to the native mobile wallet application interface
+          window.location.href = universalLink;
+          return;
+        }
+      }
+      
+      alert(`${providerName} extension not detected. Please open this site inside your wallet browser or install the extension.`);
       closeWalletModal();
       return;
     }
 
-    // 3. Trigger the native wallet connection confirmation modal directly inside the current view
+    // 3. Connect directly via injected desktop/in-app provider
     const res = await provider.connect();
     db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
     await syncProfileToSupabase();
