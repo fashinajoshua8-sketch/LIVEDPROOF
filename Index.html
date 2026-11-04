@@ -2555,7 +2555,7 @@ async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Detect standard injected providers (Phantom, Solflare, etc.)
+    // 1. Check for standard injected extension/in-app browser providers first
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
@@ -2568,22 +2568,39 @@ async function requestLiveWallet(providerName) {
       provider = window.solana;
     }
 
-    // 2. If no provider is found on standard mobile browser, 
-    // instead of forcing a redirect loop, alert them gracefully or use standard provider prompt.
+    // 2. If no provider is found, check if we are on a mobile device
     if (!provider) {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
       if (isMobile) {
-        alert(`To connect on mobile, please open this website directly inside your ${providerName} app's built-in browser.`);
-        closeWalletModal();
-        return;
+        // Construct the current app URL for deep link return mapping
+        const currentUrl = window.location.href;
+        const encodedUrl = encodeURIComponent(currentUrl);
+        
+        let deepLinkUrl = "";
+        
+        // Use official Universal / Deep Link protocol for Solana wallets
+        if (providerName === 'phantom') {
+          // Phantom Universal Link format for dApp connection
+          deepLinkUrl = `https://phantom.com/ul/browse/${encodedUrl}?ref=${encodeURIComponent(window.location.origin)}`;
+        } else if (providerName === 'solflare') {
+          deepLinkUrl = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent(window.location.origin)}`;
+        }
+
+        if (deepLinkUrl) {
+          closeWalletModal();
+          // Opens the mobile wallet app directly via deep link
+          window.location.href = deepLinkUrl;
+          return;
+        }
       }
       
-      alert(`${providerName} wallet extension not detected. Please install it to connect.`);
+      alert(`${providerName} wallet extension not detected.`);
       closeWalletModal();
       return;
     }
 
-    // 3. Request connection directly in place
+    // 3. Connect via provider if available (Desktop extension or In-app browser)
     const res = await provider.connect();
     db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
     await syncProfileToSupabase();
