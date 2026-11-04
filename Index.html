@@ -2557,7 +2557,7 @@ async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Check for standard injected extension or mobile in-app browser providers (PC / In-App Webviews)
+    // 1. Detect injected providers (Works instantly on PC extensions & Mobile App In-App Browsers)
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
@@ -2570,40 +2570,36 @@ async function requestLiveWallet(providerName) {
       provider = window.solana;
     }
 
-    // 2. If no direct provider exists (standard mobile browser like Chrome/Safari), 
-    // safely trigger Phantom/Solflare's official mobile universal deep link handshake.
+    // 2. If no provider injection exists (standard mobile browser like Chrome/Safari)
     if (!provider) {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
       if (isMobile) {
         closeWalletModal();
         const currentUrl = window.location.href;
-        const encodedUrl = encodeURIComponent(currentUrl);
-        const refUrl = encodeURIComponent(window.location.origin);
+        const originUrl = window.location.origin;
         
-        let universalLink = "";
-        // Using official Phantom & Solflare universal link specs
+        let deepLink = "";
         if (providerName === 'phantom') {
-          universalLink = `https://phantom.com/ul/browse/${encodedUrl}?ref=${refUrl}`;
+          // Official Phantom connection schema with auto-return payload mapping
+          deepLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(currentUrl)}&cluster=mainnet-beta`;
         } else if (providerName === 'solflare') {
-          universalLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${refUrl}`;
-        } else if (providerName === 'glow') {
-          universalLink = `https://glow.app/ul/browse/${encodedUrl}`;
+          deepLink = `https://solflare.com/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(currentUrl)}`;
         }
 
-        if (universalLink) {
-          // Clean handoff to the native mobile wallet application interface
-          window.location.href = universalLink;
+        if (deepLink) {
+          // Smooth handshake transition to mobile app session
+          window.location.href = deepLink;
           return;
         }
       }
       
-      alert(`${providerName} extension not detected. Please open this site inside your wallet browser or install the extension.`);
+      alert(`${providerName} extension or provider not detected. Please install the wallet extension.`);
       closeWalletModal();
       return;
     }
 
-    // 3. Connect directly via injected desktop/in-app provider
+    // 3. Connect directly via injected extension provider
     const res = await provider.connect();
     db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
     await syncProfileToSupabase();
@@ -2614,6 +2610,19 @@ async function requestLiveWallet(providerName) {
     console.warn("Wallet connection cancelled or failed:", err);
   }
 }
+
+// 4. Auto-capture returning deep link payload on page load
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const pubKey = params.get('phantom_encryption_public_key') || params.get('public_key');
+  
+  if (pubKey && !db.currentUser.wallet) {
+    db.currentUser.wallet = pubKey;
+    syncProfileToSupabase();
+    renderLivedCard();
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+});
 
 function syncBudgetRules(){
   const duration = document.getElementById("cDuration")?.value || "7 days";
