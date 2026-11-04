@@ -2572,7 +2572,7 @@ async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Check for injected extension or mobile in-app browser providers
+    // 1. Check standard injected browser extensions & mobile web-injected providers
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
@@ -2585,41 +2585,45 @@ async function requestLiveWallet(providerName) {
       provider = window.solana;
     }
 
-    // 2. If no provider injection exists (standard mobile browser like Chrome/Safari)
+    // 2. Fallback to Wallet Standard registry for mobile browsers
+    if (!provider && window.navigator && window.navigator.wallets) {
+      const wallets = [...window.navigator.wallets.get()];
+      const matched = wallets.find(w => w.name.toLowerCase().includes(providerName.toLowerCase()));
+      if (matched) {
+        provider = matched;
+      }
+    }
+
+    // 3. If no provider is active in the current mobile browser tab
     if (!provider) {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
       if (isMobile) {
         closeWalletModal();
-        const originUrl = window.location.origin;
-        const currentUrl = window.location.href.split('?')[0];
-        
-        let deepLink = "";
-        if (providerName === 'phantom') {
-          // Clean, minimal Phantom v1 schema that avoids error -32602 completely
-          deepLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(currentUrl)}`;
-        } else if (providerName === 'solflare') {
-          deepLink = `https://solflare.com/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(currentUrl)}`;
-        }
-
-        if (deepLink) {
-          localStorage.setItem("lived_pending_provider", providerName);
-          window.location.href = deepLink;
-          return;
-        }
+        // Clean user prompt guiding them to open inside the wallet's built-in browser (Industry Standard behavior for Uniswap/Raydium)
+        alert(`To connect securely, please open this app inside your ${providerName} mobile app browser, or use a Wallet Standard compatible mobile browser.`);
+        return;
       }
       
-      alert(`${providerName} extension or provider not detected.`);
+      alert(`${providerName} extension not detected. Please install it to connect.`);
       closeWalletModal();
       return;
     }
 
-    // 3. Connect via standard injected provider (Desktop Extensions / In-App browser view)
-    const res = await provider.connect();
-    db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
-    localStorage.setItem("lived_wallet_session", db.currentUser.wallet);
-    await syncProfileToSupabase();
-    renderLivedCard();
+    // 4. Trigger direct connection
+    const res = typeof provider.connect === 'function' 
+      ? await provider.connect() 
+      : await provider.features['standard:connect']?.();
+
+    const pubKey = res?.publicKey ? res.publicKey.toString() : (res?.accounts?.[0]?.address);
+
+    if (pubKey) {
+      db.currentUser.wallet = pubKey;
+      localStorage.setItem("lived_wallet_session", pubKey);
+      await syncProfileToSupabase();
+      renderLivedCard();
+    }
+    
     closeWalletModal();
   } catch (err) {
     closeWalletModal();
