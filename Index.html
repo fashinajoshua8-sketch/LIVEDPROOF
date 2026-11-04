@@ -2572,7 +2572,7 @@ async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Detect injected providers (PC extensions & Mobile App In-App Browsers)
+    // 1. Detect injected providers (PC extensions or Mobile In-App browsers)
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
@@ -2585,36 +2585,38 @@ async function requestLiveWallet(providerName) {
       provider = window.solana;
     }
 
-    // 2. Mobile Browser Environment Handling (Zero Error -32602, Zero Broken Loops)
+    // 2. Mobile Browser Environment Handling (Zero errors, zero parameter crashes)
     if (!provider) {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
       if (isMobile) {
         closeWalletModal();
         
-        // Use Phantom's native build-in browser launcher (ul/browse) which avoids manual param handshakes entirely
-        const currentUrl = window.location.href;
-        let launchUrl = "";
+        // Use Phantom and Solflare's verified browse URI schema. 
+        // This opens your site directly inside their secure internal browser where window.solana injects automatically.
+        const currentUrl = encodeURIComponent(window.location.href);
+        const refUrl = encodeURIComponent(window.location.origin);
         
+        let browseLink = "";
         if (providerName === 'phantom') {
-          launchUrl = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}?ref=${encodeURIComponent(window.location.origin)}`;
+          browseLink = `https://phantom.app/ul/browse/${currentUrl}?ref=${refUrl}`;
         } else if (providerName === 'solflare') {
-          launchUrl = `https://solflare.com/ul/v1/browse/${encodeURIComponent(currentUrl)}`;
+          browseLink = `https://solflare.com/ul/v1/browse/${currentUrl}?ref=${refUrl}`;
         }
 
-        if (launchUrl) {
-          // Clean transition directly into the wallet's secure app browser where window.solana injects natively
-          window.location.href = launchUrl;
+        if (browseLink) {
+          // Synchronous navigation triggered by user tap context
+          window.location.href = browseLink;
           return;
         }
       }
       
-      alert(`${providerName} extension not detected. Please open this site inside your wallet's browser.`);
+      alert(`${providerName} extension not detected. Please install it to connect.`);
       closeWalletModal();
       return;
     }
 
-    // 3. Direct Connection for Desktop Extensions or Wallet In-App Browsers
+    // 3. Direct Connection (Identical to desktop web behavior)
     const res = await provider.connect();
     db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
     localStorage.setItem("lived_wallet_session", db.currentUser.wallet);
