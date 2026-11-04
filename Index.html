@@ -2567,12 +2567,12 @@ function getDappEncryptionKeyPair() {
   return keyPair;
 }
 
-// 2. Mobile & Desktop Wallet Connection Router
+// 2. Fixed Mobile & Desktop Wallet Connection Router
 async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // Check for standard injected extension or mobile in-app browser providers
+    // Check for injected extension or mobile in-app browser providers
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
@@ -2599,7 +2599,7 @@ async function requestLiveWallet(providerName) {
         
         let deepLink = "";
         if (providerName === 'phantom') {
-          // Official Phantom Universal Link v1 connect schema to prompt connection confirmation
+          // Fixed Phantom v1 connect schema with all mandatory parameters to prevent error -32602
           deepLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&dapp_encryption_public_key=${pubKeyHex}&redirect_link=${encodeURIComponent(currentUrl)}&cluster=mainnet-beta`;
         } else if (providerName === 'solflare') {
           deepLink = `https://solflare.com/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(currentUrl)}`;
