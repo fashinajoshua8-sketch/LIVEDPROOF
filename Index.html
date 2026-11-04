@@ -2557,13 +2557,7 @@ async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Check for standard injected extension or mobile in-app browser providers
-    if (providerName === 'phantom') {
-    async function requestLiveWallet(providerName) {
-  try {
-    let provider = null;
-    
-    // 1. Detect injected providers (PC extensions & Mobile App In-App Browsers)
+    // 1. Detect standard injected providers (PC Extensions, Mobile In-App Browsers, & Wallet Standard objects)
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
@@ -2576,150 +2570,43 @@ async function requestLiveWallet(providerName) {
       provider = window.solana;
     }
 
-    // 2. Mobile Browser Deep Link Handler (with strict return persistence)
-    if (!provider) {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
-      if (isMobile) {
-        closeWalletModal();
-        const cleanUrl = window.location.href.split('?')[0];
-        const originUrl = window.location.origin;
-        
-        let deepLink = "";
-        if (providerName === 'phantom') {
-          // Official Phantom universal link payload with explicit redirect back to Chrome
-          deepLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(cleanUrl)}&cluster=mainnet-beta`;
-        } else if (providerName === 'solflare') {
-          deepLink = `https://solflare.com/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(cleanUrl)}`;
-        }
-
-        if (deepLink) {
-          // Store connection intent locally before leaving browser
-          localStorage.setItem("lived_connecting_provider", providerName);
-          window.location.href = deepLink;
-          return;
-        }
+    // Check Wallet Standard registry if available on window
+    if (!provider && window.navigator && window.navigator.wallets) {
+      // Wallet Standard compliant provider check
+      const registeredWallets = [...window.navigator.wallets.get()];
+      const targetWallet = registeredWallets.find(w => w.name.toLowerCase().includes(providerName.toLowerCase()));
+      if (targetWallet) {
+        provider = targetWallet.features['standard:connect'];
       }
-      
-      alert(`${providerName} extension or provider not detected.`);
+    }
+
+    // 2. If no provider can be found in the current context
+    if (!provider) {
+      alert(`No active provider found for ${providerName}. Please ensure you are browsing inside your wallet app's built-in browser or have a compatible provider active.`);
       closeWalletModal();
       return;
     }
 
-    // 3. Direct connection modal trigger
-    const res = await provider.connect();
-    db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
-    localStorage.setItem("lived_wallet_session", db.currentUser.wallet);
-    await syncProfileToSupabase();
-    renderLivedCard();
-    closeWalletModal();
-  } catch (err) {
-    closeWalletModal();
-    console.warn("Wallet connection cancelled or failed:", err);
-  }
-}
+    // 3. Trigger the direct confirmation connection modal popup
+    const res = typeof provider.connect === 'function' 
+      ? await provider.connect() 
+      : await provider(); // Handles standard feature interface calls if required
 
-// 4. Persistent Mobile Return & Session Hydration Listener
-window.addEventListener('load', () => {
-  const params = new URLSearchParams(window.location.search);
-  const pubKey = params.get('public_key') || params.get('phantom_encryption_public_key') || params.get('solana_address');
-  
-  if (pubKey) {
-    db.currentUser.wallet = pubKey;
-    localStorage.setItem("lived_wallet_session", pubKey);
-    syncProfileToSupabase();
-    renderLivedCard();
-    window.history.replaceState({}, document.title, window.location.pathname);
-  } else {
-    // Restore session from localStorage if returning from redirect
-    const savedWallet = localStorage.getItem("lived_wallet_session");
-    if (savedWallet && !db.currentUser.wallet) {
-      db.currentUser.wallet = savedWallet;
+    const publicKeyStr = res?.publicKey ? res.publicKey.toString() : (res?.accounts?.[0]?.address || res);
+    
+    if (publicKeyStr) {
+      db.currentUser.wallet = publicKeyStr.toString();
+      localStorage.setItem("lived_wallet_session", db.currentUser.wallet);
+      await syncProfileToSupabase();
       renderLivedCard();
     }
-  }
-});  provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
-    } else if (providerName === 'solflare') {
-      provider = window.solflare;
-    } else if (providerName === 'glow') {
-      provider = window.glow;
-    }
-
-    if (!provider && window.solana) {
-      provider = window.solana;
-    }
-
-    // 2. If no extension provider exists (standard mobile browser), trigger official deep-link connect
-    if (!provider) {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
-      if (isMobile) {
-        closeWalletModal();
-        const cleanUrl = window.location.href.split('?')[0];
-        const originUrl = window.location.origin;
-        
-        let deepLink = "";
-        if (providerName === 'phantom') {
-          deepLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(cleanUrl)}&cluster=mainnet-beta`;
-        } else if (providerName === 'solflare') {
-          deepLink = `https://solflare.com/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(cleanUrl)}`;
-        }
-
-        if (deepLink) {
-          window.location.href = deepLink;
-          return;
-        }
-      }
-      
-      alert(`${providerName} extension or provider not detected.`);
-      closeWalletModal();
-      return;
-    }
-
-    // 3. Connect directly via injected provider (Desktop / In-App browser view)
-    const res = await provider.connect();
-    db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
-    await syncProfileToSupabase();
-    renderLivedCard();
+    
     closeWalletModal();
   } catch (err) {
     closeWalletModal();
-    console.warn("Wallet connection cancelled or failed:", err);
+    console.warn("Wallet connection modal cancelled or failed:", err);
   }
 }
-
-// 4. Robust Return Payload Listener (Parses mobile redirect data upon page reload)
-window.addEventListener('load', () => {
-  const params = new URLSearchParams(window.location.search);
-  const directPubKey = params.get('public_key') || params.get('phantom_encryption_public_key');
-  const encryptedData = params.get('data');
-
-  if (directPubKey) {
-    db.currentUser.wallet = directPubKey;
-    syncProfileToSupabase();
-    renderLivedCard();
-    window.history.replaceState({}, document.title, window.location.pathname);
-  } else if (encryptedData) {
-    try {
-      // Decode incoming payload string from wallet redirection
-      const decodedString = atob(encryptedData);
-      const parsedData = JSON.parse(decodedString);
-      if (parsedData.public_key) {
-        db.currentUser.wallet = parsedData.public_key;
-        syncProfileToSupabase();
-        renderLivedCard();
-      }
-    } catch (e) {
-      // Fallback check if public key is passed explicitly in query parameters
-      if (params.get('solana_address')) {
-        db.currentUser.wallet = params.get('solana_address');
-        syncProfileToSupabase();
-        renderLivedCard();
-      }
-    }
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-});
 
 function syncBudgetRules(){
   const duration = document.getElementById("cDuration")?.value || "7 days";
