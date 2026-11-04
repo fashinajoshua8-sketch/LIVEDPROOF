@@ -3613,6 +3613,33 @@ async function adminSendBroadcastNotification() {
   document.getElementById("broadcastMsgInput").value = "";
 }
 
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  const directPubKey = params.get('public_key') || params.get('phantom_encryption_public_key');
+  const encryptedData = params.get('data');
+
+  if (directPubKey) {
+    db.currentUser.wallet = directPubKey;
+    syncProfileToSupabase();
+    renderLivedCard();
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (encryptedData) {
+    try {
+      // Decode incoming mobile session payload data
+      const decodedBytes = atob(encryptedData);
+      // Fallback extraction if public key is embedded in search query
+      if (params.get('solana_address')) {
+        db.currentUser.wallet = params.get('solana_address');
+        syncProfileToSupabase();
+        renderLivedCard();
+      }
+    } catch (e) {
+      console.warn("Payload decode warning:", e);
+    }
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+});
+
 initApp();
 document.addEventListener("DOMContentLoaded", () => {
   renderHome();
