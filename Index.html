@@ -2557,7 +2557,7 @@ async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Detect injected providers (Works instantly on PC extensions & Mobile App In-App Browsers)
+    // 1. Check for standard injected extension or mobile in-app browser providers
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
@@ -2570,36 +2570,34 @@ async function requestLiveWallet(providerName) {
       provider = window.solana;
     }
 
-    // 2. If no provider injection exists (standard mobile browser like Chrome/Safari)
+    // 2. If no extension provider exists (standard mobile browser), trigger official deep-link connect
     if (!provider) {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
       if (isMobile) {
         closeWalletModal();
-        const currentUrl = window.location.href;
+        const cleanUrl = window.location.href.split('?')[0];
         const originUrl = window.location.origin;
         
         let deepLink = "";
         if (providerName === 'phantom') {
-          // Official Phantom connection schema with auto-return payload mapping
-          deepLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(currentUrl)}&cluster=mainnet-beta`;
+          deepLink = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(cleanUrl)}&cluster=mainnet-beta`;
         } else if (providerName === 'solflare') {
-          deepLink = `https://solflare.com/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(currentUrl)}`;
+          deepLink = `https://solflare.com/ul/v1/connect?app_url=${encodeURIComponent(originUrl)}&redirect_link=${encodeURIComponent(cleanUrl)}`;
         }
 
         if (deepLink) {
-          // Smooth handshake transition to mobile app session
           window.location.href = deepLink;
           return;
         }
       }
       
-      alert(`${providerName} extension or provider not detected. Please install the wallet extension.`);
+      alert(`${providerName} extension or provider not detected.`);
       closeWalletModal();
       return;
     }
 
-    // 3. Connect directly via injected extension provider
+    // 3. Connect directly via injected provider (Desktop / In-App browser view)
     const res = await provider.connect();
     db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
     await syncProfileToSupabase();
@@ -2611,15 +2609,35 @@ async function requestLiveWallet(providerName) {
   }
 }
 
-// 4. Auto-capture returning deep link payload on page load
+// 4. Robust Return Payload Listener (Parses mobile redirect data upon page reload)
 window.addEventListener('load', () => {
   const params = new URLSearchParams(window.location.search);
-  const pubKey = params.get('phantom_encryption_public_key') || params.get('public_key');
-  
-  if (pubKey && !db.currentUser.wallet) {
-    db.currentUser.wallet = pubKey;
+  const directPubKey = params.get('public_key') || params.get('phantom_encryption_public_key');
+  const encryptedData = params.get('data');
+
+  if (directPubKey) {
+    db.currentUser.wallet = directPubKey;
     syncProfileToSupabase();
     renderLivedCard();
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (encryptedData) {
+    try {
+      // Decode incoming payload string from wallet redirection
+      const decodedString = atob(encryptedData);
+      const parsedData = JSON.parse(decodedString);
+      if (parsedData.public_key) {
+        db.currentUser.wallet = parsedData.public_key;
+        syncProfileToSupabase();
+        renderLivedCard();
+      }
+    } catch (e) {
+      // Fallback check if public key is passed explicitly in query parameters
+      if (params.get('solana_address')) {
+        db.currentUser.wallet = params.get('solana_address');
+        syncProfileToSupabase();
+        renderLivedCard();
+      }
+    }
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 });
@@ -3612,7 +3630,7 @@ async function adminSendBroadcastNotification() {
   alert(`📢 Broadcast notification successfully sent to ${profiles.length} user(s)!`);
   document.getElementById("broadcastMsgInput").value = "";
 }
-
+/*
 window.addEventListener('load', () => {
   const params = new URLSearchParams(window.location.search);
   const directPubKey = params.get('public_key') || params.get('phantom_encryption_public_key');
@@ -3639,6 +3657,7 @@ window.addEventListener('load', () => {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 });
+*/
 
 initApp();
 document.addEventListener("DOMContentLoaded", () => {
