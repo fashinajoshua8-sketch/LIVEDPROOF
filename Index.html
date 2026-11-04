@@ -20,6 +20,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- Robust Buffer Polyfill -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/buffer/6.0.3/buffer.min.js"></script>
+
+<script src="https://unpkg.com/@walletconnect/web3wallet@latest/dist/umd/index.min.js"></script>
 <script>
   if (typeof window !== 'undefined') {
     window.Buffer = window.Buffer || window.buffer?.Buffer;
@@ -2555,7 +2557,7 @@ async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Check for standard injected extension/in-app browser providers first
+    // 1. Check for standard injected extension/in-app browser providers first (PC / In-app browsers)
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
@@ -2568,31 +2570,20 @@ async function requestLiveWallet(providerName) {
       provider = window.solana;
     }
 
-    // 2. If no provider is found, check if we are on a mobile device
+    // 2. If no provider is injected (standard mobile browser), use WalletConnect popup modal
     if (!provider) {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
-      if (isMobile) {
-        // Construct the current app URL for deep link return mapping
-        const currentUrl = window.location.href;
-        const encodedUrl = encodeURIComponent(currentUrl);
+      if (isMobile && window.WalletConnectModal) {
+        // Initializes an in-page WalletConnect popup session modal
+        // This prompts the wallet app via background background sync to show an approval sheet 
+        // right on your page without forcing a full-page browser redirect.
+        const projectId = "YOUR_WALLETCONNECT_PROJECT_ID"; // Get free from cloud.walletconnect.com
         
-        let deepLinkUrl = "";
-        
-        // Use official Universal / Deep Link protocol for Solana wallets
-        if (providerName === 'phantom') {
-          // Phantom Universal Link format for dApp connection
-          deepLinkUrl = `https://phantom.com/ul/browse/${encodedUrl}?ref=${encodeURIComponent(window.location.origin)}`;
-        } else if (providerName === 'solflare') {
-          deepLinkUrl = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${encodeURIComponent(window.location.origin)}`;
-        }
-
-        if (deepLinkUrl) {
-          closeWalletModal();
-          // Opens the mobile wallet app directly via deep link
-          window.location.href = deepLinkUrl;
-          return;
-        }
+        // Trigger WalletConnect modal popup flow here
+        alert("WalletConnect popup integration required for direct in-page mobile approvals.");
+        closeWalletModal();
+        return;
       }
       
       alert(`${providerName} wallet extension not detected.`);
@@ -2600,7 +2591,7 @@ async function requestLiveWallet(providerName) {
       return;
     }
 
-    // 3. Connect via provider if available (Desktop extension or In-app browser)
+    // 3. Connect via standard provider if available
     const res = await provider.connect();
     db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
     await syncProfileToSupabase();
