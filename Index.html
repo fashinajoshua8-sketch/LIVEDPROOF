@@ -1359,10 +1359,23 @@ async function claimDailyReward() {
   db.currentUser.currentStreak = currentDay + 1;
   db.currentUser.lastDailyClaimDate = todayStr;
 
+  // Save locally first
   localStorage.setItem("lived_current_user_cache_v3", JSON.stringify(db.currentUser));
   
+  // ➔ PERSIST DIRECTLY TO SUPABASE PROFILES TABLE
   try {
-    await syncProfileToSupabase();
+    const client = requireBackend();
+    if (db.currentUser.handle) {
+      const { error } = await client.from('profiles').upsert([{
+        handle: db.currentUser.handle,
+        current_streak: db.currentUser.currentStreak,
+        permanent_xp: db.currentUser.permanentXP,
+        total_points: db.currentUser.totalPoints,
+        last_daily_claim_date: todayStr
+      }], { onConflict: 'handle' });
+
+      if (error) console.error("Supabase Daily Claim Sync Error:", error.message);
+    }
   } catch (err) {
     console.warn("Backend sync note:", err);
   }
