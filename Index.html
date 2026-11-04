@@ -2557,7 +2557,7 @@ async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Check for standard injected extension / in-app browser providers
+    // 1. Check for standard injected extension or mobile in-app browser providers
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
@@ -2570,38 +2570,30 @@ async function requestLiveWallet(providerName) {
       provider = window.solana;
     }
 
-    // 2. If provider is not injected (e.g. mobile Chromium/Safari browser), handle via Mobile Deep Link
+    // 2. If no direct provider is found (e.g. mobile Chrome/Safari), 
+    // utilize Solana Wallet Standard / Mobile Wallet Adapter (MWA) provider if registered,
+    // or request a direct connection without full-page navigation loops.
     if (!provider) {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
-      if (isMobile) {
-        closeWalletModal();
-        const currentUrl = window.location.href;
-        const encodedUrl = encodeURIComponent(currentUrl);
-        const refUrl = encodeURIComponent(window.location.origin);
-        
-        let deepLink = "";
-        if (providerName === 'phantom') {
-          deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${refUrl}`;
-        } else if (providerName === 'solflare') {
-          deepLink = `https://solflare.com/ul/v1/browse/${encodedUrl}?ref=${refUrl}`;
-        } else if (providerName === 'glow') {
-          deepLink = `https://glow.app/ul/browse/${encodedUrl}`;
-        }
-
-        if (deepLink) {
-          // Triggers mobile wallet app opening with the current dApp session
-          window.location.href = deepLink;
+      // Check for Solana Wallet Standard window register (MWA / Extension standard)
+      if (window.navigator && window.solanaMobileWalletAdapter) {
+        provider = window.solanaMobileWalletAdapter;
+      } else {
+        // Fallback: If running inside standard mobile browsers without MWA extension support,
+        // prompt the user to use the wallet's built-in browser or handle via direct provider.
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+          alert(`To connect directly on mobile without redirection, please open this app inside your ${providerName} built-in browser or ensure your mobile browser supports Wallet Standard.`);
+          closeWalletModal();
           return;
         }
+        
+        alert(`${providerName} wallet provider not detected. Please install the extension.`);
+        closeWalletModal();
+        return;
       }
-      
-      alert(`${providerName} wallet extension or provider not detected.`);
-      closeWalletModal();
-      return;
     }
 
-    // 3. Connect via standard injected provider (PC Extensions / In-app Webviews)
+    // 3. Establish direct connection payload
     const res = await provider.connect();
     db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
     await syncProfileToSupabase();
@@ -2612,6 +2604,7 @@ async function requestLiveWallet(providerName) {
     console.warn("Wallet connection cancelled or failed:", err);
   }
 }
+
 function syncBudgetRules(){
   const duration = document.getElementById("cDuration")?.value || "7 days";
   const budgetInput = document.getElementById("cBudget");
