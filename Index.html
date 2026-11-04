@@ -2572,7 +2572,7 @@ async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Check standard injected browser extensions & mobile web-injected providers
+    // 1. Detect injected providers (PC extensions & Mobile App In-App Browsers)
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
@@ -2585,42 +2585,44 @@ async function requestLiveWallet(providerName) {
       provider = window.solana;
     }
 
-    // 2. Fallback to Wallet Standard registry for mobile browsers
-    if (!provider && window.navigator && window.navigator.wallets) {
-      const wallets = [...window.navigator.wallets.get()];
-      const matched = wallets.find(w => w.name.toLowerCase().includes(providerName.toLowerCase()));
-      if (matched) {
-        provider = matched;
-      }
-    }
-
-    // 3. If no provider is active in the current mobile browser tab
+    // 2. Mobile Browser Environment Handling (Zero Error -32602, Zero Broken Loops)
     if (!provider) {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
       if (isMobile) {
         closeWalletModal();
-        // Clean user prompt guiding them to open inside the wallet's built-in browser (Industry Standard behavior for Uniswap/Raydium)
-        alert(`To connect securely, please open this app inside your ${providerName} mobile app browser, or use a Wallet Standard compatible mobile browser.`);
-        return;
+        
+        // Use Phantom's native build-in browser launcher (ul/browse) which avoids manual param handshakes entirely
+        const currentUrl = window.location.href;
+        let launchUrl = "";
+        
+        if (providerName === 'phantom') {
+          launchUrl = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}?ref=${encodeURIComponent(window.location.origin)}`;
+        } else if (providerName === 'solflare') {
+          launchUrl = `https://solflare.com/ul/v1/browse/${encodeURIComponent(currentUrl)}`;
+        }
+
+        if (launchUrl) {
+          // Clean transition directly into the wallet's secure app browser where window.solana injects natively
+          window.location.href = launchUrl;
+          return;
+        }
       }
       
-      alert(`${providerName} extension not detected. Please install it to connect.`);
+      alert(`${providerName} extension not detected. Please open this site inside your wallet's browser.`);
       closeWalletModal();
       return;
     }
 
-    // 4. Trigger direct connection
-    const res = typeof provider.connect === 'function' 
-      ? await provider.connect() 
-      : await provider.features['standard:connect']?.();
-
-    const pubKey = res?.publicKey ? res.publicKey.toString() : (res?.accounts?.[0]?.address);
-
-    if (pubKey) {
-      db.currentUser.wallet = pubKey;
-      localStorage.setItem("lived_wallet_session", pubKey);
+    // 3. Direct Connection for Desktop Extensions or Wallet In-App Browsers
+    const res = await provider.connect();
+    db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
+    localStorage.setItem("lived_wallet_session", db.currentUser.wallet);
+    
+    if (typeof syncProfileToSupabase === 'function') {
       await syncProfileToSupabase();
+    }
+    if (typeof renderLivedCard === 'function') {
       renderLivedCard();
     }
     
@@ -2631,41 +2633,13 @@ async function requestLiveWallet(providerName) {
   }
 }
 
-// 4. Return Payload & Session Persistence Listener
+// 4. Automatic Session Recovery on Reload
 window.addEventListener('load', () => {
-  const params = new URLSearchParams(window.location.search);
-  const directPubKey = params.get('public_key') || params.get('phantom_encryption_public_key') || params.get('solana_address');
-  const encryptedData = params.get("data");
-
-  if (directPubKey) {
-    db.currentUser.wallet = directPubKey;
-    localStorage.setItem("lived_wallet_session", directPubKey);
-    syncProfileToSupabase().catch(err => console.warn("Supabase sync warning:", err));
-    renderLivedCard();
-    window.history.replaceState({}, document.title, window.location.pathname);
-  } else if (encryptedData) {
-    try {
-      const decoded = atob(encryptedData);
-      const parsed = JSON.parse(decoded);
-      if (parsed.public_key) {
-        db.currentUser.wallet = parsed.public_key;
-        localStorage.setItem("lived_wallet_session", parsed.public_key);
-        syncProfileToSupabase().catch(err => console.warn("Supabase sync warning:", err));
-        renderLivedCard();
-      }
-    } catch (e) {
-      const saved = localStorage.getItem("lived_wallet_session");
-      if (saved) {
-        db.currentUser.wallet = saved;
-        renderLivedCard();
-      }
-    }
-    window.history.replaceState({}, document.title, window.location.pathname);
-  } else {
-    // Persistent session hydration on page reload
-    const saved = localStorage.getItem("lived_wallet_session");
-    if (saved && !db.currentUser.wallet) {
-      db.currentUser.wallet = saved;
+  const savedWallet = localStorage.getItem("lived_wallet_session");
+  if (savedWallet && (!db.currentUser || !db.currentUser.wallet)) {
+    db.currentUser = db.currentUser || {};
+    db.currentUser.wallet = savedWallet;
+    if (typeof renderLivedCard === 'function') {
       renderLivedCard();
     }
   }
