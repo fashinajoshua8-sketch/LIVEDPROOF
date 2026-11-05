@@ -20,10 +20,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- Robust Buffer Polyfill -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/buffer/6.0.3/buffer.min.js"></script>
-<!-- WalletConnect Web3Wallet -->
-<script src="https://unpkg.com/@walletconnect/web3wallet@latest/dist/umd/index.min.js"></script>
-<!-- WalletConnect / Reown AppKit UMD Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/@reown/appkit@latest/dist/umd/index.min.js"></script>
+<!-- WalletConnect Web3Modal Solana UMD Bundle -->
+<script src="https://unpkg.com/@web3modal/solana@latest/dist/umd/index.production.js"></script>
 <script>
   if (typeof window !== 'undefined') {
     window.Buffer = window.Buffer || window.buffer?.Buffer;
@@ -2673,43 +2671,29 @@ window.addEventListener('load', () => {
 let wcModal = null;
 
 function initWalletConnect() {
-  if (typeof AppKit !== 'undefined' && !wcModal) {
+  if (typeof Web3ModalSolana !== 'undefined' && !wcModal) {
     try {
-      // Initialize Reown/WalletConnect AppKit for Solana
-      // Get your free Project ID from https://cloud.walletconnect.com
-      wcModal = new AppKit.AppKit({
-        projectId: 'c63066c584da5008dee41ada7c6d9faa', 
+      wcModal = new Web3ModalSolana.CreateWeb3Modal({
+        projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
         metadata: {
           name: 'LIVED PROOF',
           description: 'Web3 Engagement Hub',
           url: window.location.origin,
           icons: [`${window.location.origin}/favicon.ico`]
         },
-        networks: ['solana:mainnet', 'solana:devnet'],
-        defaultNetwork: 'solana:devnet'
+        chainConfig: {
+          chainId: 'solana:devnet',
+          chains: ['solana:devnet', 'solana:mainnet']
+        }
       });
     } catch (e) {
-      console.warn("WalletConnect init notice:", e);
+      console.warn("WalletConnect init error:", e);
     }
   }
 }
 
 async function connectViaWalletConnect() {
   try {
-    // 1. Check if AppKit is available, if not wait up to 2 seconds for it to load
-    if (typeof AppKit === 'undefined') {
-      let attempts = 0;
-      while (typeof AppKit === 'undefined' && attempts < 10) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-        attempts++;
-      }
-    }
-
-    if (typeof AppKit === 'undefined') {
-      alert("WalletConnect script failed to load. Please check your internet connection.");
-      return;
-    }
-
     initWalletConnect();
     if (!wcModal) {
       alert("WalletConnect failed to initialize. Please check your Project ID.");
@@ -2717,12 +2701,9 @@ async function connectViaWalletConnect() {
     }
 
     closeWalletModal();
+    await wcModal.openModal();
     
-    // Trigger the WalletConnect connection modal
-    await wcModal.open();
-    
-    // Listen for provider connection response
-    const provider = wcModal.getProvider?.('solana');
+    const provider = wcModal.getWalletProvider();
     if (provider) {
       const accounts = await provider.request({ method: 'solana_requestAccounts' });
       if (accounts && accounts[0]) {
