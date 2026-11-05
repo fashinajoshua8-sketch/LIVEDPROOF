@@ -353,16 +353,17 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <div class="modal-overlay" id="walletModal">
   <div class="modal-card">
     <h3 style="margin-top:0">Connect Solana Wallet</h3>
-    <p class="small">Select your preferred Web3 wallet.</p>
+    <p class="small">Connect securely using your preferred Solana wallet.</p>
     <div style="margin-top:16px;display:grid;gap:10px">
+      
       <button type="button" class="wallet-option" onclick="requestLiveWallet('phantom')">
         <div style="display:flex;align-items:center;gap:12px">
           <div class="wallet-icon-frame">
             <img src="https://cdn.jsdelivr.net/npm/solana-icons@latest/svg/wallets/phantom.svg" alt="Phantom" class="wallet-icon" loading="lazy"/>
           </div>
-          <span style="font-size:15px;font-weight:700">Phantom</span>
+          <span style="font-size:15px;font-weight:700">Phantom Wallet</span>
         </div>
-        <span class="small" style="color:var(--brand2)">Web / Mobile</span>
+        <span class="small" style="color:var(--brand2)">Connect / Open In-App</span>
       </button>
 
       <button type="button" class="wallet-option" onclick="requestLiveWallet('solflare')">
@@ -370,28 +371,9 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           <div class="wallet-icon-frame">
             <img src="https://cdn.jsdelivr.net/npm/solana-icons@latest/svg/wallets/solflare.svg" alt="Solflare" class="wallet-icon" loading="lazy"/>
           </div>
-          <span style="font-size:15px;font-weight:700">Solflare</span>
+          <span style="font-size:15px;font-weight:700">Solflare Wallet</span>
         </div>
-        <span class="small" style="color:var(--brand2)">Web / Mobile</span>
-      </button>
-
-      <button type="button" class="wallet-option" onclick="requestLiveWallet('glow')">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="wallet-icon-frame">
-            <img src="https://glow.app/favicon.png" alt="Glow" class="wallet-icon" loading="lazy"/>
-          </div>
-          <span style="font-size:15px;font-weight:700">Glow</span>
-        </div>
-        <span class="small" style="color:var(--brand2)">Web / Mobile</span>
-      </button>
-
-      <!-- ➔ ADD THIS BUTTON FOR UNIVERSAL MOBILE BROWSER CONNECT -->
-      <button type="button" class="wallet-option" onclick="connectViaWalletConnect()" style="border-color: #38bdf8;">
-        <div style="display:flex;align-items:center;gap:12px">
-          <div class="wallet-icon-frame" style="color: #38bdf8; font-weight: bold; font-size: 16px;">WC</div>
-          <span style="font-size:15px;font-weight:700;color:#38bdf8">WalletConnect (Mobile Browser)</span>
-        </div>
-        <span class="small" style="color:#38bdf8">Universal QR / App-Switch</span>
+        <span class="small" style="color:var(--brand2)">Connect / Open In-App</span>
       </button>
 
     </div>
@@ -2578,57 +2560,50 @@ function getDappEncryptionKeyPair() {
 }
 
 // 2. Fixed Mobile & Desktop Wallet Connection Router
-// ➔ FIXED MOBILE & DESKTOP WALLET CONNECTION ROUTER
 async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Check for standard injected extension or in-app provider
+    // 1. Detect provider based on user selection
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
       provider = window.solflare;
-    } else if (providerName === 'glow') {
-      provider = window.glow;
     }
 
     if (!provider && window.solana) {
       provider = window.solana;
     }
 
-    // 2. Mobile Web Browser Native App-Switch Intent Bridge
+    // 2. If no provider extension is injected, handle mobile browser routing gracefully
     if (!provider) {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
       if (isMobile) {
         closeWalletModal();
+        const currentUrl = window.location.href;
         
-        const encodedUrl = encodeURIComponent(window.location.href);
-        const encodedTitle = encodeURIComponent(document.title || "LIVED PROOF");
+        // Prompt mobile user to open cleanly inside the wallet app's native browser
+        const openInWallet = confirm(
+          `To use LIVED Proof smoothly on mobile, please open this site inside your ${providerName.toUpperCase()} app's built-in browser.\n\nWould you like to copy the link or open it directly?`
+        );
         
-        let mwaIntent = "";
-        if (providerName === 'phantom') {
-          // Phantom Universal Link / Mobile App Intent Scheme
-          mwaIntent = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodedUrl}&cluster=mainnet-beta`;
-        } else if (providerName === 'solflare') {
-          // Solflare Mobile App Intent Scheme
-          mwaIntent = `https://solflare.com/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodedUrl}`;
-        } else if (providerName === 'glow') {
-          mwaIntent = `https://glow.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodedUrl}`;
+        if (openInWallet) {
+          if (providerName === 'phantom') {
+            window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}`;
+          } else if (providerName === 'solflare') {
+            window.location.href = `https://solflare.com/ul/v1/browse/${encodeURIComponent(currentUrl)}`;
+          }
         }
-
-        if (mwaIntent) {
-          window.location.href = mwaIntent;
-          return;
-        }
+        return;
       }
       
-      alert(`${providerName} extension or app not detected.`);
+      alert(`${providerName.toUpperCase()} extension is not installed. Please install it to connect.`);
       closeWalletModal();
       return;
     }
 
-    // 3. Desktop / In-App Browser Connection
+    // 3. Request connection from provider
     const res = await provider.connect();
     db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
     localStorage.setItem("lived_wallet_session", db.currentUser.wallet);
@@ -2636,99 +2611,10 @@ async function requestLiveWallet(providerName) {
     if (typeof syncProfileToSupabase === 'function') await syncProfileToSupabase();
     if (typeof renderLivedCard === 'function') renderLivedCard();
     closeWalletModal();
+    alert("🎉 Wallet Connected Successfully!");
   } catch (err) {
     closeWalletModal();
     console.warn("Wallet connection cancelled or failed:", err);
-  }
-}
-
-// 4. Session Recovery Listener for returning from the mobile app intent
-// ➔ MOBILE SESSION RECOVERY LISTENER (CAPTURES REDIRECT PARAMS)
-window.addEventListener('load', () => {
-  const params = new URLSearchParams(window.location.search);
-  const walletAddress = params.get('public_key') || params.get('solana_address') || params.get('account') || params.get('phantom_encryption_public_key');
-  
-  if (walletAddress) {
-    db.currentUser = db.currentUser || {};
-    db.currentUser.wallet = walletAddress;
-    localStorage.setItem("lived_wallet_session", walletAddress);
-    if (typeof syncProfileToSupabase === 'function') syncProfileToSupabase().catch(() => {});
-    if (typeof renderLivedCard === 'function') renderLivedCard();
-    // Clean URL parameters after capture
-    window.history.replaceState({}, document.title, window.location.pathname);
-  } else {
-    // Restore from local session cache if available
-    const saved = localStorage.getItem("lived_wallet_session");
-    if (saved && (!db.currentUser || !db.currentUser.wallet)) {
-      db.currentUser = db.currentUser || {};
-      db.currentUser.wallet = saved;
-      if (typeof renderLivedCard === 'function') renderLivedCard();
-    }
-  }
-});
-
-// --- WALLETCONNECT SOLANA INTEGRATION SETUP ---
-// --- ROBUST WALLETCONNECT SETUP ---
-let wcModal = null;
-
-function initWalletConnect() {
-  // Replace 'YOUR_WALLETCONNECT_PROJECT_ID' with your actual Project ID from cloud.walletconnect.com
-  const projectId = 'c63066c584da5008dee41ada7c6d9faa'; 
-
-  if (!projectId || projectId === 'c63066c584da5008dee41ada7c6d9faa') {
-    console.error("WalletConnect Project ID is not configured!");
-    return;
-  }
-
-  // Check if Web3Modal AppKit is loaded and ready
-  if (window.AppKit && !wcModal) {
-    try {
-      wcModal = new window.AppKit.AppKit({
-        projectId: projectId,
-        metadata: {
-          name: 'LIVED PROOF',
-          description: 'Web3 Engagement Hub',
-          url: window.location.origin,
-          icons: [`${window.location.origin}/favicon.ico`]
-        },
-        networks: ['solana:mainnet', 'solana:devnet'],
-        defaultNetwork: 'solana:devnet'
-      });
-    } catch (e) {
-      console.error("WalletConnect initialization error:", e);
-    }
-  }
-}
-
-async function connectViaWalletConnect() {
-  try {
-    initWalletConnect();
-    
-    if (!wcModal) {
-      alert("WalletConnect failed to initialize. Please verify your Project ID in the script configuration.");
-      return;
-    }
-
-    closeWalletModal();
-    
-    // Open the WalletConnect modal
-    await wcModal.open();
-    
-    const provider = wcModal.getProvider?.('solana');
-    if (provider) {
-      const accounts = await provider.request({ method: 'solana_requestAccounts' });
-      if (accounts && accounts[0]) {
-        db.currentUser.wallet = accounts[0];
-        localStorage.setItem("lived_wallet_session", accounts[0]);
-        
-        if (typeof syncProfileToSupabase === 'function') await syncProfileToSupabase();
-        if (typeof renderLivedCard === 'function') renderLivedCard();
-        alert("🎉 WalletConnect Connected Successfully!");
-      }
-    }
-  } catch (err) {
-    console.error("WalletConnect connection error:", err);
-    alert("Connection error or modal closed.");
   }
 }
 
@@ -3720,34 +3606,6 @@ async function adminSendBroadcastNotification() {
   alert(`📢 Broadcast notification successfully sent to ${profiles.length} user(s)!`);
   document.getElementById("broadcastMsgInput").value = "";
 }
-/*
-window.addEventListener('load', () => {
-  const params = new URLSearchParams(window.location.search);
-  const directPubKey = params.get('public_key') || params.get('phantom_encryption_public_key');
-  const encryptedData = params.get('data');
-
-  if (directPubKey) {
-    db.currentUser.wallet = directPubKey;
-    syncProfileToSupabase();
-    renderLivedCard();
-    window.history.replaceState({}, document.title, window.location.pathname);
-  } else if (encryptedData) {
-    try {
-      // Decode incoming mobile session payload data
-      const decodedBytes = atob(encryptedData);
-      // Fallback extraction if public key is embedded in search query
-      if (params.get('solana_address')) {
-        db.currentUser.wallet = params.get('solana_address');
-        syncProfileToSupabase();
-        renderLivedCard();
-      }
-    } catch (e) {
-      console.warn("Payload decode warning:", e);
-    }
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-});
-*/
 
 initApp();
 document.addEventListener("DOMContentLoaded", () => {
