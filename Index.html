@@ -20,8 +20,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- Robust Buffer Polyfill -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/buffer/6.0.3/buffer.min.js"></script>
-<!-- WalletConnect Web3Modal Solana UMD Bundle -->
-<script src="https://unpkg.com/@web3modal/solana@latest/dist/umd/index.production.js"></script>
 <script>
   if (typeof window !== 'undefined') {
     window.Buffer = window.Buffer || window.buffer?.Buffer;
@@ -353,17 +351,16 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <div class="modal-overlay" id="walletModal">
   <div class="modal-card">
     <h3 style="margin-top:0">Connect Solana Wallet</h3>
-    <p class="small">Connect securely using your preferred Solana wallet.</p>
+    <p class="small">Select your preferred Web3 wallet.</p>
     <div style="margin-top:16px;display:grid;gap:10px">
-      
       <button type="button" class="wallet-option" onclick="requestLiveWallet('phantom')">
         <div style="display:flex;align-items:center;gap:12px">
           <div class="wallet-icon-frame">
             <img src="https://cdn.jsdelivr.net/npm/solana-icons@latest/svg/wallets/phantom.svg" alt="Phantom" class="wallet-icon" loading="lazy"/>
           </div>
-          <span style="font-size:15px;font-weight:700">Phantom Wallet</span>
+          <span style="font-size:15px;font-weight:700">Phantom</span>
         </div>
-        <span class="small" style="color:var(--brand2)">Connect / Open In-App</span>
+        <span class="small" style="color:var(--brand2)">Web / Mobile</span>
       </button>
 
       <button type="button" class="wallet-option" onclick="requestLiveWallet('solflare')">
@@ -371,11 +368,20 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           <div class="wallet-icon-frame">
             <img src="https://cdn.jsdelivr.net/npm/solana-icons@latest/svg/wallets/solflare.svg" alt="Solflare" class="wallet-icon" loading="lazy"/>
           </div>
-          <span style="font-size:15px;font-weight:700">Solflare Wallet</span>
+          <span style="font-size:15px;font-weight:700">Solflare</span>
         </div>
-        <span class="small" style="color:var(--brand2)">Connect / Open In-App</span>
+        <span class="small" style="color:var(--brand2)">Web / Mobile</span>
       </button>
 
+      <button type="button" class="wallet-option" onclick="requestLiveWallet('glow')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="wallet-icon-frame">
+            <img src="https://glow.app/favicon.png" alt="Glow" class="wallet-icon" loading="lazy"/>
+          </div>
+          <span style="font-size:15px;font-weight:700">Glow</span>
+        </div>
+        <span class="small" style="color:var(--brand2)">Web / Mobile</span>
+      </button>
     </div>
     <button type="button" class="btn" style="margin-top:20px;width:100%" onclick="closeWalletModal()">Cancel</button>
   </div>
@@ -595,19 +601,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <button class="btn primary" type="submit" id="proceedPaymentBtn">Proceed to Manual Treasury Payment →</button>
     </form>
   </div>
-
-  <!-- Insert this inside your #create form right before the objective brief textarea -->
-<div style="background:rgba(255,106,0,0.04); border:1px solid var(--line); padding:14px; border-radius:10px; margin:12px 0;">
-  <label style="color:var(--brand2); display:block; margin-bottom:8px">🎯 Engagement Submission Mode</label>
-  <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-    <input type="checkbox" id="cIsLiveditOnly" style="width:20px; height:20px; accent-color:var(--brand);">
-    <div>
-      <span class="small" style="font-weight:700; color:var(--fg); display:block;">Enable LIVED IT Posts Engagement Submission</span>
-      <span class="small" style="color:var(--muted);">Restricts submissions to official LIVEDIT-only posts and unlocks an extra +5 XP engagement bonus.</span>
-    </div>
-  </label>
-</div>
-
 </section>
 
 <section id="treasuryPayment" class="view section">
@@ -768,116 +761,43 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
             <input type="hidden" id="tabEditCampId">
             
             <div class="row">
-                <div><label>Campaign Name *</label><input id="tabName" required placeholder="e.g. LIVED Guard Launch"></div>
-                <div><label>Project / Category *</label><select id="tabCategory"><option>DeFi</option><option>Memecoin</option><option>AI</option><option>Infrastructure</option><option>NFT</option><option>Touch Grass</option></select></div>
+              <div><label>Campaign Name *</label><input id="tabName" required placeholder="e.g. LIVED Guard Launch"></div>
+              <div><label>Project / Category *</label><select id="tabCategory"><option>DeFi</option><option>Memecoin</option><option>AI</option><option>Infrastructure</option><option>NFT</option><option>Touch Grass</option></select></div>
             </div>
 
             <div class="row">
-                <div>
-                <label>Reward Currency *</label>
-                <select id="tabCurrency" onchange="toggleAdminNativeTokenInput()">
-                    <option value="SOL">SOL</option>
-                    <option value="USDC">USDC</option>
-                    <option value="USDT">USDT</option>
-                    <option value="Native Token">Native Token ($LIVED)</option>
-                </select>
-                </div>
-                <div id="tabNativeTokenBox" style="display:none;">
-                <label>Native Token Name</label>
-                <input id="tabNativeTokenName" placeholder="e.g. LIVED">
-                </div>
+              <div><label>Reward Currency *</label><select id="tabCurrency"><option value="SOL">SOL</option><option value="USDC">USDC</option><option value="USDT">USDT</option><option value="Native Token">Native Token ($LIVED)</option></select></div>
+              <div><label>Total Reward Pool (USD) *</label><input id="tabBudget" type="number" step="1" value="100" required></div>
             </div>
 
             <div class="row">
-                <div>
-                <label>Duration *</label>
-                <select id="tabDuration">
-                    <option value="1 day">1 day</option>
-                    <option value="2 days">2 days</option>
-                    <option value="3 days">3 days</option>
-                    <option value="7 days" selected>7 days</option>
-                    <option value="14 days">14 days</option>
-                    <option value="30 days">30 days</option>
-                </select>
-                </div>
-                <div><label>Total Reward Pool (USD) *</label><input id="tabBudget" type="number" step="1" value="100" required></div>
-            </div>
-
-            <div class="row">
-                <div><label>Max Participants Cap *</label><input id="tabMaxPart" type="number" value="50" required></div>
-                <div><label>Top Participants Splitting Reward Pool *</label><input id="tabTopRewarded" type="number" min="1" value="5" required></div>
-            </div>
-
-            <div style="background:rgba(255,106,0,0.03);border:1px solid var(--line);padding:14px;border-radius:10px;margin:10px 0">
-                <label style="color:var(--brand2);display:block;margin-bottom:8px">⚙️ Streak Model & Verification Thresholds</label>
-                
-                <div class="row" style="margin-bottom:10px">
-                <div>
-                    <label>Streak Model</label>
-                    <select id="tabStreakModel">
-                    <option value="Milestone-Based">Milestone-Based (Recommended)</option>
-                    <option value="Full Reset">Full Reset</option>
-                    <option value="Multiplier Reset">Multiplier Reset</option>
-                    </select>
-                </div>
-                <div><label>Streak Bonus Value per Day (XP)</label><input id="tabXP" type="number" min="1" value="10" required></div>
-                </div>
-
-                <div class="row" style="margin-bottom:10px">
-                <div><label>Streak Multiplier Base</label><input id="tabStreakMultiplier" type="number" step="0.1" min="1.0" value="1.0" required></div>
-                <div><label>Streak Milestone Threshold (Days)</label><input id="tabStreakMilestone" type="number" min="1" value="7" required></div>
-                </div>
-
-                <div class="row">
-                <div><label>Min Likes</label><input id="tabMinLikes" type="number" min="0" value="10" required></div>
-                <div><label>Min Reposts</label><input id="tabMinReposts" type="number" min="0" value="5" required></div>
-                </div>
-                <div class="row" style="margin-top:10px">
-                <div><label>Min Comments</label><input id="tabMinComments" type="number" min="0" value="5" required></div>
-                <div><label>Min Views / Impressions</label><input id="tabMinViews" type="number" min="0" value="50" required></div>
-                </div>
-                <div class="row" style="margin-top:10px">
-                <div>
-                    <label>Campaign Timezone Cutoff</label>
-                    <select id="tabTimezone">
-                    <option value="UTC">UTC (Midnight Cutoff)</option>
-                    <option value="EST">EST (New York)</option>
-                    <option value="PST">PST (Los Angeles)</option>
-                    <option value="CET">CET (Central Europe)</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Status</label>
-                    <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
-                    <input type="checkbox" id="tabIsActive" checked style="width:20px; height:20px; accent-color:var(--brand);">
-                    <span class="small" style="font-weight:700; color:var(--good);">Active</span>
-                    </div>
-                </div>
-                </div>
+              <div><label>Max Participants Cap *</label><input id="tabMaxPart" type="number" value="50" required></div>
+              <div><label>Streak Model</label><select id="tabStreakModel"><option value="Milestone-Based">Milestone-Based</option><option value="Full Reset">Full Reset</option><option value="Multiplier Reset">Multiplier Reset</option></select></div>
             </div>
 
             <div>
-                <label>Post Requirements & Tag *</label>
-                <input id="tabRequirements" placeholder="e.g. Include #LIVEDGuard, tag @LIVED_IT" required>
+              <label>Post Requirements & Tag *</label>
+              <input id="tabRequirements" placeholder="e.g. Include #LIVEDGuard, tag @LIVED_IT" required>
             </div>
 
-            <div style="margin: 12px 0;">
-                <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                <input type="checkbox" id="tabIsLiveditOnly" style="width:20px; height:20px; accent-color:var(--brand);">
-                <div>
-                    <span class="small" style="font-weight:700; color:var(--fg);">Enable LIVED IT Posts Engagement Submission</span>
-                    <span class="small" style="color:var(--muted); display:block;">Enforces @LIVEDITglobal and awards an extra +5 XP engagement bonus.</span>
+            <div class="row">
+              <div><label>XP per Post *</label><input id="tabXP" type="number" value="10" required></div>
+              <div>
+                <label>Status</label>
+                <div style="display:flex; align-items:center; gap:8px; margin-top:8px;">
+                  <input type="checkbox" id="tabIsActive" checked style="width:20px; height:20px; accent-color:var(--brand);">
+                  <span class="small" style="font-weight:700; color:var(--good);">Active</span>
                 </div>
-                </label>
+              </div>
             </div>
 
             <div><label>Campaign Objective & Brief *</label><textarea id="tabBrief" required placeholder="Enter campaign description, rules, and details..."></textarea></div>
 
             <div class="actions" style="margin-top:20px; justify-content:flex-end;">
-                <button type="button" class="btn" onclick="document.getElementById('adminTabularForm').reset()">Cancel</button>
-                <button type="submit" class="btn primary">💾 Save Campaign</button>
+              <button type="button" class="btn" onclick="document.getElementById('adminTabularForm').reset()">Cancel</button>
+              <button type="submit" class="btn primary">💾 Save Campaign</button>
             </div>
-            </form>
+          </form>
         </div>
 
         <!-- CAMPAIGNS LIST TABLE -->
@@ -948,97 +868,6 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           <h3 style="margin:0 0 10px; font-size:18px;">Campaign Winner Payouts & On-Chain Escrow Settlement</h3>
           <p class="small" style="margin:4px 0 12px">Execute automated Solana escrow transfers directly to top campaign leaders.</p>
           <div id="adminPayoutsList"></div>
-        </div>
-
-        <!-- ADMIN CAMPAIGN PARTICIPANTS & CONTRIBUTOR DETAILS -->
-        <div style="margin-top:35px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
-            <div>
-              <h3 style="margin:0; font-size:18px;">Campaign Participants & Contributor Details</h3>
-              <p class="small" style="margin:4px 0 0">Inspect participant records, connected X handles, and verified wallet addresses per campaign.</p>
-            </div>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <button class="btn sm primary" onclick="copyAllWallets()">📋 Copy All Wallets</button>
-              <select id="adminParticipantCampaignFilter" onchange="renderAdminParticipantsTable()" style="background:#141417; border-radius:8px; padding:8px 12px; font-size:13px; border:1px solid var(--line); color:var(--fg);">
-                <option value="all">📁 View All Campaigns</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="card" style="padding:0; overflow-x:auto; background:#111114; border:1px solid var(--line); border-radius:12px; margin-bottom:35px;">
-            <table class="leaderboard" style="width:100%; border-collapse:collapse; min-width:850px;" id="adminParticipantsTable">
-              <thead>
-                <tr style="border-bottom:1px solid var(--line); color:var(--muted); font-size:11px;">
-                  <th style="padding:14px 16px;">Campaign Name</th>
-                  <th style="padding:14px 16px;">Participant X Handle</th>
-                  <th style="padding:14px 16px;">Connected Wallet Address</th>
-                  <th style="padding:14px 16px;">Total XP</th>
-                  <th style="padding:14px 16px;">Reach</th>
-                  <th style="padding:14px 16px; text-align:right;">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="adminParticipantsRows">
-                <tr><td colspan="6" style="text-align:center; padding:20px;" class="small">Loading participant details...</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- ADVANCED ADMIN SUITE -->
-        <div style="margin-top:45px; border-top:2px solid var(--line); padding-top:25px;">
-            <h3 style="margin:0 0 10px; font-size:20px; color:var(--brand2);">🛠️ Advanced Admin Suite</h3>
-            <p class="small" style="margin-bottom:20px;">Analytics, User XP breakdowns, Manual Adjustments, Moderation, and Broadcasts.</p>
-
-        <!-- Feature A: Campaign Analytics & CSV Export -->
-        <div class="card" style="margin-bottom:20px; background:#111114;">
-            <h4 style="margin:0 0 8px">📊 Protocol Analytics & Data Export</h4>
-            <p class="small" style="margin-bottom:14px;">Download audit trails and participant records for off-chain accounting.</p>
-            <div class="actions">
-            <button class="btn sm primary" onclick="exportParticipantsCSV()">📥 Export Participants CSV</button>
-            <button class="btn sm" onclick="exportPaymentsCSV()">📥 Export Payments CSV</button>
-            </div>
-        </div>
-
-        <!-- Feature B: User XP Breakdown by Campaign Dropdown -->
-        <div class="card" style="margin-bottom:20px; background:#111114;">
-            <h4 style="margin:0 0 8px">🔍 User XP Breakdown Selector</h4>
-            <p class="small" style="margin-bottom:14px;">Select a campaign to inspect individual user scores, net XP, and interaction metrics.</p>
-            <div style="margin-bottom:12px;">
-            <select id="breakdownCampaignSelect" onchange="renderAdminUserXpBreakdown()" style="background:#141417; border-radius:8px; padding:10px; border:1px solid var(--line); color:var(--fg); width:100%; max-width:350px;">
-                <option value="">-- Choose Campaign for Breakdown --</option>
-            </select>
-            </div>
-            <div id="userXpBreakdownContainer" class="small" style="color:var(--muted);">Select a campaign above to load user points breakdown.</div>
-        </div>
-
-        <!-- Feature C: Manual XP Adjustment Tool -->
-        <div class="card" style="margin-bottom:20px; background:#111114;">
-            <h4 style="margin:0 0 8px">⚡ Manual XP Adjustment</h4>
-            <p class="small" style="margin-bottom:14px;">Manually reward or deduct XP for a specific contributor handle.</p>
-            <div class="row" style="margin-bottom:10px;">
-            <input type="text" id="manualXpHandle" placeholder="@handle">
-            <input type="number" id="manualXpAmount" placeholder="XP Amount (+/- e.g. 50 or -20)">
-            </div>
-            <button class="btn sm success" onclick="adminExecuteManualXpAdjustment()">Apply XP Adjustment</button>
-        </div>
-
-        <!-- Feature D: User Moderation & Ban List -->
-        <div class="card" style="margin-bottom:20px; background:#111114;">
-            <h4 style="margin:0 0 8px">🛡️ User Moderation & Bans</h4>
-            <p class="small" style="margin-bottom:14px;">Block abusive handles or bot accounts from participating in future campaigns.</p>
-            <div style="display:flex; gap:10px; margin-bottom:12px;">
-            <input type="text" id="banHandleInput" placeholder="@handleToBan" style="flex:1;">
-            <button class="btn sm danger" onclick="adminBanUserHandle()">Ban Handle</button>
-            </div>
-        </div>
-
-        <!-- Feature E: Broadcast Protocol-Wide Notification -->
-        <div class="card" style="background:#111114;">
-            <h4 style="margin:0 0 8px">📢 Broadcast Notification</h4>
-            <p class="small" style="margin-bottom:14px;">Send a live toast alert to all connected protocol participants.</p>
-            <textarea id="broadcastMsgInput" placeholder="Enter broadcast announcement message..." style="margin-bottom:10px;"></textarea>
-            <button class="btn sm primary" onclick="adminSendBroadcastNotification()">Send Global Alert</button>
-        </div>
         </div>
 
       </div>
@@ -1270,17 +1099,11 @@ const CAMPAIGN_TEMPLATES = {
 
 function initDailyRewards() {
   const todayStr = new Date().toISOString().slice(0, 10);
-const lastClaim = db.currentUser.lastDailyClaimDate;
-if (lastClaim) {
-  const lastDate = new Date(lastClaim).getTime();
-  const now = new Date().getTime();
-  const diffHours = (now - lastDate) / (1000 * 60 * 60);
+  const lastClaim = db.currentUser.lastDailyClaimDate;
   
-  // If more than 48 hours passed (missed a full day + grace period), reset streak
-  if (diffHours > 48) {
+  if (!db.currentUser.currentStreak || db.currentUser.currentStreak < 1) {
     db.currentUser.currentStreak = 1;
   }
-}
   
   const currentStreak = db.currentUser.currentStreak;
   const hasClaimedToday = (lastClaim === todayStr);
@@ -1353,23 +1176,10 @@ async function claimDailyReward() {
   db.currentUser.currentStreak = currentDay + 1;
   db.currentUser.lastDailyClaimDate = todayStr;
 
-  // Save locally first
   localStorage.setItem("lived_current_user_cache_v3", JSON.stringify(db.currentUser));
   
-  // ➔ PERSIST DIRECTLY TO SUPABASE PROFILES TABLE
   try {
-    const client = requireBackend();
-    if (db.currentUser.handle) {
-      const { error } = await client.from('profiles').upsert([{
-        handle: db.currentUser.handle,
-        current_streak: db.currentUser.currentStreak,
-        permanent_xp: db.currentUser.permanentXP,
-        total_points: db.currentUser.totalPoints,
-        last_daily_claim_date: todayStr
-      }], { onConflict: 'handle' });
-
-      if (error) console.error("Supabase Daily Claim Sync Error:", error.message);
-    }
+    await syncProfileToSupabase();
   } catch (err) {
     console.warn("Backend sync note:", err);
   }
@@ -1556,16 +1366,12 @@ function renderCampaigns(){
     const isTouchGrass = c.category === "Touch Grass";
     const streakModel = c.streakModel || "Milestone-Based";
 
-    // AUTOMATED TIMEFRAME CHECK
-    const timeInfo = getCampaignTimeLeft(c.expiresAt, c.created_at, c.duration);
-    const badgeStyle = timeInfo.isExpired ? 'background:rgba(248,113,113,0.12);color:#f87171;border:1px solid rgba(248,113,113,0.3)' : (isTouchGrass ? 'background:#10b98125;color:#34d399;border:1px solid #10b98155' : '');
-
     return `<article class="card campaign">
       ${bannerImg}
       <div class="campaign-inner">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <span class="badge" style="${badgeStyle}">⏱️ ${timeInfo.text} · ⚡ ${esc(streakModel)}</span>
-          <span class="small" style="font-weight:700;color:${timeInfo.isExpired ? 'var(--warn)' : 'var(--brand2)'}">${timeInfo.isExpired ? 'EXPIRED' : 'ACTIVE'}</span>
+          <span class="badge" style="${isTouchGrass ? 'background:#10b98125;color:#34d399;border:1px solid #10b98155' : ''}">${esc(c.category)} · ${esc(c.duration)} · ⚡ ${esc(streakModel)}</span>
+          <span class="small" style="font-weight:700;color:var(--brand2)">ACTIVE</span>
         </div>
         <h2>${esc(c.name)}</h2>
         <p>${esc(c.brief)}</p>
@@ -1580,7 +1386,7 @@ function renderCampaigns(){
           </div>
           <div class="actions">
             <button class="btn" onclick="openCampaign(${c.id})">Inspect</button>
-            <button class="btn ${timeInfo.isExpired ? '' : 'primary'}" ${timeInfo.isExpired ? 'disabled style="opacity:0.5;cursor:not-allowed"' : ''} onclick="joinCampaign(${c.id})">${c.joined ? "Joined" : (timeInfo.isExpired ? "Expired" : "Join")}</button>
+            <button class="btn primary" onclick="joinCampaign(${c.id})">${c.joined?"Joined":"Join"}</button>
           </div>
         </div>
       </div>
@@ -1602,10 +1408,6 @@ function openCampaign(id){
   const currencyLabel = c.currency === "Native Token" ? (c.nativeTokenName || "Token") : (c.currency || "SOL");
   const isTouchGrass = c.category === "Touch Grass";
   const streakModel = c.streakModel || "Milestone-Based";
-
-  // AUTOMATED TIMEFRAME CHECK FOR DETAIL VIEW
-  const timeInfo = getCampaignTimeLeft(c.expiresAt, c.created_at, c.duration);
-  const isLocked = c.status === "COMPLETED" || c.status === "ARCHIVED" || c.status === "REJECTED" || timeInfo.isExpired;
 
   let linksHtml = '';
   if (c.targetLinks && Array.isArray(c.targetLinks) && c.targetLinks.length > 0) {
@@ -1633,13 +1435,14 @@ function openCampaign(id){
     </div>
   ` : '';
 
+  const isLocked = c.status === "COMPLETED" || c.status === "ARCHIVED" || c.status === "REJECTED";
   let submitButtonHtml = isLocked ? 
-    `<div class="notice" style="color:var(--warn)">🔒 Campaign Timeframe Ended or Inactive. Submissions closed.</div>` :
+    `<div class="notice" style="color:var(--warn)">🔒 Campaign Completed or Inactive. Submissions closed.</div>` :
     `<div style="margin:20px 0"><button class="btn ${isTouchGrass ? 'success' : 'primary'}" onclick="openSubmitPostModal(${c.id})">${isTouchGrass ? '🌿 Submit Touch Grass Video Post' : '📤 Submit X Post for Verified Points'}</button></div>`;
   
   document.getElementById("detailContent").innerHTML = `
     ${heroBanner}
-    <div class="kicker">${esc(c.category)} · ${esc(c.duration)} · Paid in ${esc(currencyLabel)} · ${esc(timeInfo.isExpired ? 'EXPIRED' : (c.status||'ACTIVE'))}</div>
+    <div class="kicker">${esc(c.category)} · ${esc(c.duration)} · Paid in ${esc(currencyLabel)} · ${esc(c.status||'ACTIVE')}</div>
     <h2>${esc(c.name)}</h2>
     <p>${esc(c.brief)}</p>
     
@@ -1649,7 +1452,6 @@ function openCampaign(id){
       <div class="stat"><b>${money(pool)} (${currencyLabel})</b><span class="small">Contributor Pool (90%)</span></div>
     </div>
 
-    <div class="metric"><span>Timeframe & Time Left</span><b style="color:${timeInfo.isExpired ? 'var(--warn)' : 'var(--brand2)'}">⏱️ ${timeInfo.text} (${esc(c.duration)})</b></div>
     <div class="metric"><span>Max Participants Cap</span><b>${c.maxParticipants || 'Unlimited'}</b></div>
     <div class="metric"><span>Rewarded Rank Cutoff</span><b style="color:var(--good)">Top ${c.topRewarded || 5} Contributors</b></div>
     <div class="metric"><span>Streak Model Rule</span><b style="color:var(--brand2)">⚡ ${esc(streakModel)}</b></div>
@@ -1769,8 +1571,7 @@ async function joinCampaign(id){
   }
   
   const client = requireBackend();
-  // Changed from .insert() to .upsert() to handle existing participant keys gracefully
-  const { error } = await client.from('campaign_participants').upsert([{
+  const { error } = await client.from('campaign_participants').insert([{
     campaign_id: numericId,
     handle: db.currentUser.handle,
     score: 0,
@@ -1778,7 +1579,7 @@ async function joinCampaign(id){
     reach: 0,
     interactions: 0,
     wallet_address: db.currentUser.wallet || null
-  }], { onConflict: 'campaign_id,handle' });
+  }]);
 
   if(error){ alert("Could not join campaign: " + error.message); return; }
 
@@ -1814,25 +1615,13 @@ function openSubmitPostModal(campaignId) {
   }
   const c = db.campaigns.find(x => Number(x.id) === Number(campaignId)) || db.allAdminCampaigns?.find(x => Number(x.id) === Number(campaignId));
   const isTouchGrass = c && c.category === "Touch Grass";
-  const isLiveditOnly = c && c.is_livedit_only;
 
   document.getElementById("targetCampaignId").value = campaignId;
   document.getElementById("postUrlInput").value = "";
-  
-  // Dynamic Header Tag logic
-  if (isLiveditOnly) {
-    document.getElementById("submitModalTitle").textContent = "LIVED IT Posts Engagement Submission";
-    document.getElementById("submitModalDesc").textContent = "Submit your engagement link for official LIVEDIT-only posts. Includes +5 XP bonus. Duplicate claims are strictly restricted.";
-  } else if (isTouchGrass) {
-    document.getElementById("submitModalTitle").textContent = "Submit Touch Grass Video Experience";
-    document.getElementById("submitModalDesc").textContent = "Paste your original video or real-world participation post link on X below.";
-  } else {
-    document.getElementById("submitModalTitle").textContent = "Submit Campaign Post";
-    document.getElementById("submitModalDesc").textContent = "Paste your X post URL below. Verified metrics and configurable streak rules determine your points.";
-  }
-
+  document.getElementById("submitModalTitle").textContent = isTouchGrass ? "Submit Touch Grass Video Experience" : "Submit Campaign Post";
+  document.getElementById("submitModalDesc").textContent = isTouchGrass ? "Paste your original video or real-world participation post link on X below." : "Paste your X post URL below. Verified metrics and configurable streak rules determine your points.";
   document.getElementById("videoUploadNote").style.display = isTouchGrass ? "block" : "none";
-  document.getElementById("urlInputLabel").textContent = "X Post / Video URL";
+  document.getElementById("urlInputLabel").textContent = isTouchGrass ? "Video / X Post URL" : "X Post URL";
   document.getElementById("submitPostModal").classList.add("active");
 }
 
@@ -1967,27 +1756,24 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     }
     if (currentStreak > longestStreak) longestStreak = currentStreak;
 
-// --- LINEAR STREAK REWARD FORMULA ---
-    const maxStreakCap = 30; // Optional cap to protect campaign budgets from runaway inflation
-    const effectiveStreak = Math.min(currentStreak, maxStreakCap);
-
-    // Linear Formula: Base bonus per day multiplied directly by day count (no compounding multiplication)
-    let calculatedStreakBonus = streakBonusPerDay * effectiveStreak;
+    if (streakModel !== "Multiplier Reset") {
+      streakMultiplier = Number((streakMultiplierBase + (currentStreak * 0.05)).toFixed(2));
+    }
+    
+    let calculatedStreakBonus = Math.round(streakBonusPerDay * currentStreak * streakMultiplier);
 
     let milestoneBonusAwarded = 0;
     if (streakModel === "Milestone-Based") {
       milestoneProgress += 1;
       if (milestoneProgress >= streakMilestoneDays) {
-        // Flat milestone bonus every 7 days (e.g., +50 XP milestone reward)
-        milestoneBonusAwarded = 50 * Math.floor(currentStreak / streakMilestoneDays);
+        milestoneBonusAwarded = 100 * Math.floor(currentStreak / streakMilestoneDays);
         calculatedStreakBonus += milestoneBonusAwarded;
       }
     }
 
     const baseXP = 10;
-    const engagementBonus = activeCampaign?.is_livedit_only ? 5 : 0;
-    const totalAwardXP = baseXP + calculatedStreakBonus + engagementBonus;
-
+    const totalAwardXP = baseXP + calculatedStreakBonus;
+    
     db.currentUser.permanentXP = Number(db.currentUser.permanentXP || 0) + Number(baseXP);
     db.currentUser.streakBonus = streakModel === "Full Reset" && missedDay ? calculatedStreakBonus : Number(db.currentUser.streakBonus || 0) + Number(calculatedStreakBonus);
     db.currentUser.totalPoints = db.currentUser.permanentXP + db.currentUser.streakBonus;
@@ -2002,17 +1788,12 @@ document.getElementById("submitPostForm").addEventListener("submit", async funct
     const interactionsVal = (data.likes || 0) + (data.reposts || 0) + (data.comments || 0);
 
     const { error: subError } = await client.from("campaign_submissions").insert([{
-        campaign_id: campaignId,
-        handle: db.currentUser.handle,
-        post_url: postUrl,
-        metrics: { impressions: reachVal, likes: data.likes, reposts: data.reposts, comments: data.comments },
-        score: totalAwardXP,
-        networking_xp: networkingXPVal,
-        score_breakdown: {
-            base: baseXP,
-            streak: calculatedStreakBonus,
-            engagement: engagementBonus
-        }
+      campaign_id: campaignId,
+      handle: db.currentUser.handle,
+      post_url: postUrl,
+      metrics: { impressions: reachVal, likes: data.likes, reposts: data.reposts, comments: data.comments },
+      score: totalAwardXP,
+      networking_xp: networkingXPVal
     }]);
 
     if (subError) {
@@ -2435,96 +2216,10 @@ function addEngagementLinkRow() {
   container.appendChild(row);
 }
 
-function toggleAdminNativeTokenInput() {
-  const currencyVal = document.getElementById("tabCurrency")?.value;
-  const box = document.getElementById("tabNativeTokenBox");
+function toggleNativeTokenInput() {
+  const currencyVal = document.getElementById("cCurrency")?.value;
+  const box = document.getElementById("nativeTokenBox");
   if(box) box.style.display = (currencyVal === "Native Token") ? "block" : "none";
-}
-
-document.getElementById("adminTabularForm")?.addEventListener("submit", async function(e) {
-  e.preventDefault();
-  const id = document.getElementById("tabEditCampId").value;
-  const client = requireBackend();
-  
-  const isLiveditOnly = document.getElementById("tabIsLiveditOnly")?.checked || false;
-  const requirementsText = document.getElementById("tabRequirements").value.trim();
-  const enforcedTag = isLiveditOnly ? "@LIVEDITglobal" : (extractTagFromRequirements(requirementsText) || "@LIVEDITglobal");
-  const currency = document.getElementById("tabCurrency").value;
-
-  const payload = {
-    name: document.getElementById("tabName").value.trim(),
-    category: document.getElementById("tabCategory").value,
-    currency: currency,
-    native_token_name: currency === "Native Token" ? document.getElementById("tabNativeTokenName").value.trim() : null,
-    duration: document.getElementById("tabDuration").value,
-    budget: Number(document.getElementById("tabBudget").value),
-    max_participants: Number(document.getElementById("tabMaxPart").value) || 50,
-    top_rewarded: Number(document.getElementById("tabTopRewarded").value) || 5,
-    streak_model: document.getElementById("tabStreakModel").value,
-    streak_bonus_value: Number(document.getElementById("tabXP").value) || 10,
-    streak_multiplier: Number(document.getElementById("tabStreakMultiplier").value) || 1.0,
-    streak_milestone: Number(document.getElementById("tabStreakMilestone").value) || 7,
-    min_likes: Number(document.getElementById("tabMinLikes").value) || 10,
-    min_reposts: Number(document.getElementById("tabMinReposts").value) || 5,
-    min_comments: Number(document.getElementById("tabMinComments").value) || 5,
-    min_views: Number(document.getElementById("tabMinViews").value) || 50,
-    timezone: document.getElementById("tabTimezone").value,
-    brief: document.getElementById("tabBrief").value.trim(),
-    requirements: requirementsText,
-    is_livedit_only: isLiveditOnly,
-    required_tag: enforcedTag,
-    status: document.getElementById("tabIsActive").checked ? "ACTIVE" : "PENDING"
-  };
-
-  if (id) {
-    const { error } = await client.from('campaigns').update(payload).eq('id', Number(id));
-    if (error) { alert("Error updating campaign: " + error.message); return; }
-    alert("✨ Campaign updated successfully!");
-  } else {
-    const { error } = await client.from('campaigns').insert([payload]);
-    if (error) { alert("Error creating campaign: " + error.message); return; }
-    alert("🎉 Campaign created successfully!");
-  }
-
-  this.reset();
-  document.getElementById("tabEditCampId").value = "";
-  document.getElementById("tabNativeTokenBox").style.display = "none";
-  await loadGlobalCampaigns();
-  renderAdminQueue();
-});
-
-function openAdminEditCampaign(id) {
-  const numericId = Number(id);
-  const c = db.allAdminCampaigns?.find(x => Number(x.id) === numericId);
-  if (!c) { alert("Campaign not found"); return; }
-
-  document.getElementById("tabEditCampId").value = c.id;
-  document.getElementById("tabName").value = c.name;
-  document.getElementById("tabCategory").value = c.category;
-  document.getElementById("tabCurrency").value = c.currency || "SOL";
-  toggleAdminNativeTokenInput();
-  if (c.currency === "Native Token") {
-    document.getElementById("tabNativeTokenName").value = c.nativeTokenName || "";
-  }
-  document.getElementById("tabDuration").value = c.duration || "7 days";
-  document.getElementById("tabBudget").value = c.budget;
-  document.getElementById("tabMaxPart").value = c.maxParticipants || 50;
-  document.getElementById("tabTopRewarded").value = c.topRewarded || 5;
-  document.getElementById("tabStreakModel").value = c.streakModel || "Milestone-Based";
-  document.getElementById("tabXP").value = c.streakBonusValue || 10;
-  document.getElementById("tabStreakMultiplier").value = c.streakMultiplier || 1.0;
-  document.getElementById("tabStreakMilestone").value = c.streakMilestone || 7;
-  document.getElementById("tabMinLikes").value = c.minLikes || 10;
-  document.getElementById("tabMinReposts").value = c.minReposts || 5;
-  document.getElementById("tabMinComments").value = c.minComments || 5;
-  document.getElementById("tabMinViews").value = c.minViews || 50;
-  document.getElementById("tabTimezone").value = c.timezone || "UTC";
-  document.getElementById("tabRequirements").value = c.requirements || "";
-  document.getElementById("tabBrief").value = c.brief || "";
-  document.getElementById("tabIsActive").checked = c.status === "ACTIVE";
-  document.getElementById("tabIsLiveditOnly").checked = c.is_livedit_only || false;
-  
-  window.scrollTo({top: 100, behavior: 'smooth'});
 }
 
 function enterPlatform() {
@@ -2545,65 +2240,48 @@ async function disconnectWallet() {
   renderLivedCard();
 }
 
-// 1. Generate or retrieve encryption keypair for mobile handshake
-function getDappEncryptionKeyPair() {
-  let stored = localStorage.getItem("lived_dapp_keypair");
-  if (stored) {
-    try { return JSON.parse(stored); } catch(e) {}
-  }
-  const keyPair = {
-    publicKey: Array.from(crypto.getRandomValues(new Uint8Array(32))),
-    secretKey: Array.from(crypto.getRandomValues(new Uint8Array(64)))
-  };
-  localStorage.setItem("lived_dapp_keypair", JSON.stringify(keyPair));
-  return keyPair;
-}
-
-// 2. Fixed Mobile & Desktop Wallet Connection Router
 async function requestLiveWallet(providerName) {
   try {
     let provider = null;
     
-    // 1. Detect provider based on user selection
+    // 1. Precise provider detection with generic fallback
     if (providerName === 'phantom') {
       provider = window.phantom?.solana || (window.solana?.isPhantom ? window.solana : null);
     } else if (providerName === 'solflare') {
       provider = window.solflare;
+    } else if (providerName === 'glow') {
+      provider = window.glow;
     }
 
     if (!provider && window.solana) {
       provider = window.solana;
     }
 
-    // 2. If no provider extension is injected, handle mobile browser routing gracefully
-    if (!provider) {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    // 2. Mobile deep-link browse bridge redirect if not injected
+    if (!provider && window.innerWidth <= 900) {
+      const currentUrl = window.location.href;
+      const ref = window.location.origin;
       
-      if (isMobile) {
-        closeWalletModal();
-        const currentUrl = window.location.href;
-        
-        // Prompt mobile user to open cleanly inside the wallet app's native browser
-        const openInWallet = confirm(
-          `To use LIVED Proof smoothly on mobile, please open this site inside your ${providerName.toUpperCase()} app's built-in browser.\n\nWould you like to copy the link or open it directly?`
-        );
-        
-        if (openInWallet) {
-          if (providerName === 'phantom') {
-            window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}`;
-          } else if (providerName === 'solflare') {
-            window.location.href = `https://solflare.com/ul/v1/browse/${encodeURIComponent(currentUrl)}`;
-          }
-        }
+      if (providerName === 'phantom') {
+        window.location.href = `https://phantom.app/ul/browse/${encodeURIComponent(currentUrl)}?ref=${encodeURIComponent(ref)}`;
+        return;
+      } else if (providerName === 'solflare') {
+        window.location.href = `https://solflare.com/ul/v1/browse/${encodeURIComponent(currentUrl)}?ref=${encodeURIComponent(ref)}`;
+        return;
+      } else if (providerName === 'glow') {
+        window.location.href = `https://glow.app/ul/browse/${encodeURIComponent(currentUrl)}?ref=${encodeURIComponent(ref)}`;
         return;
       }
-      
-      alert(`${providerName.toUpperCase()} extension is not installed. Please install it to connect.`);
+    }
+
+    // 3. Final missing check
+    if (!provider) {
+      alert(`${providerName.toUpperCase()} wallet not detected. Please install the extension or open inside your wallet's browser app.`);
       closeWalletModal();
       return;
     }
 
-    // 3. Request connection from provider
+    // 4. Connect and sync state
     const res = await provider.connect();
     db.currentUser.wallet = (res.publicKey || provider.publicKey).toString();
     localStorage.setItem("lived_wallet_session", db.currentUser.wallet);
@@ -2611,8 +2289,7 @@ async function requestLiveWallet(providerName) {
     if (typeof syncProfileToSupabase === 'function') await syncProfileToSupabase();
     if (typeof renderLivedCard === 'function') renderLivedCard();
     closeWalletModal();
-    alert("🎉 Wallet Connected Successfully!");
-  } catch (err) {
+  } catch(err) {
     closeWalletModal();
     console.warn("Wallet connection cancelled or failed:", err);
   }
@@ -2654,13 +2331,8 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
   const currency = document.getElementById("cCurrency").value;
   const targetLinks = Array.from(document.querySelectorAll(".cLinkInput")).map(el => el.value.trim()).filter(Boolean);
   const requirementsText = document.getElementById("cRequirements").value.trim();
-  const isLiveEditOnly = document.getElementById("cIsLiveditOnly")?.checked || false;
+  const parsedTag = extractTagFromRequirements(requirementsText);
   
-  const durationDaysMap = { "1 day": 1, "2 days": 2, "3 days": 3, "7 days": 7, "14 days": 14, "30 days": 30 };
-  const daysCount = durationDaysMap[duration] || 7;
-  const expiresAt = new Date(Date.now() + (daysCount * 24 * 60 * 60 * 1000)).toISOString();
-  const enforcedTag = isLiveEditOnly ? "@LIVEDITglobal" : (extractTagFromRequirements(requirementsText) || "@LIVEDITglobal");
-
   pendingManualCampaign = {
     name: document.getElementById("cName").value.trim(),
     category: document.getElementById("cCategory").value,
@@ -2669,7 +2341,6 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
     image: uploadedCampaignImageBase64 || null,
     budget,
     duration,
-    expires_at: expiresAt,
     maxParticipants: Number(document.getElementById("cMaxParticipants").value) || 50,
     topRewarded: Number(document.getElementById("cTopRewarded").value) || 5,
     streakModel: document.getElementById("cStreakModel").value,
@@ -2677,7 +2348,7 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
     streakMultiplier: Number(document.getElementById("cStreakMultiplier").value) || 1.0,
     streakMilestone: Number(document.getElementById("cStreakMilestone").value) || 7,
     targetLinks,
-    required_tag: enforcedTag,
+    required_tag: parsedTag,
     brief: document.getElementById("cBrief").value.trim(),
     requirements: requirementsText,
     min_likes: Number(document.getElementById("cMinLikes").value) || 10,
@@ -2687,8 +2358,7 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
     timezone: document.getElementById("cTimezone").value,
     status: "PENDING",
     payerWallet: db.currentUser.wallet || "Manual Creator",
-    solPaid: Number((budget / dynamicSolPrice).toFixed(4)),
-    is_livedit_only: isLiveEditOnly
+    solPaid: Number((budget / dynamicSolPrice).toFixed(4))
   };
 
   document.getElementById("confName").textContent = pendingManualCampaign.name;
@@ -2699,14 +2369,10 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
 });
 
 async function confirmManualPayment(){
-  if (!pendingManualCampaign) {
-    alert("No pending campaign data found. Please fill out the form again.");
-    switchTab("create");
-    return;
-  }
+  if (!pendingManualCampaign) return;
   try {
     const client = requireBackend();
-    const { error: campError } = await client.from('campaigns').insert([{
+    await client.from('campaigns').insert([{
       name: pendingManualCampaign.name,
       category: pendingManualCampaign.category,
       currency: pendingManualCampaign.currency,
@@ -2714,7 +2380,6 @@ async function confirmManualPayment(){
       image: pendingManualCampaign.image,
       budget: pendingManualCampaign.budget,
       duration: pendingManualCampaign.duration,
-      expires_at: pendingManualCampaign.expires_at,
       max_participants: pendingManualCampaign.maxParticipants,
       top_rewarded: pendingManualCampaign.topRewarded,
       streak_model: pendingManualCampaign.streakModel,
@@ -2732,21 +2397,16 @@ async function confirmManualPayment(){
       timezone: pendingManualCampaign.timezone,
       status: "PENDING",
       payer_wallet: pendingManualCampaign.payerWallet,
-      sol_paid: pendingManualCampaign.solPaid,
-      is_livedit_only: pendingManualCampaign.is_livedit_only
+      sol_paid: pendingManualCampaign.solPaid
     }]);
 
-    if (campError) throw campError;
-
-    const { error: payError } = await client.from('payments_ledger').insert([{
+    await client.from('payments_ledger').insert([{
       campaign_name: pendingManualCampaign.name,
       budget: pendingManualCampaign.budget,
       sol_amount: pendingManualCampaign.solPaid,
       tx_signature: "MANUAL_TX_" + Math.random().toString(36).substring(2, 10).toUpperCase(),
       payer: pendingManualCampaign.payerWallet
     }]);
-
-    if (payError) throw payError;
 
     document.getElementById("campaignForm").reset();
     pendingManualCampaign = null;
@@ -2790,9 +2450,6 @@ function renderAdminPanel(){
     document.getElementById("adminDashboard").style.display = "block";
     loadGlobalCampaigns();
     renderAdminQueue();
-
-    populateBreakdownDropdown();
-
   } else {
     document.getElementById("adminAuthBox").style.display = "block";
     document.getElementById("adminDashboard").style.display = "none";
@@ -2829,21 +2486,10 @@ document.getElementById("adminTabularForm")?.addEventListener("submit", async fu
   const id = document.getElementById("tabEditCampId").value;
   const client = requireBackend();
   
-  const isLiveditOnly = document.getElementById("tabIsLiveditOnly")?.checked || false;
-  const requirementsText = document.getElementById("tabRequirements").value.trim();
-  
-  const selectedDuration = document.getElementById("tabDuration")?.value || "7 days";
-  const durationDaysMap = { "1 day": 1, "2 days": 2, "3 days": 3, "7 days": 7, "14 days": 14, "30 days": 30 };
-  const daysCount = durationDaysMap[selectedDuration] || 7;
-  const expiresAt = new Date(Date.now() + (daysCount * 24 * 60 * 60 * 1000)).toISOString();
-
-  // Automatically force @LIVEDITglobal for LIVEDIT-only campaigns
-  const enforcedTag = isLiveditOnly ? "@LIVEDITglobal" : (extractTagFromRequirements(requirementsText) || "@LIVEDITglobal");
-
   const payload = {
     name: document.getElementById("tabName").value.trim(),
     category: document.getElementById("tabCategory").value,
-    duration: selectedDuration,
+    duration: "7 days",
     currency: document.getElementById("tabCurrency").value,
     budget: Number(document.getElementById("tabBudget").value),
     max_participants: Number(document.getElementById("tabMaxPart").value) || 50,
@@ -2851,11 +2497,8 @@ document.getElementById("adminTabularForm")?.addEventListener("submit", async fu
     streak_model: document.getElementById("tabStreakModel").value,
     streak_bonus_value: Number(document.getElementById("tabXP").value),
     brief: document.getElementById("tabBrief").value.trim(),
-    requirements: requirementsText,
-    is_livedit_only: isLiveditOnly,
-    required_tag: enforcedTag,
-    status: document.getElementById("tabIsActive").checked ? "ACTIVE" : "PENDING",
-    expires_at: expiresAt,
+    requirements: document.getElementById("tabRequirements").value.trim(),
+    status: document.getElementById("tabIsActive").checked ? "ACTIVE" : "PENDING"
   };
 
   if (id) {
@@ -2888,86 +2531,71 @@ function openAdminEditCampaign(id) {
   document.getElementById("tabStreakModel").value = c.streakModel || "Milestone-Based";
   document.getElementById("tabBrief").value = c.brief;
   document.getElementById("tabIsActive").checked = c.status === "ACTIVE";
-  document.getElementById("tabIsLiveditOnly").checked = c.is_livedit_only;
+
   window.scrollTo({top: 100, behavior: 'smooth'});
 }
 
 async function loadGlobalCampaigns(isSilent = false) {
-    try {
-        const client = requireBackend();
-        const [campRes, partRes] = await Promise.all([
-            client.from('campaigns').select('*').order('created_at', { ascending: false }),
-            client.from('campaign_participants').select('*')
-        ]);
+  try {
+    const client = requireBackend();
+    const [campRes, partRes] = await Promise.all([
+      client.from('campaigns').select('*').order('created_at', { ascending: false }),
+      client.from('campaign_participants').select('*')
+    ]);
 
-        if (campRes.error) {
-            console.error("❌ Supabase Campaign Fetch Error:", campRes.error.message, campRes.error.details);
-            return;
-        }
+    if (campRes.error) return;
 
-        const sourceData = campRes.data || [];
-        const allParticipants = (partRes && !partRes.error) ? (partRes.data || []) : [];
+    const sourceData = campRes.data || [];
+    if (sourceData.length === 0 && db.campaigns.length > 0) return; // Protect cache from empty states
 
-        const normalize = (c) => {
-            const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
-            const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, p.wallet_address || null, p.networking_xp || 0, p.joined_at || p.created_at]);
-            
-            const expiresAt = c.expires_at || null;
-            const timeInfo = getCampaignTimeLeft(expiresAt, c.created_at, c.duration);
-            let currentStatus = (c.status || "ACTIVE").toUpperCase();
+    const allParticipants = (partRes && !partRes.error) ? (partRes.data || []) : [];
 
-            if (timeInfo.isExpired && currentStatus === "ACTIVE") {
-                currentStatus = "COMPLETED";
-                client.from('campaigns').update({ status: 'COMPLETED' }).eq('id', c.id).then(() => {});
-            }
+    const normalize = (c) => {
+      const participants = allParticipants.filter(p => Number(p.campaign_id) === Number(c.id));
+      const formattedYappers = participants.map(p => [p.handle, p.score || 0, p.reach || 0, p.interactions || 0, p.wallet_address || null, p.networking_xp || 0, p.joined_at || p.created_at]);
+      return {
+        id: Number(c.id),
+        name: c.name,
+        category: c.category,
+        currency: c.currency || "SOL",
+        nativeTokenName: c.native_token_name || null,
+        image: c.image,
+        budget: Number(c.budget),
+        duration: c.duration || "7 days",
+        maxParticipants: c.max_participants || 50,
+        topRewarded: c.top_rewarded || 5,
+        streakModel: c.streak_model || "Milestone-Based",
+        streakBonusValue: c.streak_bonus_value || 10,
+        streakMultiplier: c.streak_multiplier || 1.0,
+        streakMilestone: c.streak_milestone || 7,
+        targetLinks: c.target_links || [],
+        brief: c.brief || "",
+        requirements: c.requirements || "",
+        minLikes: c.min_likes || 10,
+        minReposts: c.min_reposts || 5,
+        minComments: c.min_comments || 5,
+        minViews: c.min_views || 50,
+        timezone: c.timezone || "UTC",
+        required_tag: c.required_tag || "@LIVEDITglobal",
+        status: (c.status || "ACTIVE").toUpperCase(),
+        yappers: formattedYappers,
+        joined: formattedYappers.some(y => y[0] === db.currentUser.handle)
+      };
+    };
 
-            return {
-                id: Number(c.id),
-                name: c.name,
-                category: c.category,
-                currency: c.currency || "SOL",
-                nativeTokenName: c.native_token_name || null,
-                image: c.image,
-                budget: Number(c.budget),
-                duration: c.duration || "7 days",
-                expires_at: expiresAt,
-                isExpired: timeInfo.isExpired,
-                timeLeftText: timeInfo.text,
-                maxParticipants: c.max_participants || 50,
-                topRewarded: c.top_reward_percentage || c.top_rewarded || 5,
-                streakModel: c.streak_model || "Milestone-Based",
-                streakBonusValue: c.streak_bonus_value || 10,
-                streakMultiplier: c.streak_multiplier || 1.0,
-                streakMilestone: c.streak_milestone || 7,
-                targetLinks: c.target_links || [],
-                brief: c.brief || "",
-                requirements: c.requirements || "",
-                minLikes: c.min_likes || 10,
-                minReposts: c.min_reposts || 5,
-                minComments: c.min_comments || 5,
-                minViews: c.min_views || 50,
-                timezone: c.timezone || "UTC",
-                is_livedit_only: c.is_livedit_only || false,
-                required_tag: c.required_tag || "@LIVEDITglobal",
-                status: currentStatus,
-                yappers: formattedYappers,
-                joined: formattedYappers.some(y => y[0] === db.currentUser.handle)
-            };
-        };
+    db.allAdminCampaigns = sourceData.map(normalize);
+    db.pendingRequests = db.allAdminCampaigns.filter(c => c.status === 'PENDING');
+    db.campaigns = db.allAdminCampaigns.filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED');
 
-        db.allAdminCampaigns = sourceData.map(normalize);
-        db.pendingRequests = db.allAdminCampaigns.filter(c => c.status === 'PENDING');
-        db.campaigns = db.allAdminCampaigns.filter(c => c.status === 'ACTIVE' || c.status === 'COMPLETED');
+    // Save updated data via SWR manager
+    AppStore.persist();
 
-        // ➔ Guaranteed write to localStorage
-        AppStore.persist();
-
-        renderCampaigns();
-        renderHome();
-        if (isAdminLoggedIn) renderAdminQueue();
-    } catch (err) {
-        console.error("❌ SWR Background revalidation critical error:", err);
-    }
+    renderCampaigns();
+    renderHome();
+    if (isAdminLoggedIn) renderAdminQueue();
+  } catch (err) {
+    if (!isSilent) console.error("SWR Background revalidation error:", err);
+  }
 }
 
 async function renderAdminQueue(){
@@ -2990,7 +2618,6 @@ async function renderAdminQueue(){
         </div>
       `).join("");
     }
-    await renderAdminParticipantsTable();
   }
 
   const rowsContainer = document.getElementById("adminCampaignsRows");
@@ -3146,68 +2773,6 @@ async function adminProcessPayout(campaignId, handle, recipientWallet, amount, c
   } catch (err) { alert("Payout Escrow Error: " + err.message); }
 }
 
-// Populate campaign selector and render participants table in admin panel
-async function renderAdminParticipantsTable() {
-  const filterSelect = document.getElementById("adminParticipantCampaignFilter");
-  const rowsBody = document.getElementById("adminParticipantsRows");
-  if (!rowsBody || !filterSelect) return;
-
-  const selectedCampaignId = filterSelect.value;
-
-  // Preserve selected filter option when repopulating
-  filterSelect.innerHTML = `<option value="all">📁 View All Campaigns</option>` + 
-    (db.allAdminCampaigns || []).map(c => `<option value="${c.id}" ${selectedCampaignId == c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join("");
-
-  try {
-    const client = requireBackend();
-    let query = client.from('campaign_participants').select('*, campaigns(name)');
-    
-    if (selectedCampaignId && selectedCampaignId !== "all") {
-      query = query.eq('campaign_id', Number(selectedCampaignId));
-    }
-
-    const { data: participants, error } = await query.order('score', { ascending: false });
-
-    if (error) throw error;
-
-    if (!participants || participants.length === 0) {
-      rowsBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;" class="small">No participants found for this campaign selection.</td></tr>`;
-      return;
-    }
-
-    rowsBody.innerHTML = participants.map(p => {
-      const campName = p.campaigns?.name || `Campaign #${p.campaign_id}`;
-      const walletAddress = p.wallet_address || "";
-      const walletDisplay = walletAddress ? 
-        `<span style="font-family:monospace; color:var(--brand2);" title="${esc(walletAddress)}">${esc(walletAddress.slice(0, 6))}...${esc(walletAddress.slice(-4))}</span>` : 
-        `<span style="color:var(--muted); font-style:italic;">Not Connected</span>`;
-
-      // Safe escaped string for click handler
-      const safeWallet = esc(walletAddress);
-
-      return `
-        <tr style="border-bottom:1px solid var(--line); font-size:13px;">
-          <td style="padding:14px 16px; font-weight:700;">${esc(campName)}</td>
-          <td style="padding:14px 16px;"><span class="avatar">${esc(p.handle.replace("@","").slice(0,2).toUpperCase())}</span>${esc(p.handle)}</td>
-          <td style="padding:14px 16px;">${walletDisplay}</td>
-          <td style="padding:14px 16px; color:var(--brand2); font-weight:700;">${p.score || 0} XP</td>
-          <td style="padding:14px 16px;">${Number(p.reach || 0).toLocaleString()}</td>
-          <td style="padding:14px 16px; text-align:right;">
-            ${walletAddress ? `<button class="btn sm primary" onclick="copyWalletAddress('${safeWallet}', this)" title="Copy Wallet Address">📋 Copy Wallet</button>` : `<span class="small" style="color:var(--muted)">No Wallet</span>`}
-          </td>
-        </tr>
-      `;
-    }).join("");
-
-  } catch (err) {
-    rowsBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--seal);" class="small">Error loading participant data: ${esc(err.message)}</td></tr>`;
-  }
-}
-
-function inspectParticipantDetail(handle, wallet, score) {
-  alert(`👤 Participant Profile Inspection\n\nHandle: ${handle}\nWallet Address: ${wallet}\nTotal Score: ${score} XP`);
-}
-
 function subscribeToNotifications() {
   if (!BACKEND_CONFIGURED || !supabaseClient) return;
   supabaseClient
@@ -3237,11 +2802,6 @@ const AppStore = {
         db.campaigns = parsed.campaigns || [];
         db.pendingRequests = parsed.pendingRequests || [];
         db.allAdminCampaigns = parsed.allAdminCampaigns || [];
-        
-        // ➔ Force immediate render on startup using cached data
-        renderCampaigns();
-        renderHome();
-        if (isAdminLoggedIn) renderAdminQueue();
       }
     } catch (e) {
       console.warn("SWR Cache read error:", e);
@@ -3249,35 +2809,37 @@ const AppStore = {
   },
 
   // 2. Background update save (Revalidate)
-    persist() {
+  persist() {
     try {
-        const lightCampaigns = (db.campaigns || []).map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
-        const lightAdmin = (db.allAdminCampaigns || []).map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
-
+      if (db.allAdminCampaigns && db.allAdminCampaigns.length > 0) {
+        const lightCampaigns = db.campaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
+        const lightAdmin = db.allAdminCampaigns.map(c => ({ ...c, image: c.image && c.image.startsWith('data:') ? null : c.image }));
+        
         localStorage.setItem("lived_campaigns_cache_v3", JSON.stringify({
-            campaigns: lightCampaigns,
-            pendingRequests: db.pendingRequests || [],
-            allAdminCampaigns: lightAdmin
+          campaigns: lightCampaigns,
+          pendingRequests: db.pendingRequests,
+          allAdminCampaigns: lightAdmin
         }));
-    }   catch (err) {
-        console.warn("SWR storage write failed:", err);
+      }
+    } catch (err) {
+      console.warn("SWR storage write skipped:", err);
     }
   }
 };
 
 async function initApp() {
+  // 1. SWR: Instant paint from local cache (Stale)
   AppStore.init();
   renderHome();
   renderCampaigns();
   if (isAdminLoggedIn) renderAdminQueue();
 
+  // Clear any dangling websocket channels to prevent memory leaks
   if (BACKEND_CONFIGURED && supabaseClient) {
     try {
       supabaseClient.removeAllChannels();
     } catch (e) {}
   }
-
-  handleXOAuthCallback().catch(err => console.error("X OAuth note:", err));
 
   await handleXOAuthCallback();
   await restoreAdminSession();
@@ -3286,7 +2848,8 @@ async function initApp() {
   initDailyRewards();
 
   if (BACKEND_CONFIGURED) {
-    loadGlobalCampaigns(false); /*.catch(e => console.error("Background sync error:", e));*/
+    // 2. SWR: Background network check for updates (Revalidate)
+    loadGlobalCampaigns(true).catch(e => console.error("Background sync error:", e));
     
     subscribeToNotifications();
     fetchLiveSolPrice();
@@ -3295,14 +2858,6 @@ async function initApp() {
     window._globalPollInterval = setInterval(() => {
       loadGlobalCampaigns(true);
     }, 30000);
-
-    // === REAL-TIME COUNTDOWN TICKER INTERVAL ===
-    if (window._campaignCountdownInterval) clearInterval(window._campaignCountdownInterval);
-    window._campaignCountdownInterval = setInterval(() => {
-      if (document.getElementById("campaigns")?.style.display === "block" || document.getElementById("home")?.style.display === "block") {
-        renderCampaigns();
-      }
-    }, 60000);
 
     supabaseClient
       .channel('public:global_campaigns')
@@ -3344,267 +2899,6 @@ async function clearAllSubmissions() {
   } catch (err) {
     alert("❌ Error clearing submissions: " + err.message);
   }
-}
-
-async function copyAllWallets() {
-  try {
-    const selectedCampaignId = document.getElementById("adminParticipantCampaignFilter").value;
-    const client = requireBackend();
-    let query = client.from('campaign_participants').select('wallet_address');
-    
-    // Respect the currently selected campaign filter
-    if (selectedCampaignId && selectedCampaignId !== "all") {
-      query = query.eq('campaign_id', Number(selectedCampaignId));
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
-
-    // Filter out nulls, empty strings, or "None" values
-    const wallets = (data || [])
-      .map(p => p.wallet_address)
-      .filter(w => w && w !== "None" && w.trim() !== "");
-
-    if (wallets.length === 0) {
-      alert("No valid wallet addresses found to copy for this selection.");
-      return;
-    }
-
-    // Join wallets with newlines
-    const walletsText = wallets.join("\n");
-    
-    await navigator.clipboard.writeText(walletsText);
-    alert(`🎉 Successfully copied ${wallets.length} wallet address(es) to clipboard!`);
-  } catch (err) {
-    alert("Error copying wallets: " + err.message);
-  }
-}
-
-async function copyWalletAddress(wallet, btnEl) {
-  if (!wallet || wallet === "None") {
-    alert("No valid wallet address available.");
-    return;
-  }
-  try {
-    await navigator.clipboard.writeText(wallet);
-    const originalText = btnEl.textContent;
-    btnEl.textContent = "✓ Copied!";
-    btnEl.style.background = "var(--good)";
-    btnEl.style.color = "#0a0a0a";
-    setTimeout(() => {
-      btnEl.textContent = originalText;
-      btnEl.style.background = "";
-      btnEl.style.color = "";
-    }, 2000);
-  } catch (err) {
-    alert("Failed to copy wallet address: " + err.message);
-  }
-}
-
-// Hidden mobile touch trigger (e.g., tap the logo 5 times rapidly to open admin panel)
-let logoTapCount = 0;
-let logoTapTimer = null;
-
-document.addEventListener("DOMContentLoaded", () => {
-  const logoElement = document.querySelector(".logo");
-  if (logoElement) {
-    logoElement.addEventListener("click", (e) => {
-      // Check if it's a mobile device or explicit multi-tap
-      logoTapCount++;
-      if (logoTapCount === 5) {
-        e.preventDefault();
-        switchTab("admin");
-        logoTapCount = 0;
-        alert("🔓 Admin Panel Unlocked via Mobile Gesture");
-      }
-      
-      clearTimeout(logoTapTimer);
-      logoTapTimer = setTimeout(() => {
-        logoTapCount = 0;
-      }, 400); // Reset tap count if taps are spaced out
-    });
-  }
-});
-
-function getCampaignTimeLeft(expiresAtStr, createdAtStr, durationStr) {
-  const now = new Date().getTime();
-  let expiryTime = 0;
-
-  if (expiresAtStr) {
-    expiryTime = new Date(expiresAtStr).getTime();
-  } else if (createdAtStr) {
-    const createdTime = new Date(createdAtStr).getTime();
-    const daysMatch = String(durationStr || "7 days").match(/(\d+)/);
-    const durationDays = daysMatch ? parseInt(daysMatch[1], 10) : 7;
-    expiryTime = createdTime + (durationDays * 24 * 60 * 60 * 1000);
-  } else {
-    return { text: "Active", isExpired: false };
-  }
-
-  const timeLeft = expiryTime - now;
-  if (timeLeft <= 0) return { text: "Expired / Completed", isExpired: true };
-
-  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-
-  if (days > 0) return { text: `${days}d ${hours}h left`, isExpired: false };
-  return { text: `${hours}h ${minutes}m left`, isExpired: false };
-}
-
-// --- ADVANCED ADMIN FEATURE FUNCTIONS ---
-
-// 1. CSV Exports
-async function exportParticipantsCSV() {
-  const client = requireBackend();
-  const { data } = await client.from('campaign_participants').select('*');
-  if (!data || !data.length) { alert("No participant data to export."); return; }
-  
-  let csv = "ID,Campaign ID,Handle,Score,Networking XP,Reach,Interactions,Wallet Address\n";
-  data.forEach(p => {
-    csv += `${p.id},${p.campaign_id},"${p.handle}",${p.score},${p.networking_xp},${p.reach},${p.interactions},"${p.wallet_address || ''}"\n`;
-  });
-  downloadCSV(csv, "campaign_participants_audit.csv");
-}
-
-async function exportPaymentsCSV() {
-  const client = requireBackend();
-  const { data } = await client.from('payments_ledger').select('*');
-  if (!data || !data.length) { alert("No payment data to export."); return; }
-  
-  let csv = "ID,Campaign Name,Budget,SOL Amount,Payer,Created At\n";
-  data.forEach(p => {
-    csv += `${p.id},"${p.campaign_name}",${p.budget},${p.sol_amount},"${p.payer}","${p.created_at}"\n`;
-  });
-  downloadCSV(csv, "payments_ledger_audit.csv");
-}
-
-function downloadCSV(csvContent, filename) {
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// 2. User XP Breakdown with Campaign Dropdown
-async function populateBreakdownDropdown() {
-  const select = document.getElementById("breakdownCampaignSelect");
-  if (!select) return;
-  select.innerHTML = `<option value="">-- Choose Campaign for Breakdown --</option>` + 
-    (db.allAdminCampaigns || []).map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
-}
-
-async function renderAdminUserXpBreakdown() {
-  const campaignId = document.getElementById("breakdownCampaignSelect").value;
-  const container = document.getElementById("userXpBreakdownContainer");
-  if (!campaignId || !container) return;
-
-  const client = requireBackend();
-  const { data, error } = await client
-    .from('campaign_submissions')
-    .select('*')
-    .eq('campaign_id', Number(campaignId))
-    .order('created_at', { ascending: false });
-
-  if (error || !data || !data.length) {
-    container.innerHTML = `<div class="small" style="color:var(--warn)">No XP breakdown logs found for this campaign yet.</div>`;
-    return;
-  }
-
-  container.innerHTML = `
-    <div style="max-height: 350px; overflow-y: auto; margin-top: 10px;">
-      <table class="leaderboard" style="width:100%;">
-        <thead>
-          <tr>
-            <th>Timestamp</th>
-            <th>Handle</th>
-            <th>Base XP</th>
-            <th>Streak Bonus</th>
-            <th>Engagement Bonus</th>
-            <th>Total Post XP</th>
-            <th>Proof Link</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.map(sub => {
-            const breakdown = sub.score_breakdown || { base: 10, streak: 0, engagement: 0 };
-            return `
-              <tr style="border-bottom:1px solid var(--line); font-size:12px;">
-                <td style="color:var(--muted);">${esc(sub.created_at?.replace('T',' ').substring(0,19))}</td>
-                <td><b>${esc(sub.handle)}</b></td>
-                <td style="color:var(--fg);">+${breakdown.base || 0} XP</td>
-                <td style="color:var(--brand2);">+${breakdown.streak || 0} XP</td>
-                <td style="color:var(--gold);">+${breakdown.engagement || 0} XP</td>
-                <td style="color:var(--good); font-weight:700;">+${sub.score || 0} XP</td>
-                <td><a href="${esc(safeUrl(sub.post_url))}" target="_blank" style="color:#38bdf8;">View ↗</a></td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
-    </div>
-  `;
-}
-
-// 3. Manual XP Adjustment
-async function adminExecuteManualXpAdjustment() {
-  const handle = document.getElementById("manualXpHandle").value.trim();
-  const amount = Number(document.getElementById("manualXpAmount").value);
-  if (!handle || isNaN(amount)) { alert("Please provide a valid handle and numeric XP amount."); return; }
-
-  const formattedHandle = handle.startsWith("@") ? handle : "@" + handle;
-  const client = requireBackend();
-
-  const { data: profile } = await client.from('profiles').select('*').eq('handle', formattedHandle).maybeSingle();
-  if (!profile) { alert("User profile not found in database."); return; }
-
-  const newPermanentXP = Math.max(0, (profile.permanent_xp || 0) + amount);
-  const newTotalPoints = newPermanentXP + (profile.streak_bonus || 0);
-
-  const { error } = await client.from('profiles').update({ permanent_xp: newPermanentXP, total_points: newTotalPoints }).eq('handle', formattedHandle);
-  if (error) { alert("Error updating XP: " + error.message); return; }
-
-  alert(`✨ Successfully adjusted ${formattedHandle}'s score by ${amount > 0 ? '+' + amount : amount} XP!`);
-  document.getElementById("manualXpHandle").value = "";
-  document.getElementById("manualXpAmount").value = "";
-}
-
-// 4. User Moderation & Bans
-async function adminBanUserHandle() {
-  const handle = document.getElementById("banHandleInput").value.trim();
-  if (!handle) return;
-  const formattedHandle = handle.startsWith("@") ? handle : "@" + handle;
-
-  if (!confirm(`Are you sure you want to ban ${formattedHandle} from participation?`)) return;
-
-  const client = requireBackend();
-  // Delete their participant records and submissions to enforce ban
-  await client.from('campaign_participants').delete().eq('handle', formattedHandle);
-  await client.from('campaign_submissions').delete().eq('handle', formattedHandle);
-
-  alert(`🛡️ Handle ${formattedHandle} has been banned and scrubbed from active campaign tables.`);
-  document.getElementById("banHandleInput").value = "";
-}
-
-// 5. Broadcast Notifications
-async function adminSendBroadcastNotification() {
-  const msg = document.getElementById("broadcastMsgInput").value.trim();
-  if (!msg) { alert("Please type a broadcast message."); return; }
-
-  const client = requireBackend();
-  const { data: profiles } = await client.from('profiles').select('handle');
-  if (!profiles || !profiles.length) { alert("No users to broadcast to."); return; }
-
-  const batchInserts = profiles.map(p => ({ handle: p.handle, message: msg }));
-  const { error } = await client.from('notifications').insert(batchInserts);
-
-  if (error) { alert("Error sending broadcast: " + error.message); return; }
-
-  alert(`📢 Broadcast notification successfully sent to ${profiles.length} user(s)!`);
-  document.getElementById("broadcastMsgInput").value = "";
 }
 
 initApp();
