@@ -2668,26 +2668,34 @@ window.addEventListener('load', () => {
 });
 
 // --- WALLETCONNECT SOLANA INTEGRATION SETUP ---
+// --- ROBUST WALLETCONNECT SETUP ---
 let wcModal = null;
 
 function initWalletConnect() {
-  if (typeof Web3ModalSolana !== 'undefined' && !wcModal) {
+  // Replace 'YOUR_WALLETCONNECT_PROJECT_ID' with your actual Project ID from cloud.walletconnect.com
+  const projectId = 'c63066c584da5008dee41ada7c6d9faa'; 
+
+  if (!projectId || projectId === 'c63066c584da5008dee41ada7c6d9faa') {
+    console.error("WalletConnect Project ID is not configured!");
+    return;
+  }
+
+  // Check if Web3Modal AppKit is loaded and ready
+  if (window.AppKit && !wcModal) {
     try {
-      wcModal = new Web3ModalSolana.CreateWeb3Modal({
-        projectId: 'c63066c584da5008dee41ada7c6d9faa',
+      wcModal = new window.AppKit.AppKit({
+        projectId: projectId,
         metadata: {
           name: 'LIVED PROOF',
           description: 'Web3 Engagement Hub',
           url: window.location.origin,
           icons: [`${window.location.origin}/favicon.ico`]
         },
-        chainConfig: {
-          chainId: 'solana:devnet',
-          chains: ['solana:devnet', 'solana:mainnet']
-        }
+        networks: ['solana:mainnet', 'solana:devnet'],
+        defaultNetwork: 'solana:devnet'
       });
     } catch (e) {
-      console.warn("WalletConnect init error:", e);
+      console.error("WalletConnect initialization error:", e);
     }
   }
 }
@@ -2695,15 +2703,18 @@ function initWalletConnect() {
 async function connectViaWalletConnect() {
   try {
     initWalletConnect();
+    
     if (!wcModal) {
-      alert("WalletConnect failed to initialize. Please check your Project ID.");
+      alert("WalletConnect failed to initialize. Please verify your Project ID in the script configuration.");
       return;
     }
 
     closeWalletModal();
-    await wcModal.openModal();
     
-    const provider = wcModal.getWalletProvider();
+    // Open the WalletConnect modal
+    await wcModal.open();
+    
+    const provider = wcModal.getProvider?.('solana');
     if (provider) {
       const accounts = await provider.request({ method: 'solana_requestAccounts' });
       if (accounts && accounts[0]) {
@@ -2717,6 +2728,7 @@ async function connectViaWalletConnect() {
     }
   } catch (err) {
     console.error("WalletConnect connection error:", err);
+    alert("Connection error or modal closed.");
   }
 }
 
