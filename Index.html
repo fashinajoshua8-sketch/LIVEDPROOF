@@ -2696,9 +2696,23 @@ function initWalletConnect() {
 
 async function connectViaWalletConnect() {
   try {
+    // 1. Check if AppKit is available, if not wait up to 2 seconds for it to load
+    if (typeof AppKit === 'undefined') {
+      let attempts = 0;
+      while (typeof AppKit === 'undefined' && attempts < 10) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        attempts++;
+      }
+    }
+
+    if (typeof AppKit === 'undefined') {
+      alert("WalletConnect script failed to load. Please check your internet connection.");
+      return;
+    }
+
     initWalletConnect();
     if (!wcModal) {
-      alert("WalletConnect library is still loading. Please try again.");
+      alert("WalletConnect failed to initialize. Please check your Project ID.");
       return;
     }
 
