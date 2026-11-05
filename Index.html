@@ -2568,6 +2568,7 @@ function getDappEncryptionKeyPair() {
 }
 
 // 2. Fixed Mobile & Desktop Wallet Connection Router
+// ➔ FIXED MOBILE & DESKTOP WALLET CONNECTION ROUTER
 async function requestLiveWallet(providerName) {
   try {
     let provider = null;
@@ -2585,24 +2586,25 @@ async function requestLiveWallet(providerName) {
       provider = window.solana;
     }
 
-    // 2. Mobile Web Browser Native MWA Intent Bridge
+    // 2. Mobile Web Browser Native App-Switch Intent Bridge
     if (!provider) {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       
       if (isMobile) {
         closeWalletModal();
         
-        // Construct standard Mobile Wallet Adapter (MWA) web-to-app intent URL
-        // This triggers the native wallet application app-switch popup directly from Chrome/Safari
         const encodedUrl = encodeURIComponent(window.location.href);
         const encodedTitle = encodeURIComponent(document.title || "LIVED PROOF");
         
         let mwaIntent = "";
         if (providerName === 'phantom') {
-          // Phantom MWA mobile web scheme
-          mwaIntent = `solana-wallet://v1/connect?redirect_url=${encodedUrl}&app_name=${encodedTitle}`;
+          // Phantom Universal Link / Mobile App Intent Scheme
+          mwaIntent = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodedUrl}&cluster=mainnet-beta`;
         } else if (providerName === 'solflare') {
+          // Solflare Mobile App Intent Scheme
           mwaIntent = `https://solflare.com/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodedUrl}`;
+        } else if (providerName === 'glow') {
+          mwaIntent = `https://glow.app/ul/v1/connect?app_url=${encodeURIComponent(window.location.origin)}&redirect_link=${encodedUrl}`;
         }
 
         if (mwaIntent) {
@@ -2611,7 +2613,7 @@ async function requestLiveWallet(providerName) {
         }
       }
       
-      alert(`${providerName} extension not detected.`);
+      alert(`${providerName} extension or app not detected.`);
       closeWalletModal();
       return;
     }
@@ -2631,9 +2633,10 @@ async function requestLiveWallet(providerName) {
 }
 
 // 4. Session Recovery Listener for returning from the mobile app intent
+// ➔ MOBILE SESSION RECOVERY LISTENER (CAPTURES REDIRECT PARAMS)
 window.addEventListener('load', () => {
   const params = new URLSearchParams(window.location.search);
-  const walletAddress = params.get('public_key') || params.get('solana_address') || params.get('account');
+  const walletAddress = params.get('public_key') || params.get('solana_address') || params.get('account') || params.get('phantom_encryption_public_key');
   
   if (walletAddress) {
     db.currentUser = db.currentUser || {};
@@ -2641,8 +2644,10 @@ window.addEventListener('load', () => {
     localStorage.setItem("lived_wallet_session", walletAddress);
     if (typeof syncProfileToSupabase === 'function') syncProfileToSupabase().catch(() => {});
     if (typeof renderLivedCard === 'function') renderLivedCard();
+    // Clean URL parameters after capture
     window.history.replaceState({}, document.title, window.location.pathname);
   } else {
+    // Restore from local session cache if available
     const saved = localStorage.getItem("lived_wallet_session");
     if (saved && (!db.currentUser || !db.currentUser.wallet)) {
       db.currentUser = db.currentUser || {};
