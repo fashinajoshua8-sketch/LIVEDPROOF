@@ -20,8 +20,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- Robust Buffer Polyfill -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/buffer/6.0.3/buffer.min.js"></script>
-
+<!-- WalletConnect Web3Wallet -->
 <script src="https://unpkg.com/@walletconnect/web3wallet@latest/dist/umd/index.min.js"></script>
+<!-- WalletConnect / Reown AppKit UMD Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/@reown/appkit@latest/dist/umd/index.min.js"></script>
 <script>
   if (typeof window !== 'undefined') {
     window.Buffer = window.Buffer || window.buffer?.Buffer;
@@ -384,6 +386,16 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
         </div>
         <span class="small" style="color:var(--brand2)">Web / Mobile</span>
       </button>
+
+      <!-- ➔ ADD THIS BUTTON FOR UNIVERSAL MOBILE BROWSER CONNECT -->
+      <button type="button" class="wallet-option" onclick="connectViaWalletConnect()" style="border-color: #38bdf8;">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="wallet-icon-frame" style="color: #38bdf8; font-weight: bold; font-size: 16px;">WC</div>
+          <span style="font-size:15px;font-weight:700;color:#38bdf8">WalletConnect (Mobile Browser)</span>
+        </div>
+        <span class="small" style="color:#38bdf8">Universal QR / App-Switch</span>
+      </button>
+
     </div>
     <button type="button" class="btn" style="margin-top:20px;width:100%" onclick="closeWalletModal()">Cancel</button>
   </div>
@@ -2656,6 +2668,62 @@ window.addEventListener('load', () => {
     }
   }
 });
+
+// --- WALLETCONNECT SOLANA INTEGRATION SETUP ---
+let wcModal = null;
+
+function initWalletConnect() {
+  if (typeof AppKit !== 'undefined' && !wcModal) {
+    try {
+      // Initialize Reown/WalletConnect AppKit for Solana
+      // Get your free Project ID from https://cloud.walletconnect.com
+      wcModal = new AppKit.AppKit({
+        projectId: 'c63066c584da5008dee41ada7c6d9faa', 
+        metadata: {
+          name: 'LIVED PROOF',
+          description: 'Web3 Engagement Hub',
+          url: window.location.origin,
+          icons: [`${window.location.origin}/favicon.ico`]
+        },
+        networks: ['solana:mainnet', 'solana:devnet'],
+        defaultNetwork: 'solana:devnet'
+      });
+    } catch (e) {
+      console.warn("WalletConnect init notice:", e);
+    }
+  }
+}
+
+async function connectViaWalletConnect() {
+  try {
+    initWalletConnect();
+    if (!wcModal) {
+      alert("WalletConnect library is still loading. Please try again.");
+      return;
+    }
+
+    closeWalletModal();
+    
+    // Trigger the WalletConnect connection modal
+    await wcModal.open();
+    
+    // Listen for provider connection response
+    const provider = wcModal.getProvider?.('solana');
+    if (provider) {
+      const accounts = await provider.request({ method: 'solana_requestAccounts' });
+      if (accounts && accounts[0]) {
+        db.currentUser.wallet = accounts[0];
+        localStorage.setItem("lived_wallet_session", accounts[0]);
+        
+        if (typeof syncProfileToSupabase === 'function') await syncProfileToSupabase();
+        if (typeof renderLivedCard === 'function') renderLivedCard();
+        alert("🎉 WalletConnect Connected Successfully!");
+      }
+    }
+  } catch (err) {
+    console.error("WalletConnect connection error:", err);
+  }
+}
 
 function syncBudgetRules(){
   const duration = document.getElementById("cDuration")?.value || "7 days";
