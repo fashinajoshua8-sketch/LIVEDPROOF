@@ -2614,9 +2614,10 @@ function startWalletDeepLink(providerName) {
   appUrl.search = "";
   appUrl.hash = "";
 
-  sessionStorage.setItem("lived_pending_wallet_connection", JSON.stringify({
+  localStorage.setItem("lived_pending_wallet_connection", JSON.stringify({
     provider: providerName,
-    secretKey: Array.from(keyPair.secretKey)
+    secretKey: Array.from(keyPair.secretKey),
+    createdAt: Date.now()
   }));
 
   const params = new URLSearchParams({
@@ -2643,10 +2644,13 @@ async function handleWalletDeepLinkCallback() {
 
   let pending;
   try {
-    const pendingData = sessionStorage.getItem("lived_pending_wallet_connection");
+    const pendingData = localStorage.getItem("lived_pending_wallet_connection");
     if (!pendingData) throw new Error("The pending wallet connection was not found. Please connect again.");
     pending = JSON.parse(pendingData);
     if (pending.provider !== providerName) throw new Error("The wallet response does not match the selected wallet.");
+    if (!Number.isFinite(pending.createdAt) || Date.now() - pending.createdAt > 10 * 60 * 1000) {
+      throw new Error("The wallet connection request expired. Please connect again.");
+    }
 
     const errorCode = params.get("errorCode");
     if (errorCode) {
@@ -2685,7 +2689,7 @@ async function handleWalletDeepLinkCallback() {
     closeWalletModal();
     alert("🎉 Wallet Connected Successfully!");
   } finally {
-    sessionStorage.removeItem("lived_pending_wallet_connection");
+    localStorage.removeItem("lived_pending_wallet_connection");
   }
 }
 
