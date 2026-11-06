@@ -353,7 +353,8 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
 <div class="modal-overlay" id="walletModal">
   <div class="modal-card">
     <h3 style="margin-top:0">Connect Solana Wallet</h3>
-    <p class="small">On mobile, Phantom and Solflare open as separate apps and return here after approval.</p>
+    <p class="small">Phantom and Solflare can connect from a mobile browser. Glow connects through its supported browser integration.</p>
+    <div id="walletConnectMessage" class="notice" role="status" aria-live="polite" style="display:none;margin-top:12px"></div>
     <div style="margin-top:16px;display:grid;gap:10px">
       
       <button type="button" class="wallet-option" onclick="requestLiveWallet('phantom')">
@@ -384,7 +385,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           </div>
           <span style="font-size:15px;font-weight:700">Glow Wallet</span>
         </div>
-        <span class="small" style="color:var(--brand2)">Connect</span>
+        <span class="small" style="color:var(--brand2)">Glow browser / extension</span>
       </button>
 
     </div>
@@ -2547,8 +2548,20 @@ function enterPlatform() {
 function toggleWalletConnection() {
   if (db.currentUser.wallet) { disconnectWallet(); } else { openWalletModal(); }
 }
-function openWalletModal(){ document.getElementById("walletModal").classList.add("active"); }
-function closeWalletModal(){ document.getElementById("walletModal").classList.remove("active"); }
+function setWalletConnectMessage(message) {
+  const messageEl = document.getElementById("walletConnectMessage");
+  if (!messageEl) return;
+  messageEl.textContent = message;
+  messageEl.style.display = message ? "block" : "none";
+}
+function openWalletModal(){
+  setWalletConnectMessage("");
+  document.getElementById("walletModal").classList.add("active");
+}
+function closeWalletModal(){
+  document.getElementById("walletModal").classList.remove("active");
+  setWalletConnectMessage("");
+}
 
 async function disconnectWallet() {
   db.currentUser.wallet = null;
@@ -2560,35 +2573,59 @@ async function disconnectWallet() {
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
 function encodeBase58(bytes) {
-  let value = 0n;
-  for (const byte of bytes) value = value * 256n + BigInt(byte);
-  let encoded = "";
-  while (value > 0n) {
-    const remainder = Number(value % 58n);
-    encoded = BASE58_ALPHABET[remainder] + encoded;
-    value /= 58n;
+  const digits = [];
+  for (const byte of bytes) {
+    let carry = byte;
+    for (let i = 0; i < digits.length; i++) {
+      carry += digits[i] * 256;
+      digits[i] = carry % 58;
+      carry = Math.floor(carry / 58);
+    }
+    while (carry > 0) {
+      digits.push(carry % 58);
+      carry = Math.floor(carry / 58);
+    }
   }
   let leadingZeroes = 0;
   while (leadingZeroes < bytes.length && bytes[leadingZeroes] === 0) leadingZeroes++;
-  return "1".repeat(leadingZeroes) + encoded;
+  let encoded = "1".repeat(leadingZeroes);
+  for (let i = digits.length - 1; i >= 0; i--) {
+    encoded += BASE58_ALPHABET[digits[i]];
+  }
+  return encoded;
 }
 
 function decodeBase58(value) {
   if (!value) throw new Error("Missing wallet response data.");
-  let decodedValue = 0n;
+  const bytes = [];
   for (const character of value) {
     const digit = BASE58_ALPHABET.indexOf(character);
     if (digit < 0) throw new Error("Invalid wallet response encoding.");
-    decodedValue = decodedValue * 58n + BigInt(digit);
-  }
-  const bytes = [];
-  while (decodedValue > 0n) {
-    bytes.unshift(Number(decodedValue % 256n));
-    decodedValue /= 256n;
+    let carry = digit;
+    for (let i = 0; i < bytes.length; i++) {
+      carry += bytes[i] * 58;
+      bytes[i] = carry & 255;
+      carry >>= 8;
+    }
+    while (carry > 0) {
+      bytes.push(carry & 255);
+      carry >>= 8;
+    }
   }
   let leadingZeroes = 0;
   while (leadingZeroes < value.length && value[leadingZeroes] === "1") leadingZeroes++;
-  return new Uint8Array([...new Array(leadingZeroes).fill(0), ...bytes]);
+  const decoded = new Uint8Array(leadingZeroes + bytes.length);
+  for (let i = 0; i < bytes.length; i++) {
+    decoded[leadingZeroes + i] = bytes[bytes.length - i - 1];
+  }
+  return decoded;
+}
+
+function decodeWalletResponseText(bytes) {
+  if (typeof TextDecoder !== "undefined") return new TextDecoder().decode(bytes);
+  let encoded = "";
+  for (const byte of bytes) encoded += "%" + ("0" + byte.toString(16)).slice(-2);
+  return decodeURIComponent(encoded);
 }
 
 function getDappEncryptionKeyPair() {
@@ -2596,6 +2633,13 @@ function getDappEncryptionKeyPair() {
     throw new Error("Secure mobile wallet connection is unavailable. Please reload and try again.");
   }
   return window.nacl.box.keyPair();
+}
+
+function isMobileWalletBrowser() {
+  const userAgent = navigator.userAgent || "";
+  return navigator.userAgentData?.mobile === true ||
+    /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent) ||
+    (navigator.maxTouchPoints > 1 && /Macintosh/i.test(userAgent));
 }
 
 function startWalletDeepLink(providerName) {
@@ -2678,7 +2722,7 @@ async function handleWalletDeepLinkCallback() {
     );
     if (!decrypted) throw new Error("Could not verify the wallet response.");
 
-    const walletData = JSON.parse(new TextDecoder().decode(decrypted));
+    const walletData = JSON.parse(decodeWalletResponseText(decrypted));
     const web3 = window.solanaWeb3;
     if (!web3) throw new Error("Solana Web3 library did not load. Please reload and try again.");
     const walletAddress = new web3.PublicKey(walletData.public_key).toBase58();
@@ -2701,25 +2745,32 @@ async function requestLiveWallet(providerName) {
     } else if (providerName === 'solflare') {
       provider = window.solflare || (window.solana?.isSolflare ? window.solana : null);
     } else if (providerName === 'glow') {
-      provider = window.glow;
+      provider = window.glow || window.glowSolana;
     }
 
     if (!provider) {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if (isMobile) {
+      if (isMobileWalletBrowser()) {
+        if (providerName === "glow") {
+          setWalletConnectMessage(
+            "Glow does not currently provide a supported external-browser connection for this site. On Android, open this page in Glow's browser; on iPhone or iPad, use Glow's Safari extension. To connect without changing browsers, choose Phantom or Solflare."
+          );
+          return;
+        }
         startWalletDeepLink(providerName);
         return;
       }
-      alert(`${providerName.toUpperCase()} extension is not installed. Please install it to connect.`);
+      setWalletConnectMessage(`${providerName.toUpperCase()} was not detected. Install or enable the wallet, reload this page, and try again.`);
       return;
     }
 
     const res = await provider.connect();
-    const publicKey = res?.publicKey || provider.publicKey;
-    if (!publicKey) throw new Error("The wallet did not return a public address.");
-    db.currentUser.wallet = typeof publicKey.toBase58 === "function"
-      ? publicKey.toBase58()
-      : publicKey.toString();
+    const walletAddress = res?.publicKey || res?.address || provider.publicKey || provider.address;
+    if (!walletAddress) throw new Error("The wallet did not return a public address.");
+    const web3 = window.solanaWeb3;
+    if (!web3) throw new Error("Solana Web3 library did not load. Please reload and try again.");
+    db.currentUser.wallet = new web3.PublicKey(
+      typeof walletAddress.toBase58 === "function" ? walletAddress.toBase58() : walletAddress.toString()
+    ).toBase58();
     localStorage.setItem("lived_wallet_session", db.currentUser.wallet);
     if (typeof syncProfileToSupabase === 'function') await syncProfileToSupabase();
     if (typeof renderLivedCard === 'function') renderLivedCard();
@@ -2727,7 +2778,7 @@ async function requestLiveWallet(providerName) {
     alert("🎉 Wallet Connected Successfully!");
   } catch (err) {
     console.error("Wallet connection failed:", err);
-    alert("Wallet connection failed: " + (err.message || "Please try again."));
+    setWalletConnectMessage("Wallet connection failed: " + (err.message || "Please try again."));
   }
 }
 
