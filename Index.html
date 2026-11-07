@@ -1754,12 +1754,6 @@ async function joinCampaign(id){
     connectXLive();
     return;
   }
-  if (!db.currentUser.wallet) {
-    alert("Please connect your Solana wallet before joining campaigns!");
-    openWalletModal();
-    return;
-  }
-
   const numericId = Number(id);
   const c = db.campaigns.find(x => Number(x.id) === numericId); 
   if(!c) return;
@@ -1772,15 +1766,18 @@ async function joinCampaign(id){
   
   const client = requireBackend();
   // Changed from .insert() to .upsert() to handle existing participant keys gracefully
-  const { error } = await client.from('campaign_participants').upsert([{
+  const participant = {
     campaign_id: numericId,
     handle: db.currentUser.handle,
     score: 0,
     networking_xp: 0,
     reach: 0,
-    interactions: 0,
-    wallet_address: db.currentUser.wallet || null
-  }], { onConflict: 'campaign_id,handle' });
+    interactions: 0
+  };
+  if (db.currentUser.wallet) participant.wallet_address = db.currentUser.wallet;
+  const { error } = await client.from('campaign_participants').upsert([participant], {
+    onConflict: 'campaign_id,handle'
+  });
 
   if(error){ alert("Could not join campaign: " + error.message); return; }
 
