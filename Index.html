@@ -616,7 +616,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
   <div class="panel">
     <div class="kicker">Step 2 · Manual Funding</div>
     <h2>Treasury Payment & Confirmation</h2>
-    <p>Please send the required budget amount manually from your wallet to the official treasury address below, then click confirmation.</p>
+    <p>Please send the required budget amount manually from your wallet to the official treasury address below, then click confirmation. This records your confirmation only; it does not verify the transfer on-chain.</p>
     
     <div class="card" style="margin:20px 0;border:2px solid var(--brand);background:rgba(255,106,0,0.06)">
       <div class="kicker" style="color:var(--brand2);margin-bottom:6px">Official LIVED Treasury Wallet Address</div>
@@ -632,11 +632,11 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
     </div>
 
     <div class="notice" style="margin:20px 0">
-      <b>Instructions:</b> Open your Solana wallet (Phantom, Solflare, Glow), transfer the exact SOL amount shown above to the LIVED Treasury address, and click the confirmation button below once completed.
+      <b>Instructions:</b> Open your Solana wallet (Phantom, Solflare, Glow), transfer the exact SOL amount shown above to the LIVED Treasury address, and click the confirmation button below once completed. An administrator must verify the transfer before it is treated as paid.
     </div>
     
     <div class="actions" style="justify-content:space-between">
-      <button class="btn" onclick="switchTab('create')">← Back to Edit</button>
+      <button class="btn" id="backToCampaignEditBtn" onclick="switchTab('create')">← Back to Edit</button>
       <button class="btn success" id="confirmPaymentBtn" type="button" onclick="confirmManualPayment()">✓ Confirm Payment Has Been Made</button>
     </div>
   </div>
@@ -927,6 +927,7 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
             <thead>
               <tr>
                 <th>Date / Time</th>
+                <th>Campaign ID</th>
                 <th>Campaign</th>
                 <th>Budget (USD)</th>
                 <th>Est. SOL</th>
@@ -2529,7 +2530,7 @@ function openAdminEditCampaign(id) {
 function enterPlatform() {
   const gate = document.getElementById('welcomeGateModal');
   if (gate) { gate.style.display = 'none'; }
-  switchTab('home');
+  switchTab(pendingManualCampaign ? 'treasuryPayment' : 'home');
 }
 
 function toggleWalletConnection() {
@@ -2816,9 +2817,62 @@ function updateBudgetCalculations(){
 document.getElementById("cDuration")?.addEventListener("change", syncBudgetRules);
 document.getElementById("cBudget")?.addEventListener("input", updateBudgetCalculations);
 
+const PENDING_CAMPAIGN_STORAGE_KEY = "lived_pending_campaign_submission_v1";
 let pendingManualCampaign = null;
+let pendingCampaignSubmissionId = null;
+let pendingCampaignSubmissionAttempted = false;
+
+function createCampaignSubmissionId() {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+  const bytes = new Uint8Array(16);
+  if (window.crypto && typeof window.crypto.getRandomValues === "function") {
+    window.crypto.getRandomValues(bytes);
+  } else {
+    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  let hex = "";
+  for (let i = 0; i < bytes.length; i++) {
+    const byteHex = bytes[i].toString(16);
+    hex += byteHex.length === 1 ? "0" + byteHex : byteHex;
+  }
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+function renderPendingCampaignSummary() {
+  if (!pendingManualCampaign) return;
+  document.getElementById("confName").textContent = pendingManualCampaign.name;
+  document.getElementById("confCurrency").textContent = pendingManualCampaign.currency;
+  document.getElementById("confBudget").textContent = money(pendingManualCampaign.budget);
+  document.getElementById("confSolAmount").textContent = `${pendingManualCampaign.solPaid} SOL`;
+  const editButton = document.getElementById("backToCampaignEditBtn");
+  editButton.disabled = pendingCampaignSubmissionAttempted;
+  editButton.title = pendingCampaignSubmissionAttempted
+    ? "This submission may already have reached the server. Retry it with the same id to avoid duplicates."
+    : "";
+}
+
+try {
+  const savedSubmission = JSON.parse(localStorage.getItem(PENDING_CAMPAIGN_STORAGE_KEY) || "null");
+  if (savedSubmission && savedSubmission.campaign && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(savedSubmission.submissionId)) {
+    pendingManualCampaign = savedSubmission.campaign;
+    pendingCampaignSubmissionId = savedSubmission.submissionId;
+    pendingCampaignSubmissionAttempted = savedSubmission.attempted === true;
+  }
+} catch (err) {
+  console.error("Could not restore the pending campaign submission:", err);
+}
+
 document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
   e.preventDefault();
+  if (pendingCampaignSubmissionAttempted) {
+    alert("This campaign submission may already have reached the server. Return to payment and retry the same submission instead of creating a new one.");
+    switchTab("treasuryPayment");
+    return;
+  }
   const budget = Number(document.getElementById("cBudget").value);
   const duration = document.getElementById("cDuration").value;
   const currency = document.getElementById("cCurrency").value;
@@ -2861,71 +2915,76 @@ document.getElementById("campaignForm")?.addEventListener("submit", (e) => {
     is_livedit_only: isLiveEditOnly
   };
 
-  document.getElementById("confName").textContent = pendingManualCampaign.name;
-  document.getElementById("confCurrency").textContent = currency;
-  document.getElementById("confBudget").textContent = money(budget);
-  document.getElementById("confSolAmount").textContent = `${pendingManualCampaign.solPaid} SOL`;
+  pendingCampaignSubmissionId = createCampaignSubmissionId();
+  pendingCampaignSubmissionAttempted = false;
+  try {
+    localStorage.setItem(PENDING_CAMPAIGN_STORAGE_KEY, JSON.stringify({
+      submissionId: pendingCampaignSubmissionId,
+      attempted: false,
+      campaign: pendingManualCampaign
+    }));
+  } catch (err) {
+    pendingManualCampaign = null;
+    pendingCampaignSubmissionId = null;
+    pendingCampaignSubmissionAttempted = false;
+    alert("Could not safely save this campaign for retry. Check available browser storage and try again. " + err.message);
+    return;
+  }
+  renderPendingCampaignSummary();
   switchTab("treasuryPayment");
 });
 
 async function confirmManualPayment(){
-  if (!pendingManualCampaign) {
+  if (!pendingManualCampaign || !pendingCampaignSubmissionId) {
     alert("No pending campaign data found. Please fill out the form again.");
     switchTab("create");
     return;
   }
+  const confirmButton = document.getElementById("confirmPaymentBtn");
+  if (confirmButton.disabled) return;
+  confirmButton.disabled = true;
   try {
+    const wasSubmissionAlreadyAttempted = pendingCampaignSubmissionAttempted;
+    pendingCampaignSubmissionAttempted = true;
+    try {
+      localStorage.setItem(PENDING_CAMPAIGN_STORAGE_KEY, JSON.stringify({
+        submissionId: pendingCampaignSubmissionId,
+        attempted: true,
+        campaign: pendingManualCampaign
+      }));
+    } catch (storageError) {
+      pendingCampaignSubmissionAttempted = wasSubmissionAlreadyAttempted;
+      throw new Error("Could not save the retry safeguard before submitting. Check browser storage and try again. " + storageError.message);
+    }
+    renderPendingCampaignSummary();
     const client = requireBackend();
-    const { error: campError } = await client.from('campaigns').insert([{
-      name: pendingManualCampaign.name,
-      category: pendingManualCampaign.category,
-      currency: pendingManualCampaign.currency,
-      native_token_name: pendingManualCampaign.nativeTokenName,
-      image: pendingManualCampaign.image,
-      budget: pendingManualCampaign.budget,
-      duration: pendingManualCampaign.duration,
-      expires_at: pendingManualCampaign.expires_at,
-      max_participants: pendingManualCampaign.maxParticipants,
-      top_rewarded: pendingManualCampaign.topRewarded,
-      streak_model: pendingManualCampaign.streakModel,
-      streak_bonus_value: pendingManualCampaign.streakBonusValue,
-      streak_multiplier: pendingManualCampaign.streakMultiplier,
-      streak_milestone: pendingManualCampaign.streakMilestone,
-      target_links: pendingManualCampaign.targetLinks,
-      required_tag: pendingManualCampaign.required_tag,
-      brief: pendingManualCampaign.brief,
-      requirements: pendingManualCampaign.requirements,
-      min_likes: pendingManualCampaign.min_likes,
-      min_reposts: pendingManualCampaign.min_reposts,
-      min_comments: pendingManualCampaign.min_comments,
-      min_views: pendingManualCampaign.min_views,
-      timezone: pendingManualCampaign.timezone,
-      status: "PENDING",
-      payer_wallet: pendingManualCampaign.payerWallet,
-      sol_paid: pendingManualCampaign.solPaid,
-      is_livedit_only: pendingManualCampaign.is_livedit_only
-    }]);
-
-    if (campError) throw campError;
-
-    const { error: payError } = await client.from('payments_ledger').insert([{
-      campaign_name: pendingManualCampaign.name,
-      budget: pendingManualCampaign.budget,
-      sol_amount: pendingManualCampaign.solPaid,
-      tx_signature: "MANUAL_TX_" + Math.random().toString(36).substring(2, 10).toUpperCase(),
-      payer: pendingManualCampaign.payerWallet
-    }]);
-
-    if (payError) throw payError;
+    const { error } = await client.rpc("submit_manual_campaign", {
+      p_submission_id: pendingCampaignSubmissionId,
+      p_campaign_data: pendingManualCampaign
+    });
+    if (error) throw error;
 
     document.getElementById("campaignForm").reset();
+    try {
+      localStorage.removeItem(PENDING_CAMPAIGN_STORAGE_KEY);
+    } catch (storageError) {
+      console.error("The completed campaign retry record could not be removed:", storageError);
+    }
     pendingManualCampaign = null;
+    pendingCampaignSubmissionId = null;
+    pendingCampaignSubmissionAttempted = false;
     await loadGlobalCampaigns(true);
-    alert("🎉 Campaign Submitted Successfully with Streak Rules!");
+    alert("Campaign submitted. Payment is recorded as unverified until an administrator checks the transfer.");
     switchTab("campaigns");
   } catch (err) {
-    alert("Submission error: " + err.message);
+    alert("Submission was not confirmed. Your campaign details are saved; retrying will not create duplicate campaign or payment records. " + (err.message || String(err)));
+  } finally {
+    confirmButton.disabled = false;
   }
+}
+
+if (pendingManualCampaign) {
+  renderPendingCampaignSummary();
 }
 
 const ADMIN_EMAIL = "admin@livedproof.xyz";
@@ -3229,13 +3288,14 @@ async function renderAdminQueue(){
     payContainer.innerHTML = ledgerData?.length ? ledgerData.map(p => `
       <tr>
         <td>${esc(p.created_at?.replace('T',' ').substring(0,19))}</td>
+        <td>${p.campaign_id ? `#${esc(p.campaign_id)}` : "—"}</td>
         <td><b>${esc(p.campaign_name)}</b></td>
         <td>${money(p.budget)}</td>
         <td>${Number(p.sol_amount||0).toFixed(4)} SOL</td>
         <td style="font-family:monospace">${esc(p.payer)}</td>
-        <td style="color:var(--good)">Verified</td>
+        <td style="color:var(--warn, #fbbf24)">${esc(p.verification_status || "UNVERIFIED")}</td>
       </tr>
-    `).join("") : `<tr><td colspan="6" style="text-align:center">No records.</td></tr>`;
+    `).join("") : `<tr><td colspan="7" style="text-align:center">No records.</td></tr>`;
   }
 
   // Render Payouts Queue
@@ -3648,9 +3708,9 @@ async function exportPaymentsCSV() {
   const { data } = await client.from('payments_ledger').select('*');
   if (!data || !data.length) { alert("No payment data to export."); return; }
   
-  let csv = "ID,Campaign Name,Budget,SOL Amount,Payer,Created At\n";
+  let csv = "ID,Campaign ID,Campaign Name,Budget,SOL Amount,Payer,Verification Status,Created At\n";
   data.forEach(p => {
-    csv += `${p.id},"${p.campaign_name}",${p.budget},${p.sol_amount},"${p.payer}","${p.created_at}"\n`;
+    csv += `${p.id},${p.campaign_id || ""},"${p.campaign_name}",${p.budget},${p.sol_amount},"${p.payer}","${p.verification_status || "UNVERIFIED"}","${p.created_at}"\n`;
   });
   downloadCSV(csv, "payments_ledger_audit.csv");
 }
