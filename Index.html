@@ -627,22 +627,19 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <div id="ruleNotice" class="small" style="color:var(--brand2);margin-top:-4px;margin-bottom:6px"></div>
       <div><label>Campaign Objective & Brief</label><textarea id="cBrief" required placeholder="What should contributors focus on?"></textarea></div>
       <div><label>Participation Requirements</label><input id="cRequirements" placeholder="e.g. Minimum 200 followers, thread link, tag @Project"></div>
-      
+      <div style="background:rgba(255,106,0,0.04); border:1px solid var(--line); padding:14px; border-radius:10px; margin:12px 0;">
+        <label style="color:var(--brand2); display:block; margin-bottom:8px">🎯 Engagement Submission Mode</label>
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+          <input type="checkbox" id="cIsLiveditOnly" style="width:20px; height:20px; accent-color:var(--brand);">
+          <div>
+            <span class="small" style="font-weight:700; color:var(--fg); display:block;">Enable LIVED IT Posts Engagement Submission</span>
+            <span class="small" style="color:var(--muted);">Restricts submissions to official LIVEDIT-only posts and unlocks an extra +5 XP engagement bonus.</span>
+          </div>
+        </label>
+      </div>
       <button class="btn primary" type="submit" id="proceedPaymentBtn">Proceed to Manual Treasury Payment →</button>
     </form>
   </div>
-
-  <!-- Insert this inside your #create form right before the objective brief textarea -->
-<div style="background:rgba(255,106,0,0.04); border:1px solid var(--line); padding:14px; border-radius:10px; margin:12px 0;">
-  <label style="color:var(--brand2); display:block; margin-bottom:8px">🎯 Engagement Submission Mode</label>
-  <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-    <input type="checkbox" id="cIsLiveditOnly" style="width:20px; height:20px; accent-color:var(--brand);">
-    <div>
-      <span class="small" style="font-weight:700; color:var(--fg); display:block;">Enable LIVED IT Posts Engagement Submission</span>
-      <span class="small" style="color:var(--muted);">Restricts submissions to official LIVEDIT-only posts and unlocks an extra +5 XP engagement bonus.</span>
-    </div>
-  </label>
-</div>
 
 </section>
 
@@ -2541,6 +2538,12 @@ function toggleAdminNativeTokenInput() {
   if(box) box.style.display = (currencyVal === "Native Token") ? "block" : "none";
 }
 
+function toggleNativeTokenInput() {
+  const currencyVal = document.getElementById("cCurrency")?.value;
+  const box = document.getElementById("nativeTokenBox");
+  if(box) box.style.display = (currencyVal === "Native Token") ? "block" : "none";
+}
+
 document.getElementById("adminTabularForm")?.addEventListener("submit", async function(e) {
   e.preventDefault();
   const id = document.getElementById("tabEditCampId").value;
@@ -2550,13 +2553,17 @@ document.getElementById("adminTabularForm")?.addEventListener("submit", async fu
   const requirementsText = document.getElementById("tabRequirements").value.trim();
   const enforcedTag = isLiveditOnly ? "@LIVEDITglobal" : (extractTagFromRequirements(requirementsText) || "@LIVEDITglobal");
   const currency = document.getElementById("tabCurrency").value;
+  const duration = document.getElementById("tabDuration").value;
+  const durationDaysMap = { "1 day": 1, "2 days": 2, "3 days": 3, "7 days": 7, "14 days": 14, "30 days": 30 };
+  const expiresAt = new Date(Date.now() + (durationDaysMap[duration] || 7) * 24 * 60 * 60 * 1000).toISOString();
 
   const payload = {
     name: document.getElementById("tabName").value.trim(),
     category: document.getElementById("tabCategory").value,
     currency: currency,
     native_token_name: currency === "Native Token" ? document.getElementById("tabNativeTokenName").value.trim() : null,
-    duration: document.getElementById("tabDuration").value,
+    duration,
+    expires_at: expiresAt,
     budget: Number(document.getElementById("tabBudget").value),
     max_participants: Number(document.getElementById("tabMaxPart").value) || 50,
     top_rewarded: Number(document.getElementById("tabTopRewarded").value) || 5,
@@ -3279,75 +3286,6 @@ async function deleteActiveCampaign(id){
   renderHome();
 }
 
-// TABULAR FORM SUBMISSION FROM ADMIN PANEL
-document.getElementById("adminTabularForm")?.addEventListener("submit", async function(e) {
-  e.preventDefault();
-  const id = document.getElementById("tabEditCampId").value;
-  const client = requireBackend();
-  
-  const isLiveditOnly = document.getElementById("tabIsLiveditOnly")?.checked || false;
-  const requirementsText = document.getElementById("tabRequirements").value.trim();
-  
-  const selectedDuration = document.getElementById("tabDuration")?.value || "7 days";
-  const durationDaysMap = { "1 day": 1, "2 days": 2, "3 days": 3, "7 days": 7, "14 days": 14, "30 days": 30 };
-  const daysCount = durationDaysMap[selectedDuration] || 7;
-  const expiresAt = new Date(Date.now() + (daysCount * 24 * 60 * 60 * 1000)).toISOString();
-
-  // Automatically force @LIVEDITglobal for LIVEDIT-only campaigns
-  const enforcedTag = isLiveditOnly ? "@LIVEDITglobal" : (extractTagFromRequirements(requirementsText) || "@LIVEDITglobal");
-
-  const payload = {
-    name: document.getElementById("tabName").value.trim(),
-    category: document.getElementById("tabCategory").value,
-    duration: selectedDuration,
-    currency: document.getElementById("tabCurrency").value,
-    budget: Number(document.getElementById("tabBudget").value),
-    max_participants: Number(document.getElementById("tabMaxPart").value) || 50,
-    top_rewarded: 10,
-    streak_model: document.getElementById("tabStreakModel").value,
-    streak_bonus_value: Number(document.getElementById("tabXP").value),
-    brief: document.getElementById("tabBrief").value.trim(),
-    requirements: requirementsText,
-    is_livedit_only: isLiveditOnly,
-    required_tag: enforcedTag,
-    status: document.getElementById("tabIsActive").checked ? "ACTIVE" : "PENDING",
-    expires_at: expiresAt,
-  };
-
-  if (id) {
-    await client.from('campaigns').update(payload).eq('id', Number(id));
-    alert("✨ Campaign updated successfully!");
-  } else {
-    await client.from('campaigns').insert([payload]);
-    alert("🎉 Campaign created successfully!");
-  }
-
-  this.reset();
-  document.getElementById("tabEditCampId").value = "";
-  await loadGlobalCampaigns();
-  renderAdminQueue();
-});
-
-function openAdminEditCampaign(id) {
-  const numericId = Number(id);
-  const c = db.allAdminCampaigns?.find(x => Number(x.id) === numericId);
-  if (!c) { alert("Campaign not found"); return; }
-
-  document.getElementById("tabEditCampId").value = c.id;
-  document.getElementById("tabName").value = c.name;
-  document.getElementById("tabCategory").value = c.category;
-  document.getElementById("tabCurrency").value = c.currency;
-  document.getElementById("tabBudget").value = c.budget;
-  document.getElementById("tabMaxPart").value = c.maxParticipants;
-  document.getElementById("tabRequirements").value = c.requirements;
-  document.getElementById("tabXP").value = c.streakBonusValue || 10;
-  document.getElementById("tabStreakModel").value = c.streakModel || "Milestone-Based";
-  document.getElementById("tabBrief").value = c.brief;
-  document.getElementById("tabIsActive").checked = c.status === "ACTIVE";
-  document.getElementById("tabIsLiveditOnly").checked = c.is_livedit_only;
-  window.scrollTo({top: 100, behavior: 'smooth'});
-}
-
 async function loadGlobalCampaigns(isSilent = false) {
     try {
         const client = requireBackend();
@@ -3579,7 +3517,7 @@ async function adminDeleteSubmission(subId, handle, campaignId, scoreVal) {
 async function adminProcessPayout(campaignId, handle, recipientWallet, amount, currency) {
   if (!recipientWallet) { alert("Error: No wallet address recorded for this recipient."); return; }
   if (currency !== "SOL") { alert(`Automated Web3 Escrow currently supports native SOL payouts.`); return; }
-  let dbClient = window.supabaseClient;
+  const dbClient = supabaseClient;
   if (!dbClient) { alert("Database Error."); return; }
   const web3 = window.solanaWeb3;
   if (!web3) { alert("Solana Web3 library not loaded."); return; }
