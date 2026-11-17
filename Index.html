@@ -318,9 +318,43 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
       <a href="https://t.me/yourtelegramgroup" target="_blank" class="btn telegram" style="padding:9px 12px;font-size:13px">✈ Telegram ↗</a>
       <button type="button" data-view="rules" onclick="switchTab('rules')">Rules</button>
       <button type="button" data-view="guide" onclick="switchTab('guide')">📖 Guide</button>
+      <button type="button" class="nav-btn" onclick="openFeedbackModal()" style="color:var(--brand2);font-weight:700;border:1px solid #ff8a3344;background:rgba(255,138,51,0.1)">⭐ Share Feedback</button>
     </div>
   </div>
 </nav>
+
+<div class="modal-overlay" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
+  <div class="modal-card" style="max-width:520px;text-align:left">
+    <h3 id="feedbackModalTitle" style="margin-top:0">Share your experience</h3>
+    <p class="small">Your feedback helps us improve LIVED Proof. Reviews are visible to the admin team.</p>
+    <form id="feedbackForm" class="form" style="margin-top:16px">
+      <div>
+        <label for="feedbackRating">Overall rating</label>
+        <select id="feedbackRating" required>
+          <option value="">Choose a rating</option>
+          <option value="5">★★★★★ — Excellent</option>
+          <option value="4">★★★★☆ — Good</option>
+          <option value="3">★★★☆☆ — Average</option>
+          <option value="2">★★☆☆☆ — Could be better</option>
+          <option value="1">★☆☆☆☆ — Poor</option>
+        </select>
+      </div>
+      <div>
+        <label for="feedbackTitle">Headline (optional)</label>
+        <input id="feedbackTitle" maxlength="120" placeholder="Summarize your experience">
+      </div>
+      <div>
+        <label for="feedbackReview">Your review</label>
+        <textarea id="feedbackReview" minlength="10" maxlength="2000" required placeholder="What has using the app been like for you?"></textarea>
+      </div>
+      <div id="feedbackStatus" class="small" role="status" aria-live="polite"></div>
+      <div class="actions" style="margin-top:8px;justify-content:flex-end">
+        <button type="button" class="btn" onclick="closeFeedbackModal()">Cancel</button>
+        <button type="submit" class="btn primary" id="feedbackSubmitBtn">Submit Review</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <div class="modal-overlay" id="submitPostModal">
   <div class="modal-card" style="max-width:460px;text-align:left">
@@ -944,6 +978,18 @@ footer{border-top:1px solid var(--line);padding:25px 0;color:var(--muted);font-s
           <h3 style="margin:0 0 10px; font-size:18px;">Participant Submissions & Touch Grass Video Audit Queue</h3>
           <p class="small" style="margin:4px 0 12px">Monitor, review, and audit all X post links and video submissions by contributors.</p>
           <div id="adminSubmissionsList"></div>
+        </div>
+
+        <!-- COMMUNITY FEEDBACK -->
+        <div style="margin-top:35px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+            <div>
+              <h3 style="margin:0 0 6px;font-size:18px;">Community Reviews & Feedback</h3>
+              <p id="adminFeedbackSummary" class="small" style="margin:0;">Loading reviews...</p>
+            </div>
+            <button type="button" class="btn sm" onclick="loadAdminFeedback()">Refresh Reviews</button>
+          </div>
+          <div id="adminFeedbackList" style="display:grid;gap:12px;"></div>
         </div>
 
         <!-- WINNER PAYOUTS & ON-CHAIN ESCROW SETTLEMENT -->
@@ -3048,6 +3094,131 @@ async function restoreAdminSession(){
   isAdminLoggedIn = !!(data?.session?.user?.email === ADMIN_EMAIL);
 }
 
+function openFeedbackModal(){
+  const status = document.getElementById("feedbackStatus");
+  if (status) status.textContent = "";
+  document.getElementById("feedbackModal").classList.add("active");
+}
+
+function closeFeedbackModal(){
+  document.getElementById("feedbackModal").classList.remove("active");
+}
+
+document.getElementById("feedbackForm")?.addEventListener("submit", async function(e){
+  e.preventDefault();
+  const status = document.getElementById("feedbackStatus");
+  const submitButton = document.getElementById("feedbackSubmitBtn");
+  const review = document.getElementById("feedbackReview").value.trim();
+  const title = document.getElementById("feedbackTitle").value.trim();
+  const rating = Number(document.getElementById("feedbackRating").value);
+
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5 || review.length < 10) {
+    status.textContent = "Choose a rating and write at least 10 characters about your experience.";
+    status.style.color = "var(--warn)";
+    return;
+  }
+  if (!BACKEND_CONFIGURED || !supabaseClient) {
+    status.textContent = "Feedback is temporarily unavailable. Please try again later.";
+    status.style.color = "var(--seal)";
+    return;
+  }
+
+  submitButton.disabled = true;
+  status.textContent = "Submitting your review...";
+  status.style.color = "var(--muted)";
+  try {
+    const { error } = await supabaseClient.from("app_reviews").insert([{
+      rating,
+      title: title || null,
+      review_text: review,
+      handle: db.currentUser.xHandle || db.currentUser.handle || "Anonymous"
+    }]);
+    if (error) {
+      status.textContent = "Could not submit your review: " + error.message;
+      status.style.color = "var(--seal)";
+      return;
+    }
+
+    this.reset();
+    status.textContent = "Thank you! Your review has been submitted.";
+    status.style.color = "var(--good)";
+  } catch (error) {
+    status.textContent = "Could not submit your review. Check your connection and try again.";
+    status.style.color = "var(--seal)";
+    console.error("Feedback submission failed:", error);
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+
+async function loadAdminFeedback(){
+  const summary = document.getElementById("adminFeedbackSummary");
+  const list = document.getElementById("adminFeedbackList");
+  if (!isAdminLoggedIn) return;
+
+  summary.textContent = "Loading reviews...";
+  list.replaceChildren();
+  if (!BACKEND_CONFIGURED || !supabaseClient) {
+    summary.textContent = "Feedback service is not configured.";
+    return;
+  }
+
+  try {
+    const { data, error, count } = await supabaseClient
+      .from("app_reviews")
+      .select("id,rating,title,review_text,handle,created_at", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) {
+      summary.textContent = "Unable to load reviews: " + error.message;
+      return;
+    }
+
+    const reviews = data || [];
+    if (!reviews.length) {
+      summary.textContent = "No reviews have been submitted yet.";
+      return;
+    }
+
+    const visibleCount = reviews.length;
+    const totalCount = count ?? visibleCount;
+    const average = reviews.reduce((sum, item) => sum + Number(item.rating), 0) / visibleCount;
+    summary.textContent = `Showing ${visibleCount}${totalCount > visibleCount ? ` of ${totalCount}` : ""} reviews · Recent average ${average.toFixed(1)}/5`;
+
+    reviews.forEach(item => {
+      const card = document.createElement("article");
+      card.className = "card";
+
+      const header = document.createElement("div");
+      header.style.cssText = "display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;";
+
+      const heading = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = item.title || "Review";
+      const rating = document.createElement("div");
+      rating.textContent = `${"★".repeat(Number(item.rating))}${"☆".repeat(5 - Number(item.rating))} (${item.rating}/5)`;
+      rating.style.color = "var(--brand2)";
+      rating.style.marginTop = "4px";
+      heading.append(title, rating);
+
+      const author = document.createElement("span");
+      author.className = "small";
+      const createdAt = item.created_at ? new Date(item.created_at).toLocaleString() : "";
+      author.textContent = `${item.handle || "Anonymous"}${createdAt ? ` · ${createdAt}` : ""}`;
+      header.append(heading, author);
+
+      const body = document.createElement("p");
+      body.textContent = item.review_text;
+      body.style.cssText = "white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0 0;color:var(--fg);";
+      card.append(header, body);
+      list.append(card);
+    });
+  } catch (error) {
+    summary.textContent = "Unable to load reviews. Check your connection and try again.";
+    console.error("Admin feedback load failed:", error);
+  }
+}
+
 async function adminLogin(){
   const inputPass = document.getElementById("adminKey").value;
   if(!inputPass) return;
@@ -3058,6 +3229,7 @@ async function adminLogin(){
   document.getElementById("adminDashboard").style.display = "block";
   await loadGlobalCampaigns();
   renderAdminQueue();
+  await loadAdminFeedback();
 }
 
 async function adminLogout(){
@@ -3073,6 +3245,7 @@ function renderAdminPanel(){
     document.getElementById("adminDashboard").style.display = "block";
     loadGlobalCampaigns();
     renderAdminQueue();
+    loadAdminFeedback();
 
     populateBreakdownDropdown();
 
